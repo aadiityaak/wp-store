@@ -290,18 +290,18 @@ class ProductMetaBoxes
             $values = is_array($value) ? $value : [];
             $container_id = $id . '_container';
             $add_id = $id . '_add';
-            echo '<div class="wp-store-clone-container" id="' . esc_attr($container_id) . '" data-field="' . esc_attr($id) . '">';
+            echo '<div class="wp-store-clone-container" id="' . esc_attr($container_id) . '" data-field="' . esc_attr($id) . '" style="width:100%;grid-column:1 / -1">';
             if (!empty($values)) {
                 foreach ($values as $val) {
                     $val = is_string($val) ? $val : '';
-                    echo '<div class="wp-store-option-row" style="display:flex;gap:8px;margin-bottom:8px;">';
+                    echo '<div class="wp-store-option-row" style="display:flex;gap:8px;margin-bottom:8px;width:100%;">';
                     echo '<input type="text" name="' . esc_attr($id) . '[]" value="' . esc_attr($val) . '" style="flex:1;" placeholder="' . esc_attr($placeholder) . '" />';
                     echo '<button type="button" class="button wp-store-remove-option">Hapus</button>';
                     echo '</div>';
                 }
             }
             echo '</div>';
-            echo '<button type="button" class="button button-secondary wp-store-clone-add" id="' . esc_attr($add_id) . '" data-field="' . esc_attr($id) . '">+ Tambah Opsi</button>';
+            echo '<button type="button" class="button button-secondary wp-store-clone-add" style="margin-top:8px;padding:4px 10px;line-height:1.2;height:auto;min-height:0;display:inline-flex;align-items:center;gap:4px;width:auto;white-space:nowrap;font-size:12px;border-radius:3px;" id="' . esc_attr($add_id) . '" data-field="' . esc_attr($id) . '">+ Tambah Opsi</button>';
             return;
         }
 

@@ -85,7 +85,7 @@ jQuery(function ($) {
 
     function addCloneRow($targetContainer, fieldName, value, placeholder) {
         const html = `
-            <div class="wp-store-option-row" style="display:flex;gap:8px;margin-bottom:8px;">
+            <div class="wp-store-option-row" style="display:flex;gap:8px;margin-bottom:8px;width:100%;">
                 <input type="text" name="${fieldName}[]" value="${value || ''}" style="flex:1;" placeholder="${placeholder || ''}" />
                 <button type="button" class="button wp-store-remove-option">Hapus</button>
             </div>
