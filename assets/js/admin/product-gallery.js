@@ -82,5 +82,48 @@ jQuery(function ($) {
         setIds(ids);
         $item.remove();
     });
-});
 
+    function addCloneRow($targetContainer, fieldName, value, placeholder) {
+        const html = `
+            <div class="wp-store-option-row" style="display:flex;gap:8px;margin-bottom:8px;">
+                <input type="text" name="${fieldName}[]" value="${value || ''}" style="flex:1;" placeholder="${placeholder || ''}" />
+                <button type="button" class="button wp-store-remove-option">Hapus</button>
+            </div>
+        `;
+        $targetContainer.append(html);
+    }
+
+    $('.wp-store-clone-container').each(function () {
+        const $c = $(this);
+        const field = ($c.data('field') || '').toString();
+        if (!field) {
+            return;
+        }
+        if ($c.children().length === 0) {
+            addCloneRow($c, field, '', '');
+        }
+    });
+
+    $(document).on('click', '.wp-store-clone-add', function (e) {
+        e.preventDefault();
+        const field = ($(this).data('field') || '').toString();
+        const $c = $('#' + field + '_container');
+        if (!$c.length) {
+            return;
+        }
+        const placeholder = $c.find('input[type="text"]').first().attr('placeholder') || '';
+        addCloneRow($c, field, '', placeholder);
+    });
+
+    $(document).on('click', '.wp-store-remove-option', function (e) {
+        e.preventDefault();
+        const $row = $(this).closest('.wp-store-option-row');
+        const $c = $row.closest('.wp-store-clone-container');
+        const field = ($c.data('field') || '').toString();
+        $row.remove();
+        if ($c.children().length === 0 && field) {
+            const placeholder = $c.find('input[type="text"]').first().attr('placeholder') || '';
+            addCloneRow($c, field, '', placeholder);
+        }
+    });
+});

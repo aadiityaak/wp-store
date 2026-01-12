@@ -99,11 +99,11 @@ class ProductMetaBoxes
                 'placeholder' => 'Contoh: Pilih Warna',
             ],
             [
-                'name' => 'Opsi Basic (1 baris = 1 opsi)',
+                'name' => 'Opsi Basic',
                 'id' => 'wp_store_options',
                 'meta_key' => '_store_options',
-                'type' => 'textarea_lines',
-                'rows' => 5,
+                'type' => 'clone_text',
+                'placeholder' => 'Contoh: merah, biru, hijau',
             ],
             [
                 'name' => 'Nama Opsi (Advance)',
@@ -113,11 +113,11 @@ class ProductMetaBoxes
                 'placeholder' => 'Contoh: Pilih Ukuran',
             ],
             [
-                'name' => 'Opsi Advance (Format: Nama=Harga)',
+                'name' => 'Opsi Advance',
                 'id' => 'wp_store_price_options',
                 'meta_key' => '_store_price_options',
-                'type' => 'textarea_lines',
-                'rows' => 5,
+                'type' => 'clone_text',
+                'placeholder' => 'Contoh: XL=250000',
             ],
         ];
     }
@@ -235,7 +235,7 @@ class ProductMetaBoxes
                 continue;
             }
 
-            $full_width = $type === 'textarea_lines';
+            $full_width = $type === 'textarea_lines' || $type === 'clone_text';
 
             if ($grid) {
                 $style = $full_width ? ' style="margin:0;grid-column:1 / -1;"' : ' style="margin:0;"';
@@ -282,6 +282,26 @@ class ProductMetaBoxes
             }
             $text = is_array($value) ? implode("\n", array_map('strval', $value)) : '';
             echo '<textarea id="' . esc_attr($id) . '" name="' . esc_attr($id) . '" rows="' . esc_attr($rows) . '" style="width:100%;">' . esc_textarea($text) . '</textarea>';
+            return;
+        }
+
+        if ($type === 'clone_text') {
+            $placeholder = isset($field['placeholder']) ? (string) $field['placeholder'] : '';
+            $values = is_array($value) ? $value : [];
+            $container_id = $id . '_container';
+            $add_id = $id . '_add';
+            echo '<div class="wp-store-clone-container" id="' . esc_attr($container_id) . '" data-field="' . esc_attr($id) . '">';
+            if (!empty($values)) {
+                foreach ($values as $val) {
+                    $val = is_string($val) ? $val : '';
+                    echo '<div class="wp-store-option-row" style="display:flex;gap:8px;margin-bottom:8px;">';
+                    echo '<input type="text" name="' . esc_attr($id) . '[]" value="' . esc_attr($val) . '" style="flex:1;" placeholder="' . esc_attr($placeholder) . '" />';
+                    echo '<button type="button" class="button wp-store-remove-option">Hapus</button>';
+                    echo '</div>';
+                }
+            }
+            echo '</div>';
+            echo '<button type="button" class="button button-secondary wp-store-clone-add" id="' . esc_attr($add_id) . '" data-field="' . esc_attr($id) . '">+ Tambah Opsi</button>';
             return;
         }
 
@@ -367,6 +387,26 @@ class ProductMetaBoxes
             $ids = $this->sanitize_csv_ids($csv);
             if (!empty($ids)) {
                 update_post_meta($post_id, $meta_key, implode(',', $ids));
+            } else {
+                delete_post_meta($post_id, $meta_key);
+            }
+            return;
+        }
+
+        if ($type === 'clone_text') {
+            $arr = [];
+            if (is_array($raw)) {
+                foreach ($raw as $item) {
+                    $item = sanitize_text_field((string) $item);
+                    $item = trim($item);
+                    if ($item === '') {
+                        continue;
+                    }
+                    $arr[] = $item;
+                }
+            }
+            if (!empty($arr)) {
+                update_post_meta($post_id, $meta_key, $arr);
             } else {
                 delete_post_meta($post_id, $meta_key);
             }
