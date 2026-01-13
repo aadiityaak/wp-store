@@ -174,7 +174,7 @@ class SettingsController
         ], 200);
     }
 
-    private function get_rajaongkir_base_url($account_type)
+    private function get_rajaongkir_base_url()
     {
         $base_url = 'https://rajaongkir.komerce.id/api/v1';
         return $base_url;
@@ -184,6 +184,7 @@ class SettingsController
     {
         $settings = get_option('wp_store_settings', []);
         $api_key = $settings['rajaongkir_api_key'] ?? '';
+
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
@@ -191,7 +192,17 @@ class SettingsController
             ], 400);
         }
 
-        $url = 'https://rajaongkir.komerce.id/api/v1/destination/province';
+        $cache_key = 'wp_store_rajaongkir_provinces';
+        $cached_data = get_transient($cache_key);
+
+        if ($cached_data !== false) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $cached_data
+            ], 200);
+        }
+
+        $url = $this->get_rajaongkir_base_url() . '/destination/province';
 
         $response = wp_remote_get($url, [
             'headers' => ['key' => $api_key]
@@ -217,6 +228,8 @@ class SettingsController
                 ];
             }, $data['data']);
 
+            set_transient($cache_key, $provinces, DAY_IN_SECONDS);
+
             return new WP_REST_Response([
                 'success' => true,
                 'data' => $provinces
@@ -225,6 +238,7 @@ class SettingsController
 
         // Fallback or legacy structure check
         if (isset($data['rajaongkir']['results'])) {
+            set_transient($cache_key, $data['rajaongkir']['results'], DAY_IN_SECONDS);
             return new WP_REST_Response([
                 'success' => true,
                 'data' => $data['rajaongkir']['results']
@@ -260,9 +274,17 @@ class SettingsController
             ], 400);
         }
 
-        // Use Komerce Endpoint for City
-        // https://rajaongkir.komerce.id/api/v1/destination/city/{province_id}
-        $url = "https://rajaongkir.komerce.id/api/v1/destination/city/{$province}";
+        $cache_key = 'wp_store_rajaongkir_cities_' . $province;
+        $cached_data = get_transient($cache_key);
+
+        if ($cached_data !== false) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $cached_data
+            ], 200);
+        }
+
+        $url = $this->get_rajaongkir_base_url() . "/destination/city/{$province}";
 
         $response = wp_remote_get($url, [
             'headers' => ['key' => $api_key]
@@ -291,6 +313,8 @@ class SettingsController
                 ];
             }, $data['data']);
 
+            set_transient($cache_key, $cities, DAY_IN_SECONDS);
+
             return new WP_REST_Response([
                 'success' => true,
                 'data' => $cities
@@ -299,6 +323,7 @@ class SettingsController
 
         // Fallback to standard RajaOngkir structure check just in case
         if (isset($data['rajaongkir']['results'])) {
+            set_transient($cache_key, $data['rajaongkir']['results'], DAY_IN_SECONDS);
             return new WP_REST_Response([
                 'success' => true,
                 'data' => $data['rajaongkir']['results']
@@ -333,9 +358,17 @@ class SettingsController
             ], 400);
         }
 
-        // Use Komerce Endpoint for Subdistrict
-        // https://rajaongkir.komerce.id/api/v1/destination/district/{city_id}
-        $url = "https://rajaongkir.komerce.id/api/v1/destination/district/{$city}";
+        $cache_key = 'wp_store_rajaongkir_subdistricts_' . $city;
+        $cached_data = get_transient($cache_key);
+
+        if ($cached_data !== false) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $cached_data
+            ], 200);
+        }
+
+        $url = $this->get_rajaongkir_base_url() . "/destination/district/{$city}";
 
         $response = wp_remote_get($url, [
             'headers' => ['key' => $api_key]
@@ -361,6 +394,8 @@ class SettingsController
                 ];
             }, $data['data']);
 
+            set_transient($cache_key, $subdistricts, DAY_IN_SECONDS);
+
             return new WP_REST_Response([
                 'success' => true,
                 'data' => $subdistricts
@@ -369,6 +404,7 @@ class SettingsController
 
         // Fallback to standard RajaOngkir structure check
         if (isset($data['rajaongkir']['results'])) {
+            set_transient($cache_key, $data['rajaongkir']['results'], DAY_IN_SECONDS);
             return new WP_REST_Response([
                 'success' => true,
                 'data' => $data['rajaongkir']['results']

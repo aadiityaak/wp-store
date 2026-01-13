@@ -118,9 +118,20 @@ class CustomerController
             'id' => uniqid('addr_'),
             'label' => sanitize_text_field($request->get_param('label')),
             'address' => sanitize_textarea_field($request->get_param('address')),
-            'city' => sanitize_text_field($request->get_param('city')),
+            'province_id' => sanitize_text_field($request->get_param('province_id')),
+            'province_name' => sanitize_text_field($request->get_param('province_name')),
+            'city_id' => sanitize_text_field($request->get_param('city_id')),
+            'city_name' => sanitize_text_field($request->get_param('city_name')),
+            'subdistrict_id' => sanitize_text_field($request->get_param('subdistrict_id')),
+            'subdistrict_name' => sanitize_text_field($request->get_param('subdistrict_name')),
             'postal_code' => sanitize_text_field($request->get_param('postal_code')),
         ];
+
+        // Fallback for legacy 'city' field usage in display if needed, 
+        // though frontend should now use city_name.
+        // We'll keep 'city' as an alias to 'city_name' or just rely on 'city_name'.
+        // Let's explicitly add 'city' for backward compatibility if any.
+        $new_address['city'] = $new_address['city_name'];
 
         array_push($addresses, $new_address);
         update_user_meta($user_id, '_store_addresses', $addresses);
@@ -143,8 +154,19 @@ class CustomerController
             if ($addr['id'] === $address_id) {
                 $addr['label'] = sanitize_text_field($request->get_param('label'));
                 $addr['address'] = sanitize_textarea_field($request->get_param('address'));
-                $addr['city'] = sanitize_text_field($request->get_param('city'));
+                
+                $addr['province_id'] = sanitize_text_field($request->get_param('province_id'));
+                $addr['province_name'] = sanitize_text_field($request->get_param('province_name'));
+                $addr['city_id'] = sanitize_text_field($request->get_param('city_id'));
+                $addr['city_name'] = sanitize_text_field($request->get_param('city_name'));
+                $addr['subdistrict_id'] = sanitize_text_field($request->get_param('subdistrict_id'));
+                $addr['subdistrict_name'] = sanitize_text_field($request->get_param('subdistrict_name'));
+                
                 $addr['postal_code'] = sanitize_text_field($request->get_param('postal_code'));
+                
+                // Backwards compat
+                $addr['city'] = $addr['city_name'];
+                
                 $found = true;
                 break;
             }

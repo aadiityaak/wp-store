@@ -178,8 +178,21 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
                         <div class="wp-store-grid-3 wp-store-mt-2">
                             <?php
-                            $couriers = ['jne' => 'JNE', 'pos' => 'POS Indonesia', 'tiki' => 'TIKI', 'wahana' => 'Wahana', 'jnt' => 'J&T Express', 'sicepat' => 'SiCepat'];
-                            $active_couriers = $settings['shipping_couriers'] ?? [];
+                            $couriers = [
+                                'jne' => 'JNE',
+                                'sicepat' => 'SiCepat',
+                                'ide' => 'IDExpress',
+                                'sap' => 'SAP Express',
+                                'ninja' => 'Ninja',
+                                'jnt' => 'J&T Express',
+                                'tiki' => 'TIKI',
+                                'wahana' => 'Wahana Express',
+                                'pos' => 'POS Indonesia',
+                                'sentral' => 'Sentral Cargo',
+                                'lion' => 'Lion Parcel',
+                                'rex' => 'Royal Express Asia'
+                            ];
+                            $active_couriers = $settings['shipping_couriers'] ?? ['jne', 'sicepat', 'ide'];
                             foreach ($couriers as $code => $label) :
                             ?>
                                 <label class="wp-store-checkbox-label">
