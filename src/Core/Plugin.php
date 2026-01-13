@@ -41,11 +41,17 @@ class Plugin
 
         $checkout = new \WpStore\Api\CheckoutController();
         add_action('rest_api_init', [$checkout, 'register_routes']);
+
+        $customer = new \WpStore\Api\CustomerController();
+        add_action('rest_api_init', [$customer, 'register_routes']);
     }
 
     private function load_frontend()
     {
         $shortcode = new \WpStore\Frontend\Shortcode();
         $shortcode->register();
+
+        $profile = new \WpStore\Frontend\CustomerProfile();
+        $profile->register();
     }
 }
