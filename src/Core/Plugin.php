@@ -26,6 +26,9 @@ class Plugin
 
         $meta_boxes = new \WpStore\Admin\ProductMetaBoxes();
         $meta_boxes->register();
+
+        $columns = new \WpStore\Admin\ProductColumns();
+        $columns->register();
     }
 
     private function load_api()
