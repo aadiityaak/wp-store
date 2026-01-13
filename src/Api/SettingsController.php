@@ -25,10 +25,26 @@ class SettingsController
             ],
         ]);
 
+        register_rest_route('wp-store/v1', '/rajaongkir/provinces', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_rajaongkir_provinces'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
+
         register_rest_route('wp-store/v1', '/rajaongkir/cities', [
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'get_rajaongkir_cities'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
+
+        register_rest_route('wp-store/v1', '/rajaongkir/subdistricts', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_rajaongkir_subdistricts'],
                 'permission_callback' => [$this, 'check_admin_auth'],
             ],
         ]);
@@ -43,11 +59,11 @@ class SettingsController
     {
         $params = $request->get_json_params();
         $settings = get_option('wp_store_settings', []);
-        
+
         // Use active_tab to determine what to update, or just update everything provided
         // The frontend will send the relevant data.
         // To keep it simple and robust, we can merge existing settings with new ones.
-        
+
         if (isset($params['store_name'])) $settings['store_name'] = sanitize_text_field($params['store_name']);
         if (isset($params['store_address'])) $settings['store_address'] = sanitize_textarea_field($params['store_address']);
         if (isset($params['store_email'])) $settings['store_email'] = sanitize_email($params['store_email']);
@@ -75,7 +91,11 @@ class SettingsController
 
         if (isset($params['rajaongkir_api_key'])) $settings['rajaongkir_api_key'] = sanitize_text_field($params['rajaongkir_api_key']);
         if (isset($params['rajaongkir_account_type'])) $settings['rajaongkir_account_type'] = sanitize_text_field($params['rajaongkir_account_type']);
+
+        if (isset($params['shipping_origin_province'])) $settings['shipping_origin_province'] = sanitize_text_field($params['shipping_origin_province']);
         if (isset($params['shipping_origin_city'])) $settings['shipping_origin_city'] = sanitize_text_field($params['shipping_origin_city']);
+        if (isset($params['shipping_origin_subdistrict'])) $settings['shipping_origin_subdistrict'] = sanitize_text_field($params['shipping_origin_subdistrict']);
+
         if (isset($params['shipping_couriers']) && is_array($params['shipping_couriers'])) {
             $settings['shipping_couriers'] = array_map('sanitize_text_field', $params['shipping_couriers']);
         }
@@ -147,18 +167,23 @@ class SettingsController
 
         return new WP_REST_Response([
             'success' => true,
-            'message' => count($created_pages) > 0 
-                ? 'Halaman berhasil dibuat: ' . implode(', ', $created_pages) 
+            'message' => count($created_pages) > 0
+                ? 'Halaman berhasil dibuat: ' . implode(', ', $created_pages)
                 : 'Semua halaman sudah ada.',
             'settings' => $settings
         ], 200);
     }
 
-    public function get_rajaongkir_cities(WP_REST_Request $request)
+    private function get_rajaongkir_base_url($account_type)
+    {
+        $base_url = 'https://rajaongkir.komerce.id/api/v1';
+        return $base_url;
+    }
+
+    public function get_rajaongkir_provinces(WP_REST_Request $request)
     {
         $settings = get_option('wp_store_settings', []);
         $api_key = $settings['rajaongkir_api_key'] ?? '';
-        $account_type = $settings['rajaongkir_account_type'] ?? 'starter';
 
         if (empty($api_key)) {
             return new WP_REST_Response([
@@ -167,17 +192,10 @@ class SettingsController
             ], 400);
         }
 
-        $base_url = 'https://api.rajaongkir.com/starter';
-        if ($account_type === 'basic') {
-            $base_url = 'https://api.rajaongkir.com/basic';
-        } elseif ($account_type === 'pro') {
-            $base_url = 'https://pro.rajaongkir.com/api';
-        }
+        $url = 'https://rajaongkir.komerce.id/api/v1/destination/province';
 
-        $response = wp_remote_get($base_url . '/city', [
-            'headers' => [
-                'key' => $api_key
-            ]
+        $response = wp_remote_get($url, [
+            'headers' => ['key' => $api_key]
         ]);
 
         if (is_wp_error($response)) {
@@ -190,9 +208,23 @@ class SettingsController
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
 
-        // RajaOngkir structure: { meta: {...}, data: [...] } or { rajaongkir: { results: [...] } }
-        // Official docs say: { rajaongkir: { query: [], status: {}, results: [] } }
-        
+        // Komerce response structure: { meta: {...}, data: [ {id, name}, ... ] }
+        if (isset($data['data'])) {
+            // Map data to match RajaOngkir standard format expected by frontend
+            $provinces = array_map(function ($item) {
+                return [
+                    'province_id' => $item['id'],
+                    'province'    => $item['name']
+                ];
+            }, $data['data']);
+
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $provinces
+            ], 200);
+        }
+
+        // Fallback or legacy structure check
         if (isset($data['rajaongkir']['results'])) {
             return new WP_REST_Response([
                 'success' => true,
@@ -202,7 +234,143 @@ class SettingsController
 
         return new WP_REST_Response([
             'success' => false,
-            'message' => 'Gagal mengambil data kota dari Raja Ongkir.',
+            'message' => 'Gagal mengambil data provinsi.',
+            'raw' => $data
+        ], 500);
+    }
+
+    public function get_rajaongkir_cities(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $api_key = $settings['rajaongkir_api_key'] ?? '';
+
+        if (empty($api_key)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'API Key Raja Ongkir belum diatur.'
+            ], 400);
+        }
+
+        $province = $request->get_param('province');
+        // If province is not provided, we might want to return all cities or error.
+        // The Komerce endpoint seems to require province_id in the path.
+        if (!$province) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Parameter province ID diperlukan.'
+            ], 400);
+        }
+
+        // Use Komerce Endpoint for City
+        // https://rajaongkir.komerce.id/api/v1/destination/city/{province_id}
+        $url = "https://rajaongkir.komerce.id/api/v1/destination/city/{$province}";
+
+        $response = wp_remote_get($url, [
+            'headers' => ['key' => $api_key]
+        ]);
+
+        if (is_wp_error($response)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => $response->get_error_message()
+            ], 500);
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        // Komerce structure: { meta: {...}, data: [...] }
+        if (isset($data['data'])) {
+            // Map data to match RajaOngkir standard format expected by frontend
+            $cities = array_map(function ($item) {
+                return [
+                    'city_id'   => $item['id'],
+                    'city_name' => $item['name'],
+                    'type'      => '', // Komerce doesn't seem to provide type (Kota/Kabupaten) in this response
+                    'province'  => '', // Komerce doesn't provide province name in this response
+                    'postal_code' => $item['zip_code'] ?? ''
+                ];
+            }, $data['data']);
+
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $cities
+            ], 200);
+        }
+
+        // Fallback to standard RajaOngkir structure check just in case
+        if (isset($data['rajaongkir']['results'])) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $data['rajaongkir']['results']
+            ], 200);
+        }
+
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => 'Gagal mengambil data kota.',
+            'raw' => $data
+        ], 500);
+    }
+
+    public function get_rajaongkir_subdistricts(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $api_key = $settings['rajaongkir_api_key'] ?? '';
+
+        if (empty($api_key)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'API Key Raja Ongkir belum diatur.'
+            ], 400);
+        }
+
+        $city = $request->get_param('city');
+
+        if (!$city) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Parameter city ID diperlukan.'
+            ], 400);
+        }
+
+        // Use Komerce Endpoint for Subdistrict
+        // https://rajaongkir.komerce.id/api/v1/destination/district/{city_id}
+        $url = "https://rajaongkir.komerce.id/api/v1/destination/district/{$city}";
+
+        $response = wp_remote_get($url, [
+            'headers' => ['key' => $api_key]
+        ]);
+
+        if (is_wp_error($response)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => $response->get_error_message()
+            ], 500);
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        // Komerce structure: { meta: {...}, data: [...] }
+        if (isset($data['data'])) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $data['data']
+            ], 200);
+        }
+
+        // Fallback to standard RajaOngkir structure check
+        if (isset($data['rajaongkir']['results'])) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $data['rajaongkir']['results']
+            ], 200);
+        }
+
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => 'Gagal mengambil data kecamatan.',
             'raw' => $data
         ], 500);
     }

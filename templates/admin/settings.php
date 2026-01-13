@@ -132,20 +132,43 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         <p class="wp-store-helper">Lokasi toko Anda untuk perhitungan ongkos kirim.</p>
 
                         <div class="wp-store-mt-2">
-                            <label class="wp-store-label" for="shipping_origin_city">Kota Asal (City)</label>
-                            <div x-data="{ open: false }">
-                                <select name="shipping_origin_city" id="shipping_origin_city" x-model="settings.shipping_origin_city" class="wp-store-input" style="width: 100%; max-width: 400px;">
-                                    <option value="">-- Pilih Kota --</option>
-                                    <template x-for="city in cities" :key="city.city_id">
-                                        <option :value="city.city_id" x-text="`${city.type} ${city.city_name} (${city.province})`" :selected="city.city_id == settings.shipping_origin_city"></option>
+                            <!-- Province -->
+                            <div class="wp-store-mb-2">
+                                <label class="wp-store-label" for="shipping_origin_province">Provinsi</label>
+                                <select name="shipping_origin_province" id="shipping_origin_province" x-model="settings.shipping_origin_province" @change="onProvinceChange()" class="wp-store-input" style="width: 100%; max-width: 400px;">
+                                    <option value="">-- Pilih Provinsi --</option>
+                                    <template x-for="prov in provinces" :key="prov.province_id">
+                                        <option :value="prov.province_id" x-text="prov.province" :selected="prov.province_id == settings.shipping_origin_province"></option>
                                     </template>
                                 </select>
-                                <div x-show="isLoadingCities" class="wp-store-helper">Memuat data kota...</div>
-                                <div x-show="!isLoadingCities && cities.length === 0" class="wp-store-helper">
-                                    Data kota tidak ditemukan. Pastikan API Key benar. <button type="button" @click="loadCities" class="button-link">Refresh</button>
-                                </div>
+                                <div x-show="isLoadingProvinces" class="wp-store-helper">Memuat provinsi...</div>
                             </div>
-                            <p class="wp-store-helper">Kota asal pengiriman untuk perhitungan ongkir.</p>
+
+                            <!-- City -->
+                            <div class="wp-store-mb-2">
+                                <label class="wp-store-label" for="shipping_origin_city">Kota/Kabupaten</label>
+                                <select name="shipping_origin_city" id="shipping_origin_city" x-model="settings.shipping_origin_city" @change="onCityChange()" class="wp-store-input" style="width: 100%; max-width: 400px;" :disabled="!settings.shipping_origin_province">
+                                    <option value="">-- Pilih Kota/Kabupaten --</option>
+                                    <template x-for="city in cities" :key="city.city_id">
+                                        <option :value="city.city_id" x-text="`${city.type} ${city.city_name}`" :selected="city.city_id == settings.shipping_origin_city"></option>
+                                    </template>
+                                </select>
+                                <div x-show="isLoadingCities" class="wp-store-helper">Memuat kota...</div>
+                            </div>
+
+                            <!-- Subdistrict -->
+                            <div class="wp-store-mb-2">
+                                <label class="wp-store-label" for="shipping_origin_subdistrict">Kecamatan</label>
+                                <select name="shipping_origin_subdistrict" id="shipping_origin_subdistrict" x-model="settings.shipping_origin_subdistrict" class="wp-store-input" style="width: 100%; max-width: 400px;" :disabled="!settings.shipping_origin_city">
+                                    <option value="">-- Pilih Kecamatan --</option>
+                                    <template x-for="sub in subdistricts" :key="sub.subdistrict_id">
+                                        <option :value="sub.subdistrict_id" x-text="sub.subdistrict_name" :selected="sub.subdistrict_id == settings.shipping_origin_subdistrict"></option>
+                                    </template>
+                                </select>
+                                <div x-show="isLoadingSubdistricts" class="wp-store-helper">Memuat kecamatan...</div>
+                            </div>
+
+                            <p class="wp-store-helper">Lokasi toko Anda untuk perhitungan ongkos kirim.</p>
                         </div>
                     </div>
 
@@ -522,18 +545,33 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 'Bank Maspion', 'Bank Bumi Arta', 'Bank Victoria', 'Lainnya'
             ],
 
+            provinces: [],
             cities: [],
+            subdistricts: [],
+            isLoadingProvinces: false,
             isLoadingCities: false,
+            isLoadingSubdistricts: false,
             settings: {
-                shipping_origin_city: '<?php echo esc_js($settings['shipping_origin_city'] ?? ''); ?>'
+                shipping_origin_province: '<?php echo esc_js($settings['shipping_origin_province'] ?? ''); ?>',
+                shipping_origin_city: '<?php echo esc_js($settings['shipping_origin_city'] ?? ''); ?>',
+                shipping_origin_subdistrict: '<?php echo esc_js($settings['shipping_origin_subdistrict'] ?? ''); ?>',
+                rajaongkir_account_type: '<?php echo esc_js($settings['rajaongkir_account_type'] ?? 'starter'); ?>'
             },
 
             init() {
                 // Initialize history state if needed
                 this.updateUrl(this.activeTab);
 
-                // Load cities
-                this.loadCities();
+                // Load provinces and cascading data
+                this.loadProvinces().then(() => {
+                    if (this.settings.shipping_origin_province) {
+                        this.loadCities(this.settings.shipping_origin_province).then(() => {
+                            if (this.settings.shipping_origin_city) {
+                                this.loadSubdistricts(this.settings.shipping_origin_city);
+                            }
+                        });
+                    }
+                });
 
                 // Initialize bank accounts
                 const savedAccounts = <?php echo json_encode($settings['store_bank_accounts'] ?? []); ?>;
@@ -569,10 +607,32 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 this.bankAccounts.splice(index, 1);
             },
 
-            async loadCities() {
-                this.isLoadingCities = true;
+            async loadProvinces() {
+                this.isLoadingProvinces = true;
                 try {
-                    const response = await fetch('/wp-json/wp-store/v1/rajaongkir/cities', {
+                    const response = await fetch('/wp-json/wp-store/v1/rajaongkir/provinces', {
+                        method: 'GET',
+                        headers: {
+                            'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        this.provinces = result.data;
+                    }
+                } catch (error) {
+                    console.error('Error loading provinces:', error);
+                } finally {
+                    this.isLoadingProvinces = false;
+                }
+            },
+
+            async loadCities(provinceId) {
+                if (!provinceId) return;
+                this.isLoadingCities = true;
+                this.cities = [];
+                try {
+                    const response = await fetch(`/wp-json/wp-store/v1/rajaongkir/cities?province=${provinceId}`, {
                         method: 'GET',
                         headers: {
                             'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
@@ -588,6 +648,48 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     console.error('Error loading cities:', error);
                 } finally {
                     this.isLoadingCities = false;
+                }
+            },
+
+            async loadSubdistricts(cityId) {
+                if (!cityId) return;
+                // Don't try to load subdistricts for starter account if we know it will fail
+                // But let's try anyway as user might have upgraded key but not setting
+                this.isLoadingSubdistricts = true;
+                this.subdistricts = [];
+                try {
+                    const response = await fetch(`/wp-json/wp-store/v1/rajaongkir/subdistricts?city=${cityId}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        this.subdistricts = result.data;
+                    }
+                } catch (error) {
+                    console.error('Error loading subdistricts:', error);
+                } finally {
+                    this.isLoadingSubdistricts = false;
+                }
+            },
+
+            onProvinceChange() {
+                this.settings.shipping_origin_city = '';
+                this.settings.shipping_origin_subdistrict = '';
+                this.cities = [];
+                this.subdistricts = [];
+                if (this.settings.shipping_origin_province) {
+                    this.loadCities(this.settings.shipping_origin_province);
+                }
+            },
+
+            onCityChange() {
+                this.settings.shipping_origin_subdistrict = '';
+                this.subdistricts = [];
+                if (this.settings.shipping_origin_city) {
+                    this.loadSubdistricts(this.settings.shipping_origin_city);
                 }
             },
 
