@@ -28,6 +28,15 @@ class Shortcode
             true
         );
 
+        wp_register_style(
+            'wp-store-frontend-css',
+            WP_STORE_URL . 'assets/frontend/css/style.css',
+            [],
+            WP_STORE_VERSION
+        );
+
+        wp_enqueue_style('wp-store-frontend-css');
+
         wp_localize_script(
             'wp-store-frontend',
             'wpStoreSettings',
@@ -53,7 +62,7 @@ class Shortcode
         }
 
         ob_start();
-        ?>
+?>
         <div x-data="wpStore(<?php echo esc_attr($per_page); ?>)" x-init="init()" class="wp-store-wrapper">
             <div class="wp-store-products">
                 <template x-if="loading">
@@ -111,7 +120,7 @@ class Shortcode
                 <p x-text="message"></p>
             </div>
         </div>
-        <?php
+<?php
         return ob_get_clean();
     }
 }

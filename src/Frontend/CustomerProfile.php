@@ -22,11 +22,13 @@ class CustomerProfile
         // For safety, I'll enqueue 'wp-store-frontend' which has the vars, 
         // even if I write the specific JS inline for this component.
         wp_enqueue_script('wp-store-frontend');
+        wp_enqueue_style('wp-store-frontend-css');
 
         ob_start();
 ?>
+
         <script>
-            // Ensure wpStoreSettings is available for the inline Alpine component
+            // Ensure wpStoreSettings is available
             if (typeof wpStoreSettings === 'undefined') {
                 var wpStoreSettings = <?php echo json_encode([
                                             'restUrl' => esc_url_raw(rest_url('wp-store/v1/')),
@@ -35,72 +37,97 @@ class CustomerProfile
             }
         </script>
 
-        <div class="wp-store-profile-wrapper" x-data="storeCustomerProfile()" x-init="init()">
-            <div class="wp-store-tabs">
-                <button
-                    @click="tab = 'profile'"
-                    :class="{ 'active': tab === 'profile' }"
-                    class="wp-store-btn-tab">
-                    Profil Saya
-                </button>
-                <button
-                    @click="tab = 'addresses'"
-                    :class="{ 'active': tab === 'addresses' }"
-                    class="wp-store-btn-tab">
-                    Buku Alamat
-                </button>
+        <div class="wps-profile-wrapper" x-data="storeCustomerProfile()" x-init="init()">
+            <div class="wps-card wps-p-4" style="margin-bottom: 1rem;">
+                <div class="wps-tabs">
+                    <button @click="tab = 'profile'" :class="{ 'active': tab === 'profile' }" class="wps-tab">
+                        Profil Saya
+                    </button>
+                    <button @click="tab = 'addresses'" :class="{ 'active': tab === 'addresses' }" class="wps-tab">
+                        Buku Alamat
+                    </button>
+                </div>
             </div>
 
             <!-- Notification -->
-            <div x-show="message" x-transition class="wp-store-alert" x-text="message"></div>
+            <div x-show="message" x-transition class="wps-alert wps-alert-success" x-text="message"></div>
 
             <!-- Profile Tab -->
-            <div x-show="tab === 'profile'" class="wp-store-tab-content">
-                <h3>Edit Profil</h3>
-                <form @submit.prevent="saveProfile">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="text" x-model="profile.email" disabled class="form-control-disabled">
+            <div x-show="tab === 'profile'">
+                <div class="wps-card">
+                    <div class="wps-p-6 border-b border-gray-200">
+                        <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Informasi Profil</h2>
+                        <p class="wps-mt-1 wps-text-sm wps-text-gray-500">Perbarui informasi profil dan detail kontak Anda.</p>
                     </div>
-                    <div class="form-group">
-                        <label>Nama Depan</label>
-                        <input type="text" x-model="profile.first_name" required class="form-control">
+                    <div class="wps-p-6">
+                        <form @submit.prevent="saveProfile">
+                            <div class="wps-grid wps-grid-cols-2 wps-gap-4" style="grid-template-columns: 1fr 1fr; display: grid; gap: 1rem;">
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Nama Depan</label>
+                                    <input type="text" x-model="profile.first_name" required class="wps-input">
+                                </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Nama Belakang</label>
+                                    <input type="text" x-model="profile.last_name" class="wps-input">
+                                </div>
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Email</label>
+                                <input type="text" x-model="profile.email" disabled class="wps-input" style="background-color: #f9fafb;">
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">No. Telepon</label>
+                                <input type="text" x-model="profile.phone" class="wps-input">
+                            </div>
+                            <div class="wps-flex" style="justify-content: flex-end; margin-top: 1rem;">
+                                <button type="submit" class="wps-btn wps-btn-primary" :disabled="loading">
+                                    <span x-show="loading" class="wps-mr-2">...</span>
+                                    <span x-show="!loading">Simpan Perubahan</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label>Nama Belakang</label>
-                        <input type="text" x-model="profile.last_name" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>No. Telepon</label>
-                        <input type="text" x-model="profile.phone" class="form-control">
-                    </div>
-                    <button type="submit" class="btn-primary" :disabled="loading">
-                        <span x-show="loading">Menyimpan...</span>
-                        <span x-show="!loading">Simpan Perubahan</span>
-                    </button>
-                </form>
+                </div>
             </div>
 
             <!-- Addresses Tab -->
-            <div x-show="tab === 'addresses'" class="wp-store-tab-content">
+            <div x-show="tab === 'addresses'">
                 <div x-show="!isEditingAddress">
-                    <div class="address-header">
-                        <h3>Daftar Alamat</h3>
-                        <button @click="resetAddressForm(); isEditingAddress = true" class="btn-secondary">+ Tambah Alamat</button>
+                    <div class="wps-flex wps-justify-between wps-items-center wps-mb-6">
+                        <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Daftar Alamat</h2>
+                        <button @click="resetAddressForm(); isEditingAddress = true" class="wps-btn wps-btn-primary">
+                            <svg class="wps-w-5 wps-h-5" style="width: 20px; height: 20px; margin-right: 5px;" fill="none" stroke="#fff" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Tambah Alamat
+                        </button>
                     </div>
 
-                    <div class="address-list">
+                    <div class="wps-grid wps-gap-4" style="display: grid; gap: 1rem;">
                         <template x-if="addresses.length === 0">
-                            <p>Belum ada alamat tersimpan.</p>
+                            <div class="wps-card wps-p-6 wps-text-center wps-text-gray-500">
+                                Belum ada alamat tersimpan.
+                            </div>
                         </template>
                         <template x-for="addr in addresses" :key="addr.id">
-                            <div class="address-card">
-                                <h4 x-text="addr.label"></h4>
-                                <p x-text="addr.address"></p>
-                                <p><span x-text="addr.city"></span>, <span x-text="addr.postal_code"></span></p>
-                                <div class="address-actions">
-                                    <button @click="editAddress(addr)" class="btn-small">Edit</button>
-                                    <button @click="deleteAddress(addr.id)" class="btn-small btn-danger">Hapus</button>
+                            <div class="wps-card wps-p-4">
+                                <div class="wps-flex wps-justify-between wps-items-start">
+                                    <div>
+                                        <div class="wps-flex wps-items-center wps-mb-2">
+                                            <span class="wps-badge wps-bg-blue-500 wps-text-white wps-text-xs wps-font-medium wps-px-2.5 wps-py-0.5 rounded-full" x-text="addr.label"></span>
+                                        </div>
+                                        <p class="wps-text-sm wps-text-gray-900 wps-mb-1" x-text="addr.address"></p>
+                                        <p class="wps-text-sm wps-text-gray-500">
+                                            <span x-text="addr.subdistrict_name"></span>,
+                                            <span x-text="addr.city_name"></span>,
+                                            <span x-text="addr.province_name"></span>
+                                            <span x-text="addr.postal_code"></span>
+                                        </p>
+                                    </div>
+                                    <div class="wps-flex wps-space-x-2">
+                                        <button @click="editAddress(addr)" class="wps-btn wps-btn-secondary wps-text-sm" style="padding: 0.25rem 0.5rem;">Edit</button>
+                                        <button @click="deleteAddress(addr.id)" class="wps-btn wps-btn-danger wps-text-sm" style="padding: 0.25rem 0.5rem;">Hapus</button>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -109,174 +136,80 @@ class CustomerProfile
 
                 <!-- Address Form -->
                 <div x-show="isEditingAddress">
-                    <h3 x-text="addressForm.id ? 'Edit Alamat' : 'Tambah Alamat Baru'"></h3>
-                    <form @submit.prevent="saveAddress">
-                        <div class="form-group">
-                            <label>Label (Contoh: Rumah, Kantor)</label>
-                            <input type="text" x-model="addressForm.label" required class="form-control">
+                    <div class="wps-card">
+                        <div class="wps-p-6 border-b border-gray-200 wps-flex wps-justify-between wps-items-center">
+                            <h2 class="wps-text-lg wps-font-medium wps-text-gray-900" x-text="addressForm.id ? 'Edit Alamat' : 'Tambah Alamat Baru'"></h2>
+                            <button @click="isEditingAddress = false" class="wps-text-gray-500 hover:text-gray-700">
+                                <svg class="wps-w-6 wps-h-6" style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label>Alamat Lengkap</label>
-                            <textarea x-model="addressForm.address" required class="form-control"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Provinsi</label>
-                            <select x-model="addressForm.province_id" @change="onProvinceChange()" class="form-control" :disabled="isLoadingProvinces">
-                                <option value="">Pilih Provinsi</option>
-                                <template x-for="prov in provinces" :key="prov.province_id">
-                                    <option :value="prov.province_id" x-text="prov.province"></option>
-                                </template>
-                            </select>
-                            <span x-show="isLoadingProvinces" style="font-size: 12px; color: #666;">Memuat...</span>
-                        </div>
+                        <div class="wps-p-6">
+                            <form @submit.prevent="saveAddress">
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Label Alamat</label>
+                                    <input type="text" x-model="addressForm.label" placeholder="Contoh: Rumah, Kantor" required class="wps-input">
+                                </div>
 
-                        <div class="form-group">
-                            <label>Kota/Kabupaten</label>
-                            <select x-model="addressForm.city_id" @change="onCityChange()" class="form-control" :disabled="!addressForm.province_id || isLoadingCities">
-                                <option value="">Pilih Kota/Kabupaten</option>
-                                <template x-for="city in cities" :key="city.city_id">
-                                    <option :value="city.city_id" x-text="city.type + ' ' + city.city_name"></option>
-                                </template>
-                            </select>
-                            <span x-show="isLoadingCities" style="font-size: 12px; color: #666;">Memuat...</span>
-                        </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Provinsi</label>
+                                    <select x-model="addressForm.province_id" @change="onProvinceChange()" class="wps-select" :disabled="isLoadingProvinces">
+                                        <option value="">Pilih Provinsi</option>
+                                        <template x-for="prov in provinces" :key="prov.province_id">
+                                            <option :value="prov.province_id" x-text="prov.province"></option>
+                                        </template>
+                                    </select>
+                                    <span x-show="isLoadingProvinces" class="wps-text-sm wps-text-gray-500">Memuat...</span>
+                                </div>
 
-                        <div class="form-group">
-                            <label>Kecamatan</label>
-                            <select x-model="addressForm.subdistrict_id" @change="onSubdistrictChange()" class="form-control" :disabled="!addressForm.city_id || isLoadingSubdistricts">
-                                <option value="">Pilih Kecamatan</option>
-                                <template x-for="sub in subdistricts" :key="sub.subdistrict_id">
-                                    <option :value="sub.subdistrict_id" x-text="sub.subdistrict_name"></option>
-                                </template>
-                            </select>
-                            <span x-show="isLoadingSubdistricts" style="font-size: 12px; color: #666;">Memuat...</span>
-                        </div>
+                                <div class="wps-grid wps-grid-cols-2 wps-gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="wps-form-group">
+                                        <label class="wps-label">Kota/Kabupaten</label>
+                                        <select x-model="addressForm.city_id" @change="onCityChange()" class="wps-select" :disabled="!addressForm.province_id || isLoadingCities">
+                                            <option value="">Pilih Kota/Kabupaten</option>
+                                            <template x-for="city in cities" :key="city.city_id">
+                                                <option :value="String(city.city_id)" x-text="city.type + ' ' + city.city_name"></option>
+                                            </template>
+                                        </select>
+                                        <span x-show="isLoadingCities" class="wps-text-sm wps-text-gray-500">Memuat...</span>
+                                    </div>
 
-                        <div class="form-group">
-                            <label>Kode Pos</label>
-                            <input type="text" x-model="addressForm.postal_code" required class="form-control">
+                                    <div class="wps-form-group">
+                                        <label class="wps-label">Kecamatan</label>
+                                        <select x-model="addressForm.subdistrict_id" @change="onSubdistrictChange()" class="wps-select" :disabled="!addressForm.city_id || isLoadingSubdistricts">
+                                            <option value="">Pilih Kecamatan</option>
+                                            <template x-for="sub in subdistricts" :key="sub.subdistrict_id">
+                                                <option :value="String(sub.subdistrict_id)" x-text="sub.subdistrict_name"></option>
+                                            </template>
+                                        </select>
+                                        <span x-show="isLoadingSubdistricts" class="wps-text-sm wps-text-gray-500">Memuat...</span>
+                                    </div>
+                                </div>
+
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Kode Pos</label>
+                                    <input type="text" x-model="addressForm.postal_code" required class="wps-input">
+                                </div>
+
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Alamat Lengkap</label>
+                                    <textarea x-model="addressForm.address" required rows="3" class="wps-textarea"></textarea>
+                                </div>
+
+                                <div class="wps-flex wps-justify-between wps-items-center wps-mt-6">
+                                    <button type="button" @click="cancelEdit()" class="wps-btn wps-btn-secondary">Batal</button>
+                                    <button type="submit" class="wps-btn wps-btn-primary" :disabled="loading">
+                                        <span x-show="loading">Menyimpan...</span>
+                                        <span x-show="!loading">Simpan Alamat</span>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="form-actions">
-                            <button type="button" @click="isEditingAddress = false" class="btn-secondary">Batal</button>
-                            <button type="submit" class="btn-primary" :disabled="loading">Simpan</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <style>
-            .wp-store-profile-wrapper {
-                max-width: 800px;
-                margin: 20px auto;
-                font-family: sans-serif;
-            }
-
-            .wp-store-tabs {
-                display: flex;
-                border-bottom: 2px solid #eee;
-                margin-bottom: 20px;
-            }
-
-            .wp-store-btn-tab {
-                padding: 10px 20px;
-                border: none;
-                background: none;
-                cursor: pointer;
-                font-size: 16px;
-                font-weight: bold;
-                color: #666;
-            }
-
-            .wp-store-btn-tab.active {
-                border-bottom: 2px solid #007cba;
-                color: #007cba;
-            }
-
-            .form-group {
-                margin-bottom: 15px;
-            }
-
-            .form-group label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: 500;
-            }
-
-            .form-control {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-
-            .form-control-disabled {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #eee;
-                background: #f9f9f9;
-                color: #666;
-            }
-
-            .btn-primary {
-                background: #007cba;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-            .btn-secondary {
-                background: #f0f0f1;
-                color: #333;
-                padding: 10px 20px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-            .btn-small {
-                padding: 5px 10px;
-                font-size: 12px;
-                cursor: pointer;
-            }
-
-            .btn-danger {
-                background: #dc3232;
-                color: white;
-                border: none;
-            }
-
-            .address-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 15px;
-            }
-
-            .address-card {
-                border: 1px solid #eee;
-                padding: 15px;
-                margin-bottom: 15px;
-                border-radius: 4px;
-            }
-
-            .address-actions {
-                margin-top: 10px;
-                display: flex;
-                gap: 10px;
-            }
-
-            .wp-store-alert {
-                padding: 10px;
-                background: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-                border-radius: 4px;
-                margin-bottom: 15px;
-            }
-        </style>
 
         <script>
             document.addEventListener('alpine:init', () => {
@@ -328,8 +261,25 @@ class CustomerProfile
                             window.history.pushState({}, '', url);
                         });
 
+                        this.$watch('addressForm.city_id', async (val) => {
+                            if (val) {
+                                await this.loadSubdistricts(val);
+                            } else {
+                                this.subdistricts = [];
+                            }
+                        });
+
                         this.fetchProfile();
-                        this.fetchAddresses();
+                        this.fetchAddresses().then(() => {
+                            const editParam = urlParams.get('edit');
+                            if (editParam && this.addresses.length > 0) {
+                                const addr = this.addresses.find(a => String(a.id) === String(editParam));
+                                if (addr) {
+                                    this.editAddress(addr);
+                                    this.tab = 'addresses';
+                                }
+                            }
+                        });
                         this.loadProvinces(); // Load provinces early
                     },
 
@@ -394,7 +344,10 @@ class CustomerProfile
                                 }
                             });
                             const data = await res.json();
-                            this.provinces = data.data || [];
+                            this.provinces = (data.data || []).map(p => ({
+                                ...p,
+                                province_id: String(p.province_id)
+                            }));
                         } catch (err) {
                             console.error(err);
                         } finally {
@@ -415,7 +368,40 @@ class CustomerProfile
                                 }
                             });
                             const data = await res.json();
-                            this.cities = data.data || [];
+                            this.cities = (data.data || []).map(c => ({
+                                ...c,
+                                city_id: String(c.city_id)
+                            }));
+                            if (this.addressForm.city_id) {
+                                const exists = this.cities.some(c => String(c.city_id) === String(this.addressForm.city_id));
+                                if (!exists && this.addressForm.city_name) {
+                                    const norm = (s) => String(s).toLowerCase().trim();
+                                    const foundCity = this.cities.find(c =>
+                                        norm(c.city_name) === norm(this.addressForm.city_name) ||
+                                        norm((c.type ? c.type + ' ' : '') + c.city_name) === norm(this.addressForm.city_name)
+                                    );
+                                    if (foundCity) {
+                                        this.addressForm.city_id = String(foundCity.city_id);
+                                        this.addressForm.city_name = (foundCity.type ? foundCity.type + ' ' : '') + foundCity.city_name;
+                                        if (foundCity.postal_code) {
+                                            this.addressForm.postal_code = foundCity.postal_code;
+                                        }
+                                    }
+                                }
+                            } else if (this.addressForm.city_name) {
+                                const norm = (s) => String(s).toLowerCase().trim();
+                                const foundCity = this.cities.find(c =>
+                                    norm(c.city_name) === norm(this.addressForm.city_name) ||
+                                    norm((c.type ? c.type + ' ' : '') + c.city_name) === norm(this.addressForm.city_name)
+                                );
+                                if (foundCity) {
+                                    this.addressForm.city_id = String(foundCity.city_id);
+                                    this.addressForm.city_name = (foundCity.type ? foundCity.type + ' ' : '') + foundCity.city_name;
+                                    if (foundCity.postal_code) {
+                                        this.addressForm.postal_code = foundCity.postal_code;
+                                    }
+                                }
+                            }
                         } catch (err) {
                             console.error(err);
                         } finally {
@@ -436,7 +422,28 @@ class CustomerProfile
                                 }
                             });
                             const data = await res.json();
-                            this.subdistricts = data.data || [];
+                            this.subdistricts = (data.data || []).map(s => ({
+                                ...s,
+                                subdistrict_id: String(s.subdistrict_id)
+                            }));
+                            if (this.addressForm.subdistrict_id) {
+                                const exists = this.subdistricts.some(s => String(s.subdistrict_id) === String(this.addressForm.subdistrict_id));
+                                if (!exists && this.addressForm.subdistrict_name) {
+                                    const norm = (str) => String(str).toLowerCase().trim();
+                                    const foundSub = this.subdistricts.find(s => norm(s.subdistrict_name) === norm(this.addressForm.subdistrict_name));
+                                    if (foundSub) {
+                                        this.addressForm.subdistrict_id = String(foundSub.subdistrict_id);
+                                        this.addressForm.subdistrict_name = foundSub.subdistrict_name;
+                                    }
+                                }
+                            } else if (this.addressForm.subdistrict_name) {
+                                const norm = (str) => String(str).toLowerCase().trim();
+                                const foundSub = this.subdistricts.find(s => norm(s.subdistrict_name) === norm(this.addressForm.subdistrict_name));
+                                if (foundSub) {
+                                    this.addressForm.subdistrict_id = String(foundSub.subdistrict_id);
+                                    this.addressForm.subdistrict_name = foundSub.subdistrict_name;
+                                }
+                            }
                         } catch (err) {
                             console.error(err);
                         } finally {
@@ -513,18 +520,48 @@ class CustomerProfile
                         this.resetAddressForm();
                         // Copy values
                         this.addressForm = {
-                            ...addr
+                            ...addr,
+                            province_id: addr.province_id != null ? String(addr.province_id) : '',
+                            city_id: addr.city_id != null ? String(addr.city_id) : '',
+                            subdistrict_id: addr.subdistrict_id != null ? String(addr.subdistrict_id) : '',
+                            city_name: addr.city_name ?? addr.city ?? '',
+                            subdistrict_name: addr.subdistrict_name ?? ''
                         };
 
                         // Trigger loads
                         if (this.addressForm.province_id) {
                             await this.loadCities(this.addressForm.province_id);
+                            // Fallback by city_name if city_id missing
+                            if (!this.addressForm.city_id && this.addressForm.city_name) {
+                                const norm = (s) => String(s).toLowerCase().trim();
+                                const foundCity = this.cities.find(c =>
+                                    norm(c.city_name) === norm(this.addressForm.city_name) ||
+                                    norm((c.type ? c.type + ' ' : '') + c.city_name) === norm(this.addressForm.city_name)
+                                );
+                                if (foundCity) {
+                                    this.addressForm.city_id = String(foundCity.city_id);
+                                    this.addressForm.city_name = (foundCity.type ? foundCity.type + ' ' : '') + foundCity.city_name;
+                                    if (foundCity.postal_code) {
+                                        this.addressForm.postal_code = foundCity.postal_code;
+                                    }
+                                }
+                            }
                         }
                         if (this.addressForm.city_id) {
                             await this.loadSubdistricts(this.addressForm.city_id);
+                            // Fallback by subdistrict_name if subdistrict_id missing
+                            if (!this.addressForm.subdistrict_id && this.addressForm.subdistrict_name) {
+                                const norm = (s) => String(s).toLowerCase().trim();
+                                const foundSub = this.subdistricts.find(s => norm(s.subdistrict_name) === norm(this.addressForm.subdistrict_name));
+                                if (foundSub) {
+                                    this.addressForm.subdistrict_id = String(foundSub.subdistrict_id);
+                                    this.addressForm.subdistrict_name = foundSub.subdistrict_name;
+                                }
+                            }
                         }
 
                         this.isEditingAddress = true;
+                        this.setEditParam(this.addressForm.id);
                     },
 
                     async saveAddress() {
@@ -551,6 +588,7 @@ class CustomerProfile
                                 this.isEditingAddress = false;
                                 this.message = isUpdate ? 'Alamat diperbarui' : 'Alamat ditambahkan';
                                 setTimeout(() => this.message = '', 3000);
+                                this.clearEditParam();
                             }
                         } catch (err) {
                             console.error(err);
@@ -572,10 +610,29 @@ class CustomerProfile
 
                             if (res.ok) {
                                 await this.fetchAddresses();
+                                this.clearEditParam();
                             }
                         } catch (err) {
                             console.error(err);
                         }
+                    },
+
+                    cancelEdit() {
+                        this.isEditingAddress = false;
+                        this.clearEditParam();
+                    },
+
+                    setEditParam(id) {
+                        const url = new URL(window.location);
+                        url.searchParams.set('tab', 'addresses');
+                        url.searchParams.set('edit', id);
+                        window.history.pushState({}, '', url);
+                    },
+
+                    clearEditParam() {
+                        const url = new URL(window.location);
+                        url.searchParams.delete('edit');
+                        window.history.pushState({}, '', url);
                     }
                 }));
             });

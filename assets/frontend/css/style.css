@@ -1,0 +1,256 @@
+.wps-profile-wrapper {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #374151;
+  line-height: 1.5;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+.wps-grid {
+  display: grid;
+  gap: 2rem;
+}
+@media (min-width: 768px) {
+  .wps-grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .wps-col-span-1 {
+    grid-column: span 1 / span 1;
+  }
+  .wps-col-span-3 {
+    grid-column: span 3 / span 3;
+  }
+}
+.wps-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+.wps-p-6 {
+  padding: 1.5rem;
+}
+.wps-p-4 {
+  padding: 1rem;
+}
+.wps-text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+.wps-font-medium {
+  font-weight: 500;
+}
+.wps-font-bold {
+  font-weight: 700;
+}
+.wps-text-gray-900 {
+  color: #111827;
+}
+.wps-text-gray-500 {
+  color: #6b7280;
+}
+.wps-text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.wps-mb-4 {
+  margin-bottom: 1rem;
+}
+.wps-mb-6 {
+  margin-bottom: 1.5rem;
+}
+.wps-mt-2 {
+  margin-top: 0.5rem;
+}
+.wps-form-group {
+  margin-bottom: 1rem;
+}
+.wps-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+.wps-input,
+.wps-select,
+.wps-textarea {
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #111827;
+  background-color: white;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.wps-input:focus,
+.wps-select:focus,
+.wps-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.wps-input:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+.wps-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+.wps-btn-primary,
+button.wps-btn-primary {
+  background-color: #2563eb;
+  color: white !important;
+}
+.wps-btn-primary:hover {
+  background-color: #1d4ed8;
+}
+.wps-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.wps-btn-secondary {
+  background-color: white;
+  border-color: #d1d5db;
+  color: #374151;
+}
+.wps-btn-secondary:hover {
+  background-color: #f9fafb;
+}
+.wps-btn-danger {
+  background-color: white;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+.wps-btn-danger:hover {
+  background-color: #fef2f2;
+}
+.wps-nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 0.25rem;
+}
+.wps-nav-item:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+.wps-nav-item.active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+.wps-flex {
+  display: flex;
+}
+.wps-justify-between {
+  justify-content: space-between;
+}
+.wps-items-center {
+  align-items: center;
+}
+.wps-items-start {
+  align-items: flex-start;
+}
+.wps-gap-2 {
+  gap: 0.5rem;
+}
+.wps-gap-4 {
+  gap: 1rem;
+}
+.wps-space-x-2 > * + * {
+  margin-left: 0.5rem;
+}
+.wps-mr-2 {
+  margin-right: 0.5rem;
+}
+.wps-mr-3 {
+  margin-right: 0.75rem;
+}
+.wps-alert {
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+.wps-alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+.wps-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.wps-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.wps-tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.wps-tab:hover {
+  color: #111827;
+  background-color: #f9fafb;
+}
+.wps-tab.active {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+}
+
+/* Badge utilities */
+.wps-bg-blue-500 {
+  background-color: #3b82f6;
+}
+.wps-text-white {
+  color: #ffffff;
+}
+.wps-text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.wps-px-2\.5 {
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+}
+.wps-py-0\.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+.rounded-full {
+  border-radius: 9999px;
+}
