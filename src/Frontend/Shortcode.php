@@ -24,7 +24,7 @@ class Shortcode
         wp_register_script(
             'wp-store-frontend',
             WP_STORE_URL . 'assets/frontend/js/store.js',
-            [],
+            ['alpinejs'],
             WP_STORE_VERSION,
             true
         );
@@ -50,8 +50,8 @@ class Shortcode
 
     public function render_shop($atts = [])
     {
-        wp_enqueue_script('wp-store-frontend');
         wp_enqueue_script('alpinejs');
+        wp_enqueue_script('wp-store-frontend');
 
         $atts = shortcode_atts([
             'per_page' => 12,
@@ -65,8 +65,17 @@ class Shortcode
         ob_start();
 ?>
         <script>
+            if (typeof window.wpStoreSettings === 'undefined') {
+                window.wpStoreSettings = <?php echo json_encode([
+                                                'restUrl' => esc_url_raw(rest_url('wp-store/v1/')),
+                                                'nonce' => wp_create_nonce('wp_rest'),
+                                            ]); ?>;
+            }
+        </script>
+        <script>
             window.wpStore = window.wpStore || function(perPage) {
-                return {
+                var upgraded = false;
+                var self = {
                     loading: false,
                     products: [],
                     cart: [],
@@ -93,8 +102,51 @@ class Shortcode
                     formatPrice: function(v) {
                         return String(v || '');
                     },
-                    init: function() {}
+                    fetchProducts: async function() {
+                        this.loading = true;
+                        try {
+                            var base = window.wpStoreSettings && window.wpStoreSettings.restUrl ? window.wpStoreSettings.restUrl : '';
+                            if (!base) {
+                                return;
+                            }
+                            var url = new URL(base + 'products');
+                            url.searchParams.set('per_page', this.perPage);
+                            url.searchParams.set('page', this.page);
+                            var response = await fetch(url.toString());
+                            if (!response.ok) {
+                                return;
+                            }
+                            var data = await response.json();
+                            this.products = Array.isArray(data.items) ? data.items : [];
+                        } catch (e) {} finally {
+                            this.loading = false;
+                        }
+                    },
+                    init: function() {
+                        if (!upgraded && window.wpStoreReady && typeof window.wpStore === 'function') {
+                            var real = window.wpStore(self.perPage);
+                            upgraded = true;
+                            for (var k in real) {
+                                try {
+                                    self[k] = real[k];
+                                } catch (e) {}
+                            }
+                            if (typeof self.init === 'function') {
+                                self.init();
+                                return;
+                            }
+                        }
+                        if (!upgraded && typeof self.fetchProducts === 'function') {
+                            self.fetchProducts();
+                        }
+                    }
                 };
+                document.addEventListener('wp-store:ready', function() {
+                    if (!upgraded) {
+                        self.init();
+                    }
+                });
+                return self;
             };
         </script>
         <div x-data="wpStore(<?php echo esc_attr($per_page); ?>)" x-init="init()" class="wp-store-wrapper">
