@@ -13,163 +13,179 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
     <div class="wp-store-card wp-store-card-settings">
         <!-- Tabs Navigation -->
         <div class="wp-store-tabs">
-            <a href="?page=wp-store-settings&tab=general" class="wp-store-tab <?php echo $active_tab === 'general' ? 'active' : ''; ?>">
+            <div @click="switchTab('general')" class="wp-store-tab" :class="{ 'active': activeTab === 'general' }">
                 Umum
-            </a>
-            <a href="?page=wp-store-settings&tab=payment" class="wp-store-tab <?php echo $active_tab === 'payment' ? 'active' : ''; ?>">
+            </div>
+            <div @click="switchTab('payment')" class="wp-store-tab" :class="{ 'active': activeTab === 'payment' }">
                 Pembayaran
-            </a>
-            <a href="?page=wp-store-settings&tab=pages" class="wp-store-tab <?php echo $active_tab === 'pages' ? 'active' : ''; ?>">
+            </div>
+            <div @click="switchTab('pages')" class="wp-store-tab" :class="{ 'active': activeTab === 'pages' }">
                 Halaman
-            </a>
-            <a href="?page=wp-store-settings&tab=system" class="wp-store-tab <?php echo $active_tab === 'system' ? 'active' : ''; ?>">
+            </div>
+            <div @click="switchTab('system')" class="wp-store-tab" :class="{ 'active': activeTab === 'system' }">
                 Sistem
-            </a>
+            </div>
         </div>
 
-        <form method="post" action="">
-            <?php wp_nonce_field('wp_store_settings_action', 'wp_store_settings_nonce'); ?>
-            <input type="hidden" name="active_tab" value="<?php echo esc_attr($active_tab); ?>">
+        <form @submit.prevent="saveSettings" x-ref="form">
+            <?php wp_nonce_field('wp_rest', '_wpnonce'); ?>
+            <input type="hidden" name="active_tab" :value="activeTab">
 
             <!-- Tab: Umum -->
-            <?php if ($active_tab === 'general'): ?>
-                <div class="wp-store-tab-content">
-                    <div class="wp-store-form-grid">
-                        <div>
-                            <label class="wp-store-label" for="store_name">Nama Toko</label>
-                            <input name="store_name" type="text" id="store_name" value="<?php echo esc_attr($settings['store_name'] ?? get_bloginfo('name')); ?>" class="wp-store-input" placeholder="Contoh: Toko Serba Ada">
-                        </div>
+            <div x-show="activeTab === 'general'" class="wp-store-tab-content" x-cloak>
+                <div class="wp-store-form-grid">
+                    <div>
+                        <label class="wp-store-label" for="store_name">Nama Toko</label>
+                        <input name="store_name" type="text" id="store_name" value="<?php echo esc_attr($settings['store_name'] ?? get_bloginfo('name')); ?>" class="wp-store-input" placeholder="Contoh: Toko Serba Ada">
+                    </div>
 
-                        <div>
-                            <label class="wp-store-label" for="store_address">Alamat Toko</label>
-                            <textarea name="store_address" id="store_address" class="wp-store-textarea" rows="3"><?php echo esc_textarea($settings['store_address'] ?? ''); ?></textarea>
-                            <p class="wp-store-helper">Alamat lengkap toko untuk invoice/nota.</p>
-                        </div>
+                    <div>
+                        <label class="wp-store-label" for="store_address">Alamat Toko</label>
+                        <textarea name="store_address" id="store_address" class="wp-store-textarea" rows="3"><?php echo esc_textarea($settings['store_address'] ?? ''); ?></textarea>
+                        <p class="wp-store-helper">Alamat lengkap toko untuk invoice/nota.</p>
+                    </div>
 
-                        <div class="wp-store-grid-2">
-                            <div>
-                                <label class="wp-store-label" for="store_email">Email Toko</label>
-                                <input name="store_email" type="email" id="store_email" value="<?php echo esc_attr($settings['store_email'] ?? get_bloginfo('admin_email')); ?>" class="wp-store-input">
-                            </div>
-                            <div>
-                                <label class="wp-store-label" for="store_phone">Telepon/WA</label>
-                                <input name="store_phone" type="text" id="store_phone" value="<?php echo esc_attr($settings['store_phone'] ?? ''); ?>" class="wp-store-input">
-                            </div>
+                    <div class="wp-store-grid-2">
+                        <div>
+                            <label class="wp-store-label" for="store_email">Email Toko</label>
+                            <input name="store_email" type="email" id="store_email" value="<?php echo esc_attr($settings['store_email'] ?? get_bloginfo('admin_email')); ?>" class="wp-store-input">
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="store_phone">Telepon/WA</label>
+                            <input name="store_phone" type="text" id="store_phone" value="<?php echo esc_attr($settings['store_phone'] ?? ''); ?>" class="wp-store-input">
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
+            </div>
 
             <!-- Tab: Pembayaran -->
-            <?php if ($active_tab === 'payment'): ?>
-                <div class="wp-store-tab-content">
-                    <div class="wp-store-form-grid">
-                        <div class="wp-store-box-gray">
-                            <h3 class="wp-store-subtitle">Transfer Bank</h3>
-                            <p class="wp-store-helper">Informasi rekening untuk pembayaran manual.</p>
+            <div x-show="activeTab === 'payment'" class="wp-store-tab-content" x-cloak>
+                <div class="wp-store-form-grid">
+                    <h3 class="wp-store-subtitle">Transfer Bank</h3>
+                    <p class="wp-store-helper">Kelola daftar rekening bank untuk pembayaran manual.</p>
 
-                            <div class="wp-store-grid-2 wp-store-mt-4">
+                    <template x-for="(account, index) in bankAccounts" :key="index">
+                        <div class="wp-store-box-gray wp-store-mt-4" style="position: relative; padding-top: 30px;">
+                            <!-- Remove Button -->
+                            <button type="button" @click="removeBankAccount(index)" class="button-link-delete" style="position: absolute; top: 10px; right: 10px; text-decoration: none;" title="Hapus Rekening" x-show="bankAccounts.length > 0">
+                                <span class="dashicons dashicons-trash"></span> Hapus
+                            </button>
+
+                            <div class="wp-store-grid-2">
                                 <div>
-                                    <label class="wp-store-label" for="bank_name">Nama Bank</label>
-                                    <input name="bank_name" type="text" id="bank_name" value="<?php echo esc_attr($settings['bank_name'] ?? ''); ?>" class="wp-store-input" placeholder="Contoh: BCA">
+                                    <label class="wp-store-label">Nama Bank</label>
+                                    <select x-model="account.bank_name" class="wp-store-input">
+                                        <template x-for="bank in indonesianBanks" :key="bank">
+                                            <option :value="bank" x-text="bank" :selected="account.bank_name === bank"></option>
+                                        </template>
+                                    </select>
                                 </div>
                                 <div>
-                                    <label class="wp-store-label" for="bank_account">Nomor Rekening</label>
-                                    <input name="bank_account" type="text" id="bank_account" value="<?php echo esc_attr($settings['bank_account'] ?? ''); ?>" class="wp-store-input">
+                                    <label class="wp-store-label">Nomor Rekening</label>
+                                    <input type="text" x-model="account.bank_account" class="wp-store-input" placeholder="Contoh: 1234567890">
                                 </div>
                             </div>
                             <div class="wp-store-mt-4">
-                                <label class="wp-store-label" for="bank_holder">Atas Nama</label>
-                                <input name="bank_holder" type="text" id="bank_holder" value="<?php echo esc_attr($settings['bank_holder'] ?? ''); ?>" class="wp-store-input">
+                                <label class="wp-store-label">Atas Nama</label>
+                                <input type="text" x-model="account.bank_holder" class="wp-store-input" placeholder="Contoh: Nama Pemilik">
                             </div>
                         </div>
+                    </template>
+
+                    <div class="wp-store-mt-4">
+                        <button type="button" @click="addBankAccount" class="wp-store-btn wp-store-btn-secondary">
+                            <span class="dashicons dashicons-plus-alt2"></span> Tambah Rekening
+                        </button>
                     </div>
                 </div>
-            <?php endif; ?>
+            </div>
 
             <!-- Tab: Halaman -->
-            <?php if ($active_tab === 'pages'): ?>
-                <div class="wp-store-tab-content">
-                    <div class="wp-store-form-grid">
-                        <p class="wp-store-helper">Tentukan halaman untuk fitur-fitur toko.</p>
+            <div x-show="activeTab === 'pages'" class="wp-store-tab-content" x-cloak>
+                <div class="wp-store-form-grid">
+                    <p class="wp-store-helper">Tentukan halaman untuk fitur-fitur toko.</p>
 
-                        <div>
-                            <label class="wp-store-label" for="page_shop">Halaman Toko (Shop)</label>
-                            <?php
-                            wp_dropdown_pages([
-                                'name' => 'page_shop',
-                                'selected' => $settings['page_shop'] ?? 0,
-                                'show_option_none' => '-- Pilih Halaman --',
-                                'class' => 'wp-store-input'
-                            ]);
-                            ?>
-                        </div>
+                    <div>
+                        <label class="wp-store-label" for="page_shop">Halaman Toko (Shop)</label>
+                        <?php
+                        wp_dropdown_pages([
+                            'name' => 'page_shop',
+                            'selected' => $settings['page_shop'] ?? 0,
+                            'show_option_none' => '-- Pilih Halaman --',
+                            'class' => 'wp-store-input'
+                        ]);
+                        ?>
+                    </div>
 
-                        <div>
-                            <label class="wp-store-label" for="page_profile">Halaman Profil</label>
-                            <?php
-                            wp_dropdown_pages([
-                                'name' => 'page_profile',
-                                'selected' => $settings['page_profile'] ?? 0,
-                                'show_option_none' => '-- Pilih Halaman --',
-                                'class' => 'wp-store-input'
-                            ]);
-                            ?>
-                        </div>
+                    <div>
+                        <label class="wp-store-label" for="page_profile">Halaman Profil</label>
+                        <?php
+                        wp_dropdown_pages([
+                            'name' => 'page_profile',
+                            'selected' => $settings['page_profile'] ?? 0,
+                            'show_option_none' => '-- Pilih Halaman --',
+                            'class' => 'wp-store-input'
+                        ]);
+                        ?>
+                    </div>
 
-                        <div>
-                            <label class="wp-store-label" for="page_cart">Halaman Keranjang (Cart)</label>
-                            <?php
-                            wp_dropdown_pages([
-                                'name' => 'page_cart',
-                                'selected' => $settings['page_cart'] ?? 0,
-                                'show_option_none' => '-- Pilih Halaman --',
-                                'class' => 'wp-store-input'
-                            ]);
-                            ?>
-                        </div>
+                    <div>
+                        <label class="wp-store-label" for="page_cart">Halaman Keranjang (Cart)</label>
+                        <?php
+                        wp_dropdown_pages([
+                            'name' => 'page_cart',
+                            'selected' => $settings['page_cart'] ?? 0,
+                            'show_option_none' => '-- Pilih Halaman --',
+                            'class' => 'wp-store-input'
+                        ]);
+                        ?>
+                    </div>
 
-                        <div>
-                            <label class="wp-store-label" for="page_checkout">Halaman Checkout</label>
-                            <?php
-                            wp_dropdown_pages([
-                                'name' => 'page_checkout',
-                                'selected' => $settings['page_checkout'] ?? 0,
-                                'show_option_none' => '-- Pilih Halaman --',
-                                'class' => 'wp-store-input'
-                            ]);
-                            ?>
-                        </div>
+                    <div>
+                        <label class="wp-store-label" for="page_checkout">Halaman Checkout</label>
+                        <?php
+                        wp_dropdown_pages([
+                            'name' => 'page_checkout',
+                            'selected' => $settings['page_checkout'] ?? 0,
+                            'show_option_none' => '-- Pilih Halaman --',
+                            'class' => 'wp-store-input'
+                        ]);
+                        ?>
+                    </div>
 
-                        <div class="wp-store-box-gray">
-                            <h3 class="wp-store-subtitle">Generate Halaman Otomatis</h3>
-                            <p class="wp-store-helper">Belum punya halaman? Klik tombol di bawah ini untuk membuat halaman Toko, Profil, Keranjang, dan Checkout secara otomatis dengan shortcode yang sesuai.</p>
+                    <div class="wp-store-box-gray">
+                        <h3 class="wp-store-subtitle">Generate Halaman Otomatis</h3>
+                        <p class="wp-store-helper">Belum punya halaman? Klik tombol di bawah ini untuk membuat halaman Toko, Profil, Keranjang, dan Checkout secara otomatis dengan shortcode yang sesuai.</p>
 
-                            <div class="wp-store-mt-4">
-                                <button type="submit" name="wp_store_generate_pages" class="wp-store-btn wp-store-btn-secondary" onclick="return confirm('Apakah Anda yakin ingin membuat halaman-halaman ini?');">
-                                    <span class="dashicons dashicons-plus-alt"></span> Buat Halaman Otomatis
-                                </button>
-                            </div>
+                        <div class="wp-store-mt-4">
+                            <button type="button" @click="generatePages" class="wp-store-btn wp-store-btn-secondary" :disabled="isGenerating">
+                                <span class="dashicons dashicons-plus-alt" x-show="!isGenerating"></span>
+                                <span class="dashicons dashicons-update" x-show="isGenerating" style="animation: spin 2s linear infinite;"></span>
+                                <span x-text="isGenerating ? 'Sedang Membuat...' : 'Buat Halaman Otomatis'"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
+            </div>
 
             <!-- Tab: Sistem -->
-            <?php if ($active_tab === 'system'): ?>
-                <div class="wp-store-tab-content">
-                    <div class="wp-store-form-grid">
-                        <div>
-                            <label class="wp-store-label" for="currency_symbol">Simbol Mata Uang</label>
-                            <input name="currency_symbol" type="text" id="currency_symbol" value="<?php echo esc_attr($settings['currency_symbol'] ?? 'Rp'); ?>" class="wp-store-input" style="width: 100px;">
-                        </div>
+            <div x-show="activeTab === 'system'" class="wp-store-tab-content" x-cloak>
+                <div class="wp-store-form-grid">
+                    <div>
+                        <label class="wp-store-label" for="currency_symbol">Simbol Mata Uang</label>
+                        <select name="currency_symbol" id="currency_symbol" class="wp-store-input" style="width: 150px;">
+                            <option value="Rp" <?php selected($settings['currency_symbol'] ?? 'Rp', 'Rp'); ?>>Rp (Rupiah)</option>
+                            <option value="USD" <?php selected($settings['currency_symbol'] ?? 'Rp', 'USD'); ?>>USD (Dollar)</option>
+                        </select>
                     </div>
                 </div>
-            <?php endif; ?>
+            </div>
 
             <div class="wp-store-form-actions">
-                <button type="submit" name="wp_store_settings_submit" id="submit" class="wp-store-btn wp-store-btn-primary">
-                    <span class="dashicons dashicons-saved"></span> Simpan Pengaturan
+                <button type="submit" class="wp-store-btn wp-store-btn-primary" :disabled="isSaving">
+                    <span class="dashicons dashicons-saved" x-show="!isSaving"></span>
+                    <span class="dashicons dashicons-update" x-show="isSaving" style="animation: spin 2s linear infinite;"></span>
+                    <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Pengaturan'"></span>
                 </button>
             </div>
         </form>
@@ -186,7 +202,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         class="wp-store-toast"
         :class="notification.type"
         x-cloak>
-        <span class="dashicons dashicons-yes-alt wp-store-icon-20"></span>
+        <span class="dashicons" :class="notification.type === 'success' ? 'dashicons-yes-alt' : 'dashicons-warning'" class="wp-store-icon-20"></span>
         <span x-text="notification.message"></span>
     </div>
 </div>
@@ -356,6 +372,11 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         color: #135e96;
     }
 
+    .wp-store-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
     /* Toast Notification */
     .wp-store-toast {
         position: fixed;
@@ -376,11 +397,32 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         border-color: #46b450;
     }
 
+    .wp-store-toast.error {
+        border-color: #d63638;
+    }
+
     .wp-store-icon-20 {
         font-size: 20px;
         width: 20px;
         height: 20px;
+    }
+
+    .dashicons-yes-alt {
         color: #46b450;
+    }
+
+    .dashicons-warning {
+        color: #d63638;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 
     [x-cloak] {
@@ -391,23 +433,142 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('storeSettingsManager', () => ({
+            activeTab: '<?php echo esc_js($active_tab); ?>',
+            isSaving: false,
+            isGenerating: false,
             notification: {
                 show: false,
                 message: '',
                 type: 'success'
             },
+            bankAccounts: [],
+            indonesianBanks: [
+                'Bank Mandiri', 'BRI', 'BCA', 'BNI', 'BTN', 'BSI', 'CIMB Niaga',
+                'OCBC NISP', 'Bank Permata', 'Bank Danamon', 'Panin Bank',
+                'Maybank Indonesia', 'Bank Mega', 'Bank Sinarmas', 'Bank BTN Syariah',
+                'Bank Mega Syariah', 'Bank Commonwealth', 'Bank UOB Indonesia',
+                'Bank DBS Indonesia', 'Bank Woori Saudara', 'Bank Hana Indonesia',
+                'Bank Resona Perdania', 'Bank J Trust Indonesia', 'Bank Ina Perdana',
+                'Bank Artha Graha', 'Bank Index Selindo', 'Bank Ganesha',
+                'Bank Maspion', 'Bank Bumi Arta', 'Bank Victoria', 'Lainnya'
+            ],
+
             init() {
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('settings-updated') === 'true') {
-                    this.showNotification('Pengaturan berhasil disimpan!', 'success');
-                    // We don't remove the 'tab' parameter here, only 'settings-updated' if we want clean URL
-                    // But for consistency, we can keep the tab in the URL
-                    // Actually, replaceState can clean up the 'settings-updated' part
-                    const currentTab = urlParams.get('tab') || 'general';
-                    const newUrl = window.location.pathname + '?page=wp-store-settings&tab=' + currentTab;
-                    window.history.replaceState({}, document.title, newUrl);
+                // Initialize history state if needed
+                this.updateUrl(this.activeTab);
+
+                // Initialize bank accounts
+                const savedAccounts = <?php echo json_encode($settings['store_bank_accounts'] ?? []); ?>;
+                if (Array.isArray(savedAccounts) && savedAccounts.length > 0) {
+                    this.bankAccounts = savedAccounts;
+                } else {
+                    // Check legacy
+                    const legacyName = '<?php echo esc_js($settings['bank_name'] ?? ''); ?>';
+                    const legacyAccount = '<?php echo esc_js($settings['bank_account'] ?? ''); ?>';
+                    const legacyHolder = '<?php echo esc_js($settings['bank_holder'] ?? ''); ?>';
+
+                    if (legacyName || legacyAccount || legacyHolder) {
+                        this.bankAccounts.push({
+                            bank_name: legacyName,
+                            bank_account: legacyAccount,
+                            bank_holder: legacyHolder
+                        });
+                    } else {
+                        this.addBankAccount();
+                    }
                 }
             },
+
+            addBankAccount() {
+                this.bankAccounts.push({
+                    bank_name: 'BCA',
+                    bank_account: '',
+                    bank_holder: ''
+                });
+            },
+
+            removeBankAccount(index) {
+                this.bankAccounts.splice(index, 1);
+            },
+
+            switchTab(tab) {
+                this.activeTab = tab;
+                this.updateUrl(tab);
+            },
+
+            updateUrl(tab) {
+                const newUrl = window.location.pathname + '?page=wp-store-settings&tab=' + tab;
+                window.history.pushState({
+                    tab: tab
+                }, '', newUrl);
+            },
+
+            async saveSettings() {
+                this.isSaving = true;
+                const formData = new FormData(this.$refs.form);
+                const data = {};
+                formData.forEach((value, key) => data[key] = value);
+
+                // Add bank accounts manually to data
+                data.store_bank_accounts = this.bankAccounts;
+
+                try {
+                    const response = await fetch('/wp-json/wp-store/v1/settings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': formData.get('_wpnonce')
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        this.showNotification('Pengaturan berhasil disimpan!', 'success');
+                    } else {
+                        this.showNotification(result.message || 'Gagal menyimpan pengaturan.', 'error');
+                    }
+                } catch (error) {
+                    this.showNotification('Terjadi kesalahan jaringan.', 'error');
+                    console.error(error);
+                } finally {
+                    this.isSaving = false;
+                }
+            },
+
+            async generatePages() {
+                if (!confirm('Apakah Anda yakin ingin membuat halaman-halaman ini?')) return;
+
+                this.isGenerating = true;
+                const nonce = document.getElementById('_wpnonce').value;
+
+                try {
+                    const response = await fetch('/wp-json/wp-store/v1/settings/generate-pages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': nonce
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        this.showNotification(result.message, 'success');
+                        // Optionally reload to show new page selections, but for now just notify
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        this.showNotification(result.message || 'Gagal membuat halaman.', 'error');
+                    }
+                } catch (error) {
+                    this.showNotification('Terjadi kesalahan jaringan.', 'error');
+                    console.error(error);
+                } finally {
+                    this.isGenerating = false;
+                }
+            },
+
             showNotification(message, type = 'success') {
                 this.notification.message = message;
                 this.notification.type = type;

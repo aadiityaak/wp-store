@@ -50,6 +50,9 @@ class Plugin
 
         $customer = new \WpStore\Api\CustomerController();
         add_action('rest_api_init', [$customer, 'register_routes']);
+
+        $settings = new \WpStore\Api\SettingsController();
+        add_action('rest_api_init', [$settings, 'register_routes']);
     }
 
     private function load_frontend()
