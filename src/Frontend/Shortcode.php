@@ -19,11 +19,12 @@ class Shortcode
             null,
             true
         );
+        wp_add_inline_script('alpinejs', 'window.deferLoadingAlpineJs = true;', 'before');
 
         wp_register_script(
             'wp-store-frontend',
             WP_STORE_URL . 'assets/frontend/js/store.js',
-            ['alpinejs'],
+            [],
             WP_STORE_VERSION,
             true
         );
@@ -49,8 +50,8 @@ class Shortcode
 
     public function render_shop($atts = [])
     {
-        wp_enqueue_script('alpinejs');
         wp_enqueue_script('wp-store-frontend');
+        wp_enqueue_script('alpinejs');
 
         $atts = shortcode_atts([
             'per_page' => 12,
@@ -63,6 +64,39 @@ class Shortcode
 
         ob_start();
 ?>
+        <script>
+            window.wpStore = window.wpStore || function(perPage) {
+                return {
+                    loading: false,
+                    products: [],
+                    cart: [],
+                    perPage: perPage || 12,
+                    page: 1,
+                    customer: {
+                        name: '',
+                        email: '',
+                        phone: ''
+                    },
+                    submitting: false,
+                    message: '',
+                    get total() {
+                        try {
+                            return (Array.isArray(this.cart) ? this.cart : []).reduce(function(sum, item) {
+                                var price = typeof item.price === 'number' ? item.price : parseFloat(item.price || 0);
+                                var qty = typeof item.qty === 'number' ? item.qty : parseInt(item.qty || 0, 10);
+                                return sum + (price * qty);
+                            }, 0);
+                        } catch (e) {
+                            return 0;
+                        }
+                    },
+                    formatPrice: function(v) {
+                        return String(v || '');
+                    },
+                    init: function() {}
+                };
+            };
+        </script>
         <div x-data="wpStore(<?php echo esc_attr($per_page); ?>)" x-init="init()" class="wp-store-wrapper">
             <div class="wp-store-products">
                 <template x-if="loading">
@@ -84,7 +118,7 @@ class Shortcode
                                 <span x-show="product.stock !== null"> | Stok: <span x-text="product.stock"></span></span>
                             </div>
                             <div class="wp-store-card-footer">
-                                <button type="button" @click="addToCart(product)">Tambah</button>
+                                <button type="button" @click="typeof addToCart==='function' && addToCart(product)">Tambah</button>
                             </div>
                         </div>
                     </template>
@@ -96,19 +130,19 @@ class Shortcode
                     <div class="wp-store-cart-item">
                         <span x-text="item.title"></span>
                         <div class="wp-store-cart-qty">
-                            <button type="button" @click="decrement(item)">-</button>
+                            <button type="button" @click="typeof decrement==='function' && decrement(item)">-</button>
                             <span x-text="item.qty"></span>
-                            <button type="button" @click="increment(item)">+</button>
+                            <button type="button" @click="typeof increment==='function' && increment(item)">+</button>
                         </div>
                         <span x-text="formatPrice(item.qty * item.price)"></span>
-                        <button type="button" @click="remove(item)">x</button>
+                        <button type="button" @click="typeof remove==='function' && remove(item)">x</button>
                     </div>
                 </template>
                 <div class="wp-store-cart-total">
                     <span>Total</span>
                     <span x-text="formatPrice(total)"></span>
                 </div>
-                <form @submit.prevent="checkout">
+                <form @submit.prevent="typeof checkout==='function' && checkout()">
                     <input type="text" x-model="customer.name" placeholder="Nama">
                     <input type="email" x-model="customer.email" placeholder="Email">
                     <input type="text" x-model="customer.phone" placeholder="No. HP">

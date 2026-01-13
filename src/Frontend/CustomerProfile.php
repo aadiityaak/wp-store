@@ -139,8 +139,8 @@ class CustomerProfile
                     <div class="wps-card">
                         <div class="wps-p-6 border-b border-gray-200 wps-flex wps-justify-between wps-items-center">
                             <h2 class="wps-text-lg wps-font-medium wps-text-gray-900" x-text="addressForm.id ? 'Edit Alamat' : 'Tambah Alamat Baru'"></h2>
-                            <button @click="isEditingAddress = false" class="wps-text-gray-500 hover:text-gray-700">
-                                <svg class="wps-w-6 wps-h-6" style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button @click="cancelEdit()" class="wps-btn-icon wps-text-amber-600 wps-hover-text-amber-700" title="Tutup">
+                                <svg class="wps-icon-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                             </button>
@@ -169,7 +169,7 @@ class CustomerProfile
                                         <select x-model="addressForm.city_id" @change="onCityChange()" class="wps-select" :disabled="!addressForm.province_id || isLoadingCities">
                                             <option value="">Pilih Kota/Kabupaten</option>
                                             <template x-for="city in cities" :key="city.city_id">
-                                                <option :value="String(city.city_id)" x-text="city.type + ' ' + city.city_name"></option>
+                                                <option :value="String(city.city_id)" x-text="city.type + ' ' + city.city_name" :selected="city.city_id == addressForm.city_id"></option>
                                             </template>
                                         </select>
                                         <span x-show="isLoadingCities" class="wps-text-sm wps-text-gray-500">Memuat...</span>
@@ -180,7 +180,7 @@ class CustomerProfile
                                         <select x-model="addressForm.subdistrict_id" @change="onSubdistrictChange()" class="wps-select" :disabled="!addressForm.city_id || isLoadingSubdistricts">
                                             <option value="">Pilih Kecamatan</option>
                                             <template x-for="sub in subdistricts" :key="sub.subdistrict_id">
-                                                <option :value="String(sub.subdistrict_id)" x-text="sub.subdistrict_name"></option>
+                                                <option :value="String(sub.subdistrict_id)" x-text="sub.subdistrict_name" :selected="sub.subdistrict_id == addressForm.subdistrict_id"></option>
                                             </template>
                                         </select>
                                         <span x-show="isLoadingSubdistricts" class="wps-text-sm wps-text-gray-500">Memuat...</span>

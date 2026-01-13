@@ -1,5 +1,5 @@
-document.addEventListener('alpine:init', () => {
-    Alpine.data('wpStore', (perPage) => ({
+(() => {
+    const wpStoreFactory = (perPage) => ({
         loading: false,
         products: [],
         cart: [],
@@ -42,9 +42,44 @@ document.addEventListener('alpine:init', () => {
                 }
                 const data = await response.json();
                 this.products = data.items || [];
+                if (!this.products || this.products.length === 0) {
+                    await this.fetchProductsFallback();
+                }
             } catch (e) {
+                await this.fetchProductsFallback();
             } finally {
                 this.loading = false;
+            }
+        },
+        async fetchProductsFallback() {
+            try {
+                const base = String(wpStoreSettings.restUrl).replace(/wp-store\/v1\/?$/, '');
+                const url = new URL(base + 'wp/v2/store_product');
+                url.searchParams.set('per_page', this.perPage);
+                url.searchParams.set('page', this.page);
+                url.searchParams.set('_embed', '1');
+                const res = await fetch(url.toString(), { credentials: 'same-origin' });
+                if (!res.ok) {
+                    return;
+                }
+                const items = await res.json();
+                this.products = (items || []).map((p) => {
+                    const embedded = p._embedded || {};
+                    const media = Array.isArray(embedded['wp:featuredmedia']) ? embedded['wp:featuredmedia'][0] : null;
+                    const img = media && media.source_url ? media.source_url : null;
+                    const excerptText = (p.excerpt && p.excerpt.rendered) ? p.excerpt.rendered.replace(/<[^>]+>/g, '').trim() : '';
+                    return {
+                        id: p.id,
+                        title: (p.title && p.title.rendered) ? p.title.rendered : '',
+                        slug: p.slug || '',
+                        excerpt: excerptText,
+                        price: null,
+                        stock: null,
+                        image: img,
+                        link: p.link || ''
+                    };
+                });
+            } catch (err) {
             }
         },
         async addToCart(product) {
@@ -134,5 +169,20 @@ document.addEventListener('alpine:init', () => {
                 this.submitting = false;
             }
         }
-    }));
-});
+    });
+
+    window.wpStore = wpStoreFactory;
+
+    if (window.Alpine && typeof window.Alpine.data === 'function') {
+        window.Alpine.data('wpStore', wpStoreFactory);
+        if (typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(document.body);
+        } else if (typeof window.Alpine.start === 'function') {
+            window.Alpine.start();
+        }
+    } else {
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('wpStore', wpStoreFactory);
+        });
+    }
+})();
