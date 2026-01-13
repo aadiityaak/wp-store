@@ -1,0 +1,106 @@
+/* Clean CMB2 Styles */
+
+/* Metabox container */
+.cmb2-wrap {
+  margin: 0;
+  border: 0;
+}
+
+/* Field rows */
+.cmb-row {
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f1;
+  background: #fff;
+}
+
+.cmb-row:last-of-type {
+  border-bottom: 0;
+}
+
+.cmb-row:hover {
+  background: #fafafa;
+}
+
+/* Labels */
+.cmb-th {
+  width: 200px;
+  padding-right: 20px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.cmb-th label {
+  font-size: 14px;
+}
+
+/* Inputs */
+.cmb-td input[type="text"],
+.cmb-td input[type="number"],
+.cmb-td input[type="email"],
+.cmb-td input[type="url"],
+.cmb-td input[type="password"],
+.cmb-td textarea,
+.cmb-td select {
+  width: 100%;
+  max-width: 400px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+
+.cmb-td input:focus,
+.cmb-td textarea:focus,
+.cmb-td select:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: none;
+}
+
+.cmb-td textarea {
+  height: auto;
+  padding: 12px;
+}
+
+/* Descriptions */
+.cmb2-metabox-description {
+  color: #646970;
+  font-style: italic;
+  margin-top: 5px;
+}
+
+/* Side context adjustments */
+.postbox-container .cmb-row {
+  padding: 12px;
+  display: block;
+}
+
+.postbox-container .cmb-th {
+  width: 100%;
+  padding: 0 0 8px 0;
+  float: none;
+}
+
+.postbox-container .cmb-td {
+  width: 100%;
+  float: none;
+}
+
+.postbox-container .cmb-td input {
+  max-width: 100%;
+}
+
+.cmb2-postbox .cmb2-wrap > .cmb-field-list > .cmb-row {
+  padding: 0px !important;
+}
+
+.cmb2-postbox .cmb-row:not(:last-of-type) {
+  border-bottom: 0 !important;
+}
+
+.cmb2-postbox .cmb-th + .cmb-td {
+  padding-left: 0px !important;
+  float: none !important;
+}

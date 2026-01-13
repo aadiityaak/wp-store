@@ -22,7 +22,7 @@ class Shortcode
 
         wp_register_script(
             'wp-store-frontend',
-            WP_STORE_URL . 'assets/js/frontend/store.js',
+            WP_STORE_URL . 'assets/frontend/js/store.js',
             ['alpinejs'],
             WP_STORE_VERSION,
             true

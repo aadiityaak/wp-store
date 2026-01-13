@@ -7,6 +7,20 @@ class ProductMetaBoxes
     public function register()
     {
         add_action('cmb2_admin_init', [$this, 'register_metaboxes']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
+    }
+
+    public function enqueue_styles()
+    {
+        $screen = get_current_screen();
+        if ($screen && $screen->post_type === 'store_product') {
+            wp_enqueue_style(
+                'wp-store-admin-cmb2',
+                WP_STORE_URL . 'assets/admin/css/xmb2.css',
+                [],
+                WP_STORE_VERSION
+            );
+        }
     }
 
     public function register_metaboxes()
