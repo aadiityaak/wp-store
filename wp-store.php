@@ -20,6 +20,10 @@ if (file_exists(WP_STORE_PATH . 'vendor/autoload.php')) {
     require_once WP_STORE_PATH . 'vendor/autoload.php';
 }
 
+if (file_exists(WP_STORE_PATH . 'vendor/cmb2/cmb2/init.php')) {
+    require_once WP_STORE_PATH . 'vendor/cmb2/cmb2/init.php';
+}
+
 spl_autoload_register(function ($class) {
     $prefix = 'WpStore\\';
     $base_dir = WP_STORE_PATH . 'src/';

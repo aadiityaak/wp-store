@@ -70,8 +70,11 @@ class Shortcode
                             </div>
                             <h3 x-text="product.title"></h3>
                             <p x-text="product.excerpt"></p>
-                            <div class="wp-store-card-footer">
+                            <div class="wp-store-product-details">
                                 <span x-text="formatPrice(product.price)"></span>
+                                <span x-show="product.stock !== null"> | Stok: <span x-text="product.stock"></span></span>
+                            </div>
+                            <div class="wp-store-card-footer">
                                 <button type="button" @click="addToCart(product)">Tambah</button>
                             </div>
                         </div>
