@@ -19,6 +19,9 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             <div @click="switchTab('payment')" class="wp-store-tab" :class="{ 'active': activeTab === 'payment' }">
                 Pembayaran
             </div>
+            <div @click="switchTab('shipping')" class="wp-store-tab" :class="{ 'active': activeTab === 'shipping' }">
+                Pengiriman
+            </div>
             <div @click="switchTab('pages')" class="wp-store-tab" :class="{ 'active': activeTab === 'pages' }">
                 Halaman
             </div>
@@ -96,6 +99,72 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         <button type="button" @click="addBankAccount" class="wp-store-btn wp-store-btn-secondary">
                             <span class="dashicons dashicons-plus-alt2"></span> Tambah Rekening
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Pengiriman -->
+            <div x-show="activeTab === 'shipping'" class="wp-store-tab-content" x-cloak>
+                <div class="wp-store-form-grid">
+                    <h3 class="wp-store-subtitle">Pengaturan Pengiriman</h3>
+                    <p class="wp-store-helper">Konfigurasi API Raja Ongkir dan metode pengiriman.</p>
+
+                    <div class="wp-store-box-gray wp-store-mt-4">
+                        <h4 class="wp-store-subtitle-small">API Raja Ongkir</h4>
+                        <div class="wp-store-mt-2">
+                            <label class="wp-store-label" for="rajaongkir_api_key">API Key</label>
+                            <input name="rajaongkir_api_key" type="text" id="rajaongkir_api_key" value="<?php echo esc_attr($settings['rajaongkir_api_key'] ?? ''); ?>" class="wp-store-input" placeholder="Masukkan API Key Starter/Basic/Pro Anda">
+                            <p class="wp-store-helper">Dapatkan API Key di <a href="https://rajaongkir.com/" target="_blank">RajaOngkir.com</a>.</p>
+                        </div>
+
+                        <div class="wp-store-mt-4">
+                            <label class="wp-store-label" for="rajaongkir_account_type">Tipe Akun</label>
+                            <select name="rajaongkir_account_type" id="rajaongkir_account_type" class="wp-store-input" style="width: 200px;">
+                                <option value="starter" <?php selected($settings['rajaongkir_account_type'] ?? 'starter', 'starter'); ?>>Starter (Free)</option>
+                                <option value="basic" <?php selected($settings['rajaongkir_account_type'] ?? 'starter', 'basic'); ?>>Basic</option>
+                                <option value="pro" <?php selected($settings['rajaongkir_account_type'] ?? 'starter', 'pro'); ?>>Pro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="wp-store-box-gray wp-store-mt-4">
+                        <h4 class="wp-store-subtitle-small">Asal Pengiriman</h4>
+                        <p class="wp-store-helper">Lokasi toko Anda untuk perhitungan ongkos kirim.</p>
+
+                        <div class="wp-store-mt-2">
+                            <label class="wp-store-label" for="shipping_origin_city">Kota Asal (City)</label>
+                            <div x-data="{ open: false }">
+                                <select name="shipping_origin_city" id="shipping_origin_city" x-model="settings.shipping_origin_city" class="wp-store-input" style="width: 100%; max-width: 400px;">
+                                    <option value="">-- Pilih Kota --</option>
+                                    <template x-for="city in cities" :key="city.city_id">
+                                        <option :value="city.city_id" x-text="`${city.type} ${city.city_name} (${city.province})`" :selected="city.city_id == settings.shipping_origin_city"></option>
+                                    </template>
+                                </select>
+                                <div x-show="isLoadingCities" class="wp-store-helper">Memuat data kota...</div>
+                                <div x-show="!isLoadingCities && cities.length === 0" class="wp-store-helper">
+                                    Data kota tidak ditemukan. Pastikan API Key benar. <button type="button" @click="loadCities" class="button-link">Refresh</button>
+                                </div>
+                            </div>
+                            <p class="wp-store-helper">Kota asal pengiriman untuk perhitungan ongkir.</p>
+                        </div>
+                    </div>
+
+                    <div class="wp-store-box-gray wp-store-mt-4">
+                        <h4 class="wp-store-subtitle-small">Kurir Aktif</h4>
+                        <p class="wp-store-helper">Pilih kurir yang ingin Anda gunakan.</p>
+
+                        <div class="wp-store-grid-3 wp-store-mt-2">
+                            <?php
+                            $couriers = ['jne' => 'JNE', 'pos' => 'POS Indonesia', 'tiki' => 'TIKI', 'wahana' => 'Wahana', 'jnt' => 'J&T Express', 'sicepat' => 'SiCepat'];
+                            $active_couriers = $settings['shipping_couriers'] ?? [];
+                            foreach ($couriers as $code => $label) :
+                            ?>
+                                <label class="wp-store-checkbox-label">
+                                    <input type="checkbox" name="shipping_couriers[]" value="<?php echo $code; ?>" <?php echo in_array($code, $active_couriers) ? 'checked' : ''; ?>>
+                                    <?php echo $label; ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -453,9 +522,18 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 'Bank Maspion', 'Bank Bumi Arta', 'Bank Victoria', 'Lainnya'
             ],
 
+            cities: [],
+            isLoadingCities: false,
+            settings: {
+                shipping_origin_city: '<?php echo esc_js($settings['shipping_origin_city'] ?? ''); ?>'
+            },
+
             init() {
                 // Initialize history state if needed
                 this.updateUrl(this.activeTab);
+
+                // Load cities
+                this.loadCities();
 
                 // Initialize bank accounts
                 const savedAccounts = <?php echo json_encode($settings['store_bank_accounts'] ?? []); ?>;
@@ -491,6 +569,28 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 this.bankAccounts.splice(index, 1);
             },
 
+            async loadCities() {
+                this.isLoadingCities = true;
+                try {
+                    const response = await fetch('/wp-json/wp-store/v1/rajaongkir/cities', {
+                        method: 'GET',
+                        headers: {
+                            'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        this.cities = result.data;
+                    } else {
+                        console.error('Failed to load cities:', result.message);
+                    }
+                } catch (error) {
+                    console.error('Error loading cities:', error);
+                } finally {
+                    this.isLoadingCities = false;
+                }
+            },
+
             switchTab(tab) {
                 this.activeTab = tab;
                 this.updateUrl(tab);
@@ -507,7 +607,18 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 this.isSaving = true;
                 const formData = new FormData(this.$refs.form);
                 const data = {};
-                formData.forEach((value, key) => data[key] = value);
+                formData.forEach((value, key) => {
+                    // Handle array inputs like shipping_couriers[]
+                    if (key.endsWith('[]')) {
+                        const realKey = key.slice(0, -2);
+                        if (!data[realKey]) {
+                            data[realKey] = [];
+                        }
+                        data[realKey].push(value);
+                    } else {
+                        data[key] = value;
+                    }
+                });
 
                 // Add bank accounts manually to data
                 data.store_bank_accounts = this.bankAccounts;

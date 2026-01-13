@@ -24,6 +24,14 @@ class SettingsController
                 'permission_callback' => [$this, 'check_admin_auth'],
             ],
         ]);
+
+        register_rest_route('wp-store/v1', '/rajaongkir/cities', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_rajaongkir_cities'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
     }
 
     public function check_admin_auth()
@@ -65,6 +73,13 @@ class SettingsController
         if (isset($params['bank_account'])) $settings['bank_account'] = sanitize_text_field($params['bank_account']);
         if (isset($params['bank_holder'])) $settings['bank_holder'] = sanitize_text_field($params['bank_holder']);
 
+        if (isset($params['rajaongkir_api_key'])) $settings['rajaongkir_api_key'] = sanitize_text_field($params['rajaongkir_api_key']);
+        if (isset($params['rajaongkir_account_type'])) $settings['rajaongkir_account_type'] = sanitize_text_field($params['rajaongkir_account_type']);
+        if (isset($params['shipping_origin_city'])) $settings['shipping_origin_city'] = sanitize_text_field($params['shipping_origin_city']);
+        if (isset($params['shipping_couriers']) && is_array($params['shipping_couriers'])) {
+            $settings['shipping_couriers'] = array_map('sanitize_text_field', $params['shipping_couriers']);
+        }
+
         if (isset($params['page_shop'])) $settings['page_shop'] = absint($params['page_shop']);
         if (isset($params['page_profile'])) $settings['page_profile'] = absint($params['page_profile']);
         if (isset($params['page_cart'])) $settings['page_cart'] = absint($params['page_cart']);
@@ -91,61 +106,104 @@ class SettingsController
             ],
             'page_profile' => [
                 'title' => 'Profil Saya',
-                'content' => '[store_customer_profile]'
+                'content' => '[wp_store_profile]'
             ],
             'page_cart' => [
-                'title' => 'Keranjang Belanja',
-                'content' => '[store_cart]'
+                'title' => 'Keranjang',
+                'content' => '[wp_store_cart]'
             ],
             'page_checkout' => [
                 'title' => 'Checkout',
-                'content' => '[store_checkout]'
-            ]
+                'content' => '[wp_store_checkout]'
+            ],
         ];
 
         $created_pages = [];
-        $updated = false;
 
         foreach ($pages_to_create as $key => $page_data) {
-            // Only create if not already set or if the set page doesn't exist
-            if (empty($settings[$key]) || !get_post($settings[$key])) {
-                $page_id = wp_insert_post([
-                    'post_title'   => $page_data['title'],
-                    'post_content' => $page_data['content'],
-                    'post_status'  => 'publish',
-                    'post_type'    => 'page',
-                ]);
-
-                if (!is_wp_error($page_id)) {
-                    $settings[$key] = $page_id;
-                    $created_pages[] = [
-                        'key' => $key,
-                        'id' => $page_id,
-                        'title' => $page_data['title']
-                    ];
-                    $updated = true;
+            // Check if page already exists in settings
+            if (!empty($settings[$key])) {
+                $existing_page = get_post($settings[$key]);
+                if ($existing_page && $existing_page->post_status !== 'trash') {
+                    continue;
                 }
+            }
+
+            // Create page
+            $page_id = wp_insert_post([
+                'post_title'   => $page_data['title'],
+                'post_content' => $page_data['content'],
+                'post_status'  => 'publish',
+                'post_type'    => 'page',
+            ]);
+
+            if ($page_id && !is_wp_error($page_id)) {
+                $settings[$key] = $page_id;
+                $created_pages[] = $page_data['title'];
             }
         }
 
-        if ($updated) {
-            update_option('wp_store_settings', $settings);
+        update_option('wp_store_settings', $settings);
+
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => count($created_pages) > 0 
+                ? 'Halaman berhasil dibuat: ' . implode(', ', $created_pages) 
+                : 'Semua halaman sudah ada.',
+            'settings' => $settings
+        ], 200);
+    }
+
+    public function get_rajaongkir_cities(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $api_key = $settings['rajaongkir_api_key'] ?? '';
+        $account_type = $settings['rajaongkir_account_type'] ?? 'starter';
+
+        if (empty($api_key)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'API Key Raja Ongkir belum diatur.'
+            ], 400);
         }
 
-        if (empty($created_pages)) {
-             return new WP_REST_Response([
+        $base_url = 'https://api.rajaongkir.com/starter';
+        if ($account_type === 'basic') {
+            $base_url = 'https://api.rajaongkir.com/basic';
+        } elseif ($account_type === 'pro') {
+            $base_url = 'https://pro.rajaongkir.com/api';
+        }
+
+        $response = wp_remote_get($base_url . '/city', [
+            'headers' => [
+                'key' => $api_key
+            ]
+        ]);
+
+        if (is_wp_error($response)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => $response->get_error_message()
+            ], 500);
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        // RajaOngkir structure: { meta: {...}, data: [...] } or { rajaongkir: { results: [...] } }
+        // Official docs say: { rajaongkir: { query: [], status: {}, results: [] } }
+        
+        if (isset($data['rajaongkir']['results'])) {
+            return new WP_REST_Response([
                 'success' => true,
-                'message' => 'Semua halaman sudah ada.',
-                'pages' => $created_pages,
-                'settings' => $settings
+                'data' => $data['rajaongkir']['results']
             ], 200);
         }
 
         return new WP_REST_Response([
-            'success' => true,
-            'message' => 'Halaman berhasil dibuat.',
-            'pages' => $created_pages,
-            'settings' => $settings
-        ], 200);
+            'success' => false,
+            'message' => 'Gagal mengambil data kota dari Raja Ongkir.',
+            'raw' => $data
+        ], 500);
     }
 }
