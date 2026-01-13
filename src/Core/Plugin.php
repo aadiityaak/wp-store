@@ -24,11 +24,17 @@ class Plugin
             return;
         }
 
+        $admin_menu = new \WpStore\Admin\AdminMenu();
+        $admin_menu->register();
+
         $meta_boxes = new \WpStore\Admin\ProductMetaBoxes();
         $meta_boxes->register();
 
         $columns = new \WpStore\Admin\ProductColumns();
         $columns->register();
+
+        $settings = new \WpStore\Admin\Settings();
+        $settings->register();
     }
 
     private function load_api()
