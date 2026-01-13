@@ -184,7 +184,6 @@ class SettingsController
     {
         $settings = get_option('wp_store_settings', []);
         $api_key = $settings['rajaongkir_api_key'] ?? '';
-
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
@@ -354,9 +353,17 @@ class SettingsController
 
         // Komerce structure: { meta: {...}, data: [...] }
         if (isset($data['data'])) {
+            // Map data to match RajaOngkir standard format expected by frontend
+            $subdistricts = array_map(function ($item) {
+                return [
+                    'subdistrict_id'   => $item['id'],
+                    'subdistrict_name' => $item['name']
+                ];
+            }, $data['data']);
+
             return new WP_REST_Response([
                 'success' => true,
-                'data' => $data['data']
+                'data' => $subdistricts
             ], 200);
         }
 
