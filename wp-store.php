@@ -16,6 +16,10 @@ define('WP_STORE_VERSION', '0.1.0');
 define('WP_STORE_PATH', plugin_dir_path(__FILE__));
 define('WP_STORE_URL', plugin_dir_url(__FILE__));
 
+if (file_exists(WP_STORE_PATH . 'vendor/autoload.php')) {
+    require_once WP_STORE_PATH . 'vendor/autoload.php';
+}
+
 spl_autoload_register(function ($class) {
     $prefix = 'WpStore\\';
     $base_dir = WP_STORE_PATH . 'src/';
