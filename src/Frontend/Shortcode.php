@@ -7,6 +7,8 @@ class Shortcode
     public function register()
     {
         add_shortcode('wp_store_shop', [$this, 'render_shop']);
+        add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
+        add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
 
@@ -50,9 +52,6 @@ class Shortcode
 
     public function render_shop($atts = [])
     {
-        wp_enqueue_script('alpinejs');
-        wp_enqueue_script('wp-store-frontend');
-
         $atts = shortcode_atts([
             'per_page' => 12,
         ], $atts);
@@ -62,8 +61,86 @@ class Shortcode
             $per_page = 12;
         }
 
+        $args = [
+            'post_type' => 'store_product',
+            'posts_per_page' => $per_page,
+            'post_status' => 'publish',
+        ];
+
+        $query = new \WP_Query($args);
+
         ob_start();
 ?>
+        <div class="wp-store-wrapper">
+            <div class="wp-store-products">
+                <?php if ($query->have_posts()) : ?>
+                    <div class="wp-store-grid">
+                        <?php
+                        while ($query->have_posts()) :
+                            $query->the_post();
+                            $id = get_the_ID();
+                            $price = get_post_meta($id, '_store_price', true);
+                            $stock = get_post_meta($id, '_store_stock', true);
+                            $image = get_the_post_thumbnail_url($id, 'medium');
+                        ?>
+                            <div class="wp-store-card">
+                                <?php if ($image) : ?>
+                                    <div class="wp-store-image">
+                                        <img src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
+                                    </div>
+                                <?php endif; ?>
+                                <h3><?php the_title(); ?></h3>
+                                <p><?php echo esc_html(wp_trim_words(get_the_content(), 20)); ?></p>
+                                <div class="wp-store-product-details">
+                                    <span>
+                                        <?php
+                                        if ($price !== '') {
+                                            echo esc_html(number_format_i18n((float) $price, 0));
+                                        }
+                                        ?>
+                                    </span>
+                                    <?php if ($stock !== '') : ?>
+                                        <span> | Stok: <?php echo esc_html((int) $stock); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="wp-store-card-footer">
+                                    <a href="<?php the_permalink(); ?>">Lihat Detail</a>
+                                </div>
+                                <div>
+                                    <?php echo do_shortcode('[wp_store_add_to_cart]'); ?>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+                    <?php wp_reset_postdata(); ?>
+                <?php else : ?>
+                    <div>Belum ada produk.</div>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php
+        return ob_get_clean();
+    }
+
+    public function render_add_to_cart($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        $atts = shortcode_atts([
+            'id' => 0,
+            'label' => 'Tambah'
+        ], $atts);
+        $id = (int) $atts['id'];
+        if ($id <= 0) {
+            $loop_id = get_the_ID();
+            if ($loop_id && is_numeric($loop_id)) {
+                $id = (int) $loop_id;
+            }
+        }
+        if ($id <= 0) {
+            return '';
+        }
+        ob_start();
+    ?>
         <script>
             if (typeof window.wpStoreSettings === 'undefined') {
                 window.wpStoreSettings = <?php echo json_encode([
@@ -72,138 +149,149 @@ class Shortcode
                                             ]); ?>;
             }
         </script>
+        <div x-data="{
+                loading: false,
+                message: '',
+                async add() {
+                    this.loading = true;
+                    try {
+                        let currentQty = 0;
+                        try {
+                            const resCart = await fetch(wpStoreSettings.restUrl + 'cart', { credentials: 'same-origin' });
+                            const dataCart = await resCart.json();
+                            const item = (dataCart.items || []).find((i) => i.id === <?php echo (int) $id; ?>);
+                            currentQty = item ? (item.qty || 0) : 0;
+                        } catch (e) {}
+                        const nextQty = currentQty + 1;
+                        const res = await fetch(wpStoreSettings.restUrl + 'cart', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-WP-Nonce': wpStoreSettings.nonce
+                            },
+                            body: JSON.stringify({ id: <?php echo esc_attr($id); ?>, qty: nextQty })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) {
+                            this.message = data.message || 'Gagal menambah';
+                            return;
+                        }
+                        document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: data }));
+                        this.message = 'Ditambahkan';
+                        setTimeout(() => { this.message = ''; }, 1500);
+                    } catch (e) {
+                        this.message = 'Kesalahan jaringan';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }">
+            <button type="button" @click="add()" :disabled="loading"><?php echo esc_html($atts['label']); ?></button>
+            <span x-text="message"></span>
+        </div>
+    <?php
+        return ob_get_clean();
+    }
+
+    public function render_cart_widget($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        ob_start();
+    ?>
         <script>
-            window.wpStore = window.wpStore || function(perPage) {
-                var upgraded = false;
-                var self = {
-                    loading: false,
-                    products: [],
-                    cart: [],
-                    perPage: perPage || 12,
-                    page: 1,
-                    customer: {
-                        name: '',
-                        email: '',
-                        phone: ''
-                    },
-                    submitting: false,
-                    message: '',
-                    get total() {
-                        try {
-                            return (Array.isArray(this.cart) ? this.cart : []).reduce(function(sum, item) {
-                                var price = typeof item.price === 'number' ? item.price : parseFloat(item.price || 0);
-                                var qty = typeof item.qty === 'number' ? item.qty : parseInt(item.qty || 0, 10);
-                                return sum + (price * qty);
-                            }, 0);
-                        } catch (e) {
-                            return 0;
-                        }
-                    },
-                    formatPrice: function(v) {
-                        return String(v || '');
-                    },
-                    fetchProducts: async function() {
-                        this.loading = true;
-                        try {
-                            var base = window.wpStoreSettings && window.wpStoreSettings.restUrl ? window.wpStoreSettings.restUrl : '';
-                            if (!base) {
-                                return;
-                            }
-                            var url = new URL(base + 'products');
-                            url.searchParams.set('per_page', this.perPage);
-                            url.searchParams.set('page', this.page);
-                            var response = await fetch(url.toString());
-                            if (!response.ok) {
-                                return;
-                            }
-                            var data = await response.json();
-                            this.products = Array.isArray(data.items) ? data.items : [];
-                        } catch (e) {} finally {
-                            this.loading = false;
-                        }
-                    },
-                    init: function() {
-                        if (!upgraded && window.wpStoreReady && typeof window.wpStore === 'function') {
-                            var real = window.wpStore(self.perPage);
-                            upgraded = true;
-                            for (var k in real) {
-                                try {
-                                    self[k] = real[k];
-                                } catch (e) {}
-                            }
-                            if (typeof self.init === 'function') {
-                                self.init();
-                                return;
-                            }
-                        }
-                        if (!upgraded && typeof self.fetchProducts === 'function') {
-                            self.fetchProducts();
-                        }
-                    }
-                };
-                document.addEventListener('wp-store:ready', function() {
-                    if (!upgraded) {
-                        self.init();
-                    }
-                });
-                return self;
-            };
+            if (typeof window.wpStoreSettings === 'undefined') {
+                window.wpStoreSettings = <?php echo json_encode([
+                                                'restUrl' => esc_url_raw(rest_url('wp-store/v1/')),
+                                                'nonce' => wp_create_nonce('wp_rest'),
+                                            ]); ?>;
+            }
         </script>
-        <div x-data="wpStore(<?php echo esc_attr($per_page); ?>)" x-init="init()" class="wp-store-wrapper">
-            <div class="wp-store-products">
-                <template x-if="loading">
-                    <div>Memuat produk...</div>
-                </template>
-                <template x-if="!loading && products.length === 0">
-                    <div>Belum ada produk.</div>
-                </template>
-                <div class="wp-store-grid">
-                    <template x-for="product in products" :key="product.id">
-                        <div class="wp-store-card">
-                            <div class="wp-store-image" x-show="product.image">
-                                <img :src="product.image" :alt="product.title">
-                            </div>
-                            <h3 x-text="product.title"></h3>
-                            <p x-text="product.excerpt"></p>
-                            <div class="wp-store-product-details">
-                                <span x-text="formatPrice(product.price)"></span>
-                                <span x-show="product.stock !== null"> | Stok: <span x-text="product.stock"></span></span>
-                            </div>
-                            <div class="wp-store-card-footer">
-                                <button type="button" @click="typeof addToCart==='function' && addToCart(product)">Tambah</button>
+        <div x-data="{
+                open: false,
+                loading: false,
+                cart: [],
+                total: 0,
+                async fetchCart() {
+                    try {
+                        const res = await fetch(wpStoreSettings.restUrl + 'cart', { credentials: 'same-origin' });
+                        const data = await res.json();
+                        this.cart = data.items || [];
+                        this.total = data.total || 0;
+                    } catch(e) {
+                        this.cart = [];
+                        this.total = 0;
+                    }
+                },
+                async updateItem(id, qty) {
+                    this.loading = true;
+                    try {
+                        const res = await fetch(wpStoreSettings.restUrl + 'cart', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-WP-Nonce': wpStoreSettings.nonce
+                            },
+                            body: JSON.stringify({ id, qty })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) {
+                            return;
+                        }
+                        this.cart = data.items || [];
+                        this.total = data.total || 0;
+                        document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: data }));
+                    } catch(e) {
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                increment(item) { this.updateItem(item.id, item.qty + 1); },
+                decrement(item) { const q = item.qty > 1 ? item.qty - 1 : 0; this.updateItem(item.id, q); },
+                remove(item) { this.updateItem(item.id, 0); },
+                init() {
+                    this.fetchCart();
+                    document.addEventListener('wp-store:cart-updated', (e) => {
+                        const data = e.detail || {};
+                        this.cart = data.items || [];
+                        this.total = data.total || 0;
+                    });
+                }
+            }" x-init="init()" class="wp-store-cart-widget" style="position: relative;">
+            <button type="button" @click="open = true" class="wp-store-cart-button" style="position: relative;">
+                <span>🛒</span>
+                <span x-text="cart.length" style="position: absolute; top: -6px; right: -10px; background: #e11; color: #fff; border-radius: 999px; padding: 0 6px; font-size: 12px;"></span>
+            </button>
+            <div class="wp-store-offcanvas-backdrop" x-show="open" @click="open = false" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4);" x-transition.opacity></div>
+            <div class="wp-store-offcanvas" x-show="open" x-transition style="position: fixed; top: 0; right: 0; width: 320px; max-width: 90vw; height: 100vh; background: #fff; box-shadow: -2px 0 8px rgba(0,0,0,0.2); display: flex; flex-direction: column;">
+                <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <strong>Keranjang</strong>
+                    <button type="button" @click="open = false">✕</button>
+                </div>
+                <div style="flex: 1; overflow: auto; padding: 12px;">
+                    <template x-if="cart.length === 0">
+                        <div>Keranjang kosong.</div>
+                    </template>
+                    <template x-for="item in cart" :key="item.id">
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                            <img :src="item.image" alt="" style="width: 40px; height: 40px; object-fit: cover;" x-show="item.image">
+                            <div style="flex: 1;">
+                                <div x-text="item.title"></div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button type="button" @click="decrement(item)">-</button>
+                                    <span x-text="item.qty"></span>
+                                    <button type="button" @click="increment(item)">+</button>
+                                    <button type="button" @click="remove(item)" style="margin-left: auto;">Hapus</button>
+                                </div>
                             </div>
                         </div>
                     </template>
                 </div>
-            </div>
-            <div class="wp-store-cart" x-show="cart.length > 0">
-                <h3>Keranjang</h3>
-                <template x-for="item in cart" :key="item.id">
-                    <div class="wp-store-cart-item">
-                        <span x-text="item.title"></span>
-                        <div class="wp-store-cart-qty">
-                            <button type="button" @click="typeof decrement==='function' && decrement(item)">-</button>
-                            <span x-text="item.qty"></span>
-                            <button type="button" @click="typeof increment==='function' && increment(item)">+</button>
-                        </div>
-                        <span x-text="formatPrice(item.qty * item.price)"></span>
-                        <button type="button" @click="typeof remove==='function' && remove(item)">x</button>
-                    </div>
-                </template>
-                <div class="wp-store-cart-total">
+                <div style="padding: 12px; border-top: 1px solid #eee; display: flex; justify-content: space-between;">
                     <span>Total</span>
-                    <span x-text="formatPrice(total)"></span>
+                    <span x-text="total"></span>
                 </div>
-                <form @submit.prevent="typeof checkout==='function' && checkout()">
-                    <input type="text" x-model="customer.name" placeholder="Nama">
-                    <input type="email" x-model="customer.email" placeholder="Email">
-                    <input type="text" x-model="customer.phone" placeholder="No. HP">
-                    <button type="submit" x-bind:disabled="submitting">
-                        <span x-show="!submitting">Kirim Pesanan</span>
-                        <span x-show="submitting">Mengirim...</span>
-                    </button>
-                </form>
-                <p x-text="message"></p>
             </div>
         </div>
 <?php
