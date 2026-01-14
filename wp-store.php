@@ -43,6 +43,28 @@ spl_autoload_register(function ($class) {
 
 function wp_store_init()
 {
+    // Auto-update database if needed
+    if (get_option('wp_store_db_version') !== '1.0.1') {
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'store_carts';
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table_name} (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+            guest_key VARCHAR(64) NULL DEFAULT NULL,
+            cart LONGTEXT NOT NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_user (user_id),
+            UNIQUE KEY uniq_guest (guest_key)
+        ) {$charset_collate};";
+
+        dbDelta($sql);
+        update_option('wp_store_db_version', '1.0.1');
+    }
+
     $plugin = new \WpStore\Core\Plugin();
     $plugin->run();
 }
@@ -53,5 +75,10 @@ register_activation_hook(__FILE__, function () {
     $post_types = new \WpStore\Core\PostTypes();
     $post_types->register_product_type();
     $post_types->register_order_type();
+
+    // Trigger update logic
+    delete_option('wp_store_db_version'); // Force update
+    wp_store_init();
+
     flush_rewrite_rules();
 });

@@ -21,6 +21,13 @@
       } finally {
         this.loading = false;
       }
+      document.addEventListener('wp-store:cart-updated', (e) => {
+          if (e.detail && e.detail.items) {
+              this.cart = e.detail.items;
+          } else {
+              this.fetchCart();
+          }
+      });
     },
     async fetchCart() {
       try {

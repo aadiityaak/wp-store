@@ -28,6 +28,47 @@ class CartController
                 'permission_callback' => [$this, 'require_rest_nonce'],
             ],
         ]);
+
+        register_rest_route('wp-store/v1', '/debug', [
+            'methods' => 'GET',
+            'callback' => [$this, 'debug_status'],
+            'permission_callback' => '__return_true',
+        ]);
+    }
+
+    public function debug_status()
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'store_carts';
+        $exists = $wpdb->get_var("SHOW TABLES LIKE '$table'") === $table;
+
+        // Try to force create if not exists
+        if (!$exists) {
+            $charset_collate = $wpdb->get_charset_collate();
+            $sql = "CREATE TABLE {$table} (
+                id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+                guest_key VARCHAR(64) NULL DEFAULT NULL,
+                cart LONGTEXT NOT NULL,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uniq_user (user_id),
+                UNIQUE KEY uniq_guest (guest_key)
+            ) {$charset_collate};";
+            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+            dbDelta($sql);
+            $exists = $wpdb->get_var("SHOW TABLES LIKE '$table'") === $table;
+        }
+
+        return new WP_REST_Response([
+            'table_name' => $table,
+            'table_exists' => $exists,
+            'last_db_error' => $wpdb->last_error,
+            'cookie_sent' => $_COOKIE,
+            'cookie_key_name' => $this->cookie_key,
+            'guest_key_resolved' => $this->get_or_set_guest_key(),
+            'rows' => $exists ? $wpdb->get_results("SELECT * FROM $table LIMIT 10") : [],
+        ], 200);
     }
 
     public function require_rest_nonce(WP_REST_Request $request)
@@ -112,42 +153,65 @@ class CartController
 
     private function read_cart()
     {
+        global $wpdb;
+        $table = $wpdb->prefix . 'store_carts';
         if (is_user_logged_in()) {
             $user_id = get_current_user_id();
-            $cart = get_user_meta($user_id, '_wp_store_cart', true);
-            return is_array($cart) ? $cart : [];
+            $row = $wpdb->get_row($wpdb->prepare("SELECT cart FROM {$table} WHERE user_id = %d LIMIT 1", $user_id));
+            if ($row && isset($row->cart)) {
+                $data = json_decode($row->cart, true);
+                return is_array($data) ? $data : [];
+            }
+            return [];
         }
-
         $key = $this->get_or_set_guest_key();
-        $cart = get_transient('wp_store_cart_' . $key);
-        return is_array($cart) ? $cart : [];
+        $row = $wpdb->get_row($wpdb->prepare("SELECT cart FROM {$table} WHERE guest_key = %s LIMIT 1", $key));
+        if ($row && isset($row->cart)) {
+            $data = json_decode($row->cart, true);
+            return is_array($data) ? $data : [];
+        }
+        return [];
     }
 
     private function write_cart($cart)
     {
+        global $wpdb;
         $cart = is_array($cart) ? $cart : [];
-
+        $table = $wpdb->prefix . 'store_carts';
+        $json = wp_json_encode($cart);
         if (is_user_logged_in()) {
             $user_id = get_current_user_id();
-            update_user_meta($user_id, '_wp_store_cart', $cart);
+            $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE user_id = %d LIMIT 1", $user_id));
+            if ($exists) {
+                $wpdb->update($table, ['cart' => $json], ['user_id' => $user_id], ['%s'], ['%d']);
+            } else {
+                $wpdb->insert($table, ['user_id' => $user_id, 'cart' => $json], ['%d', '%s']);
+            }
             return;
         }
-
         $key = $this->get_or_set_guest_key();
-        set_transient('wp_store_cart_' . $key, $cart, DAY_IN_SECONDS * 7);
+        $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE guest_key = %s LIMIT 1", $key));
+        if ($exists) {
+            $wpdb->update($table, ['cart' => $json], ['guest_key' => $key], ['%s'], ['%s']);
+        } else {
+            $wpdb->insert($table, ['guest_key' => $key, 'cart' => $json], ['%s', '%s']);
+        }
     }
 
     private function get_or_set_guest_key()
     {
         if (isset($_COOKIE[$this->cookie_key]) && is_string($_COOKIE[$this->cookie_key]) && $_COOKIE[$this->cookie_key] !== '') {
-            return sanitize_key($_COOKIE[$this->cookie_key]);
+            $key = sanitize_key($_COOKIE[$this->cookie_key]);
+            error_log("WpStore: Found existing cookie key: " . $key);
+            return $key;
         }
 
         $key = sanitize_key(wp_generate_uuid4());
+        error_log("WpStore: Generated new key: " . $key);
 
         $secure = is_ssl();
-        $path = defined('COOKIEPATH') ? COOKIEPATH : '/';
-        $domain = defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : '';
+        $path = '/'; // Force root path for testing
+        $domain = ''; // Let browser handle domain
 
         setcookie($this->cookie_key, $key, time() + (DAY_IN_SECONDS * 30), $path, $domain, $secure, true);
         $_COOKIE[$this->cookie_key] = $key;
@@ -189,4 +253,3 @@ class CartController
         ];
     }
 }
-
