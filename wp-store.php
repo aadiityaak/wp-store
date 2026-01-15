@@ -43,13 +43,13 @@ spl_autoload_register(function ($class) {
 
 function wp_store_init()
 {
-    // Auto-update database if needed
-    if (get_option('wp_store_db_version') !== '1.0.1') {
+    $should_migrate = get_option('wp_store_db_version') !== '1.0.1';
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'store_carts';
+    $exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
+    if ($should_migrate || !$exists) {
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'store_carts';
         $charset_collate = $wpdb->get_charset_collate();
-
         $sql = "CREATE TABLE {$table_name} (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             user_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
@@ -60,7 +60,6 @@ function wp_store_init()
             UNIQUE KEY uniq_user (user_id),
             UNIQUE KEY uniq_guest (guest_key)
         ) {$charset_collate};";
-
         dbDelta($sql);
         update_option('wp_store_db_version', '1.0.1');
     }

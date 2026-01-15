@@ -261,7 +261,7 @@ class Shortcode
             }" x-init="init()" class="wp-store-cart-widget" style="position: relative;">
             <button type="button" @click="open = true" class="wp-store-cart-button" style="position: relative;">
                 <span>🛒</span>
-                <span x-text="cart.length" style="position: absolute; top: -6px; right: -10px; background: #e11; color: #fff; border-radius: 999px; padding: 0 6px; font-size: 12px;"></span>
+                <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" style="position: absolute; top: -6px; right: -10px; background: #e11; color: #fff; border-radius: 999px; padding: 0 6px; font-size: 12px;"></span>
             </button>
             <div class="wp-store-offcanvas-backdrop" x-show="open" @click="open = false" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4);" x-transition.opacity></div>
             <div class="wp-store-offcanvas" x-show="open" x-transition style="position: fixed; top: 0; right: 0; width: 320px; max-width: 90vw; height: 100vh; background: #fff; box-shadow: -2px 0 8px rgba(0,0,0,0.2); display: flex; flex-direction: column;">

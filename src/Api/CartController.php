@@ -162,6 +162,15 @@ class CartController
                 $data = json_decode($row->cart, true);
                 return is_array($data) ? $data : [];
             }
+            $key = $this->get_or_set_guest_key();
+            $row = $wpdb->get_row($wpdb->prepare("SELECT cart FROM {$table} WHERE guest_key = %s LIMIT 1", $key));
+            if ($row && isset($row->cart)) {
+                $data = json_decode($row->cart, true);
+                if (is_array($data)) {
+                    $this->write_cart($data);
+                }
+                return is_array($data) ? $data : [];
+            }
             return [];
         }
         $key = $this->get_or_set_guest_key();
