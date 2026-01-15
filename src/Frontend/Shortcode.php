@@ -544,7 +544,7 @@ class Shortcode
                                 <div class="wps-p-4">
                                     <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Pilih Pengiriman</div>
                                     <div class="wps-grid wps-grid-cols-1 wps-gap-4" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-                                        <div class="wps-form-group wps-gap-2">
+                                        <div class="wps-form-group wps-gap-2 wps-mb-0">
                                             <div>
                                                 <template x-if="!shippingOptions || shippingOptions.length===0">
                                                     <div class="wps-text-xs wps-text-gray-500">Tidak ada layanan tersedia.</div>
@@ -555,19 +555,18 @@ class Shortcode
                                                         :class="selectedShippingKey === ((opt.courier || '') + ':' + (opt.service || '')) ? 'wps-bg-blue-50 wps-border wps-border-blue-500 wps-font-bold' : 'wps-border wps-border-gray-200'"
                                                         @click="selectedShippingKey = ((opt.courier || '') + ':' + (opt.service || '')); shippingCourier = opt.courier || ''; shippingService = opt.service || ''; shippingCost = opt.cost || 0">
                                                         <div class="wps-flex wps-justify-between">
-                                                            <div>
-                                                                <div class="wps-text-sm wps-text-gray-900">
-                                                                    <span x-text="(opt.courier ? opt.courier.toUpperCase() : 'KURIR')"></span>
-                                                                    <span> • </span>
-                                                                    <span x-text="(opt.service || '').toUpperCase()"></span>
-                                                                </div>
+                                                            <div class="wps-text-left">
+                                                                <span x-text="(opt.service || '').toUpperCase()"></span>
                                                                 <div class="wps-text-xs wps-text-gray-600" x-text="opt.description || ''"></div>
                                                             </div>
-                                                            <div class="wps-text-sm wps-text-gray-900" x-text="formatPrice(opt.cost || 0)"></div>
+                                                            <div class="wps-text-right">
+                                                                <div class="wps-text-sm wps-text-gray-900" x-text="formatPrice(opt.cost || 0)"></div>
+                                                                <template x-if="opt.etd">
+                                                                    <div class="wps-text-xs wps-text-gray-500 wps-mt-1">Estimasi: <span x-text="opt.etd"></span></div>
+                                                                </template>
+                                                            </div>
                                                         </div>
-                                                        <template x-if="opt.etd">
-                                                            <div class="wps-text-xs wps-text-gray-500 wps-mt-1">Estimasi: <span x-text="opt.etd"></span></div>
-                                                        </template>
+
                                                     </button>
                                                 </template>
                                             </div>

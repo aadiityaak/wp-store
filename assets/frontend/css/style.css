@@ -47,6 +47,12 @@
 .wps-text-bold {
   font-weight: 700 !important;
 }
+.wps-text-left {
+  text-align: left;
+}
+.wps-text-right {
+  text-align: right;
+}
 .wps-text-center {
   text-align: center;
 }
@@ -58,6 +64,9 @@
 }
 .wps-p-4 {
   padding: 1rem;
+}
+.wps-p-3 {
+  padding: 0.75rem;
 }
 .wps-text-lg {
   font-size: 1.125rem;
@@ -78,6 +87,9 @@
 .wps-text-sm {
   font-size: 0.875rem;
   line-height: 1.25rem;
+}
+.wps-mb-0 {
+  margin-bottom: 0 !important;
 }
 .wps-mb-1 {
   margin-bottom: 0.25rem;
