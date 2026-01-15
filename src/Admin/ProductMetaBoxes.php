@@ -127,40 +127,6 @@ class ProductMetaBoxes
             ],
         ]);
 
-        $general->add_field([
-            'name'        => 'Nama Opsi (Advance)',
-            'id'          => '_store_option2_name',
-            'type'        => 'text',
-            'placeholder' => 'Contoh: Pilih Ukuran',
-        ]);
-
-        $group_field_id = $general->add_field([
-            'name'        => 'Opsi Advance',
-            'id'          => '_store_advanced_options',
-            'type'        => 'group',
-            'options'     => [
-                'group_title'   => 'Opsi {#}',
-                'add_button'    => 'Tambah Opsi',
-                'remove_button' => 'Hapus Opsi',
-                'sortable'      => true,
-            ],
-        ]);
-
-        $general->add_group_field($group_field_id, [
-            'name' => 'Label',
-            'id'   => 'label',
-            'type' => 'text',
-        ]);
-
-        $general->add_group_field($group_field_id, [
-            'name' => 'Harga',
-            'id'   => 'price',
-            'type' => 'text',
-            'attributes' => [
-                'type' => 'number',
-            ],
-        ]);
-
         // --- Inventory Tab ---
         $inventory->add_field([
             'name' => 'Kode Produk (SKU)',
@@ -236,7 +202,39 @@ class ProductMetaBoxes
             ],
         ]);
 
+        $attributes->add_field([
+            'name'        => 'Nama Opsi (Advance)',
+            'id'          => '_store_option2_name',
+            'type'        => 'text',
+            'placeholder' => 'Contoh: Pilih Ukuran',
+        ]);
 
+        $group_field_id = $attributes->add_field([
+            'name'        => 'Opsi Advance',
+            'id'          => '_store_advanced_options',
+            'type'        => 'group',
+            'options'     => [
+                'group_title'   => 'Opsi {#}',
+                'add_button'    => 'Tambah Opsi',
+                'remove_button' => 'Hapus Opsi',
+                'sortable'      => true,
+            ],
+        ]);
+
+        $attributes->add_group_field($group_field_id, [
+            'name' => 'Label',
+            'id'   => 'label',
+            'type' => 'text',
+        ]);
+
+        $attributes->add_group_field($group_field_id, [
+            'name' => 'Harga',
+            'id'   => 'price',
+            'type' => 'text',
+            'attributes' => [
+                'type' => 'number',
+            ],
+        ]);
 
         // --- Gallery Tab ---
         $gallery->add_field([
