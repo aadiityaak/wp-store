@@ -372,6 +372,34 @@ button.wps-btn-primary {
   border-top: 1px solid #eeeeee;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.wps-total-box {
+  display: flex;
+  flex-direction: column;
+}
+.wps-total-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+.wps-total-amount {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+.wps-checkout-btn {
+  padding: 10px 14px;
+  border-radius: 6px;
+}
+@media (max-width: 480px) {
+  .wps-offcanvas-footer {
+    justify-content: flex-start;
+  }
+  .wps-checkout-btn {
+    flex: 1;
+    text-align: center;
+  }
 }
 .wps-badge-count {
   background: #ef4444;

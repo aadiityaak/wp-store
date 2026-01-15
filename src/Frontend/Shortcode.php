@@ -11,6 +11,8 @@ class Shortcode
         add_shortcode('wp_store_related', [$this, 'render_related']);
         add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
+        add_shortcode('wp_store_checkout', [$this, 'render_checkout']);
+        add_shortcode('store_checkout', [$this, 'render_checkout']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
 
@@ -113,6 +115,172 @@ class Shortcode
             <?php else : ?>
                 <div class="wps-text-sm wps-text-gray-500">Belum ada produk.</div>
             <?php endif; ?>
+        </div>
+    <?php
+        return ob_get_clean();
+    }
+
+    public function render_checkout($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
+        ob_start();
+    ?>
+        <script>
+            if (typeof window.wpStoreSettings === 'undefined') {
+                window.wpStoreSettings = {
+                    restUrl: window.location.origin + '/wp-json/wp-store/v1/',
+                    nonce: '<?php echo wp_create_nonce('wp_rest'); ?>'
+                };
+            }
+        </script>
+        <div class="wps-p-4">
+            <div x-data="{
+                    loading: false,
+                    submitting: false,
+                    cart: [],
+                    total: 0,
+                    name: '',
+                    email: '',
+                    phone: '',
+                    message: '',
+                    currency: '<?php echo esc_js($currency); ?>',
+                    formatPrice(value) {
+                        const v = typeof value === 'number' ? value : parseFloat(value || 0);
+                        if (this.currency === 'USD') {
+                            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
+                        }
+                        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+                    },
+                    async fetchCart() {
+                        this.loading = true;
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'cart', { 
+                                credentials: 'include',
+                                headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                            });
+                            const data = await res.json();
+                            this.cart = data.items || [];
+                            this.total = data.total || 0;
+                        } catch(e) {
+                            this.cart = [];
+                            this.total = 0;
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+                    async submit() {
+                        if (!this.name || this.cart.length === 0) {
+                            this.message = 'Isi nama dan pastikan keranjang berisi.';
+                            return;
+                        }
+                        this.submitting = true;
+                        this.message = '';
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'checkout', {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                },
+                                body: JSON.stringify({
+                                    name: this.name,
+                                    email: this.email,
+                                    phone: this.phone,
+                                    items: this.cart.map(i => ({ id: i.id, qty: i.qty }))
+                                })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) {
+                                this.message = data.message || 'Gagal membuat pesanan.';
+                                return;
+                            }
+                            this.message = data.message || 'Pesanan berhasil dibuat.';
+                            try {
+                                await fetch(wpStoreSettings.restUrl + 'cart', {
+                                    method: 'DELETE',
+                                    credentials: 'include',
+                                    headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                                });
+                            } catch(_) {}
+                            this.cart = [];
+                            this.total = 0;
+                            document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: { items: [], total: 0 } }));
+                        } catch(e) {
+                            this.message = 'Terjadi kesalahan jaringan.';
+                        } finally {
+                            this.submitting = false;
+                        }
+                    },
+                    init() {
+                        this.fetchCart();
+                    }
+                }" x-init="init()">
+                <div class="wps-grid wps-grid-cols-2">
+                    <div class="wps-card">
+                        <div class="wps-p-4">
+                            <div class="wps-text-lg wps-font-medium wps-mb-4">Informasi Pemesan</div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Nama</label>
+                                <input class="wps-input" type="text" x-model="name" placeholder="Nama lengkap">
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Email</label>
+                                <input class="wps-input" type="email" x-model="email" placeholder="email@contoh.com">
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Telepon/WA</label>
+                                <input class="wps-input" type="text" x-model="phone" placeholder="08xxxxxxxxxx">
+                            </div>
+                            <div class="wps-form-group">
+                                <button type="button" class="wps-btn wps-btn-primary" @click="submit()" :disabled="submitting || cart.length === 0">
+                                    <span x-show="!submitting">Buat Pesanan</span>
+                                    <span x-show="submitting">Mengirim...</span>
+                                </button>
+                            </div>
+                            <template x-if="message">
+                                <div class="wps-alert wps-alert-success" x-text="message"></div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="wps-card">
+                        <div class="wps-p-4">
+                            <div class="wps-text-lg wps-font-medium wps-mb-4">Ringkasan Keranjang</div>
+                            <template x-if="loading">
+                                <div class="wps-text-sm wps-text-gray-500">Memuat keranjang...</div>
+                            </template>
+                            <template x-if="!loading && cart.length === 0">
+                                <div class="wps-text-sm wps-text-gray-500">Keranjang kosong.</div>
+                            </template>
+                            <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
+                                <div class="wps-flex wps-items-start wps-gap-2 wps-mb-4">
+                                    <img :src="item.image" alt="" class="wps-img-40" x-show="item.image">
+                                    <div style="flex:1">
+                                        <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
+                                        <template x-if="item.options && Object.keys(item.options).length">
+                                            <div class="wps-text-xs wps-text-gray-500">
+                                                <span x-text="Object.entries(item.options).map(([k,v]) => k + ': ' + v).join(' • ')"></span>
+                                            </div>
+                                        </template>
+                                        <div class="wps-text-xs wps-text-gray-500">
+                                            <span x-text="formatPrice(item.price)"></span>
+                                            <span> × </span>
+                                            <span x-text="item.qty"></span>
+                                            <span> = </span>
+                                            <span class="wps-text-gray-900" x-text="formatPrice(item.subtotal)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="wps-flex wps-justify-between wps-items-center">
+                                <span class="wps-text-sm wps-text-gray-500">Total</span>
+                                <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     <?php
         return ob_get_clean();
@@ -420,6 +588,9 @@ class Shortcode
     public function render_cart_widget($atts = [])
     {
         wp_enqueue_script('alpinejs');
+        $settings = get_option('wp_store_settings', []);
+        $checkout_page_id = isset($settings['page_checkout']) ? absint($settings['page_checkout']) : 0;
+        $checkout_url = $checkout_page_id ? get_permalink($checkout_page_id) : '';
         ob_start();
     ?>
         <script>
@@ -535,8 +706,13 @@ class Shortcode
                     </template>
                 </div>
                 <div class="wps-offcanvas-footer">
-                    <span class="wps-text-sm wps-text-gray-500">Total</span>
-                    <span x-text="formatPrice(total)" class="wps-text-sm wps-text-gray-900"></span>
+                    <div class="wps-total-box">
+                        <div class="wps-total-label">Total</div>
+                        <div class="wps-total-amount" x-text="formatPrice(total)"></div>
+                    </div>
+                    <?php if (!empty($checkout_url)) : ?>
+                        <a href="<?php echo esc_url($checkout_url); ?>" class="wps-btn wps-btn-primary wps-checkout-btn" x-show="cart.length > 0">Checkout</a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
