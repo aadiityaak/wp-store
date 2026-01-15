@@ -290,7 +290,7 @@ button.wps-btn-primary {
   background-color: #3b82f6;
 }
 .wps-text-white {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 .wps-text-xs {
   font-size: 0.75rem;

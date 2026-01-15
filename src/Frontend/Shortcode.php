@@ -123,7 +123,10 @@ class Shortcode
     public function render_checkout($atts = [])
     {
         wp_enqueue_script('alpinejs');
-        $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $origin_subdistrict = isset($settings['shipping_origin_subdistrict']) ? (string) $settings['shipping_origin_subdistrict'] : '';
+        $active_couriers = $settings['shipping_couriers'] ?? ['jne', 'sicepat', 'ide'];
         ob_start();
     ?>
         <script>
@@ -160,12 +163,22 @@ class Shortcode
                     isLoadingSubdistricts: false,
                     message: '',
                     currency: '<?php echo esc_js($currency); ?>',
+                    originSubdistrict: '<?php echo esc_js($origin_subdistrict); ?>',
+                    shippingCouriers: <?php echo json_encode($active_couriers); ?>,
+                    selectedCourier: '',
+                    shippingService: '',
+                    shippingCost: 0,
                     formatPrice(value) {
                         const v = typeof value === 'number' ? value : parseFloat(value || 0);
                         if (this.currency === 'USD') {
                             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
                         }
                         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+                    },
+                    totalWithShipping() {
+                        const t = typeof this.total === 'number' ? this.total : parseFloat(this.total || 0);
+                        const s = typeof this.shippingCost === 'number' ? this.shippingCost : parseFloat(this.shippingCost || 0);
+                        return t + (isNaN(s) ? 0 : s);
                     },
                     async fetchProfile() {
                         try {
@@ -298,6 +311,9 @@ class Shortcode
                                     subdistrict_name: (this.subdistricts.find(s => String(s.subdistrict_id) === String(this.selectedSubdistrict)) || {}).subdistrict_name || '',
                                     postal_code: this.postalCode || '',
                                     notes: this.notes || '',
+                                    shipping_courier: this.selectedCourier || '',
+                                    shipping_service: this.shippingService || '',
+                                    shipping_cost: this.shippingCost || 0,
                                     items: this.cart.map(i => ({ id: i.id, qty: i.qty }))
                                 })
                             });
@@ -338,7 +354,7 @@ class Shortcode
                                 <div class="wps-callout-title">Gunakan Data Tersimpan</div>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
                                     <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()">Impor Profil</button>
-                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary">Kelola Profil</a>
+                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary">Kelola</a>
                                 </div>
                             </div>
                             <div class="wps-form-group">
@@ -415,6 +431,32 @@ class Shortcode
                             </template>
                         </div>
                     </div>
+                    <template x-if="selectedSubdistrict">
+                        <div class="wps-card" style="margin-top: 1rem;">
+                            <div class="wps-p-4">
+                                <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Pilih Pengiriman</div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Kurir</label>
+                                    <select class="wps-select" x-model="selectedCourier">
+                                        <option value="">-- Pilih Kurir --</option>
+                                        <template x-for="c in shippingCouriers" :key="c">
+                                            <option :value="c" x-text="c.toUpperCase()"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div class="wps-grid wps-grid-cols-2 wps-gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="wps-form-group">
+                                        <label class="wps-label">Layanan</label>
+                                        <input class="wps-input" type="text" x-model="shippingService" placeholder="Contoh: REG, YES">
+                                    </div>
+                                    <div class="wps-form-group">
+                                        <label class="wps-label">Ongkir (Rp)</label>
+                                        <input class="wps-input" type="number" min="0" step="1" x-model="shippingCost" placeholder="Masukkan biaya ongkir">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                     <div class="wps-card">
                         <div class="wps-p-4">
                             <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Ringkasan Keranjang</div>
@@ -445,8 +487,18 @@ class Shortcode
                                 </div>
                             </template>
                             <div class="wps-flex wps-justify-between wps-items-center">
-                                <span class="wps-text-sm wps-text-gray-500">Total</span>
+                                <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
                                 <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
+                            </div>
+                            <template x-if="shippingCost && selectedCourier">
+                                <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                    <span class="wps-text-sm wps-text-gray-500">Ongkir (<span x-text="selectedCourier.toUpperCase()"></span> <span x-text="shippingService"></span>)</span>
+                                    <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(shippingCost)"></span>
+                                </div>
+                            </template>
+                            <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium">Grand Total</span>
+                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium" x-text="formatPrice(totalWithShipping())"></span>
                             </div>
                         </div>
                     </div>

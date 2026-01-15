@@ -83,7 +83,11 @@ class CheckoutController
 
         update_post_meta($order_id, '_store_order_email', $email);
         update_post_meta($order_id, '_store_order_phone', $phone);
-        update_post_meta($order_id, '_store_order_total', $total);
+        $shipping_courier = isset($data['shipping_courier']) ? sanitize_text_field($data['shipping_courier']) : '';
+        $shipping_service = isset($data['shipping_service']) ? sanitize_text_field($data['shipping_service']) : '';
+        $shipping_cost = isset($data['shipping_cost']) ? floatval($data['shipping_cost']) : 0;
+        $order_total = $total + max(0, $shipping_cost);
+        update_post_meta($order_id, '_store_order_total', $order_total);
         update_post_meta($order_id, '_store_order_items', $lines);
 
         $address = isset($data['address']) ? sanitize_textarea_field($data['address']) : '';
@@ -105,10 +109,13 @@ class CheckoutController
         update_post_meta($order_id, '_store_order_subdistrict_name', $subdistrict_name);
         update_post_meta($order_id, '_store_order_postal_code', $postal_code);
         update_post_meta($order_id, '_store_order_notes', $notes);
+        update_post_meta($order_id, '_store_order_shipping_courier', $shipping_courier);
+        update_post_meta($order_id, '_store_order_shipping_service', $shipping_service);
+        update_post_meta($order_id, '_store_order_shipping_cost', $shipping_cost);
 
         return new WP_REST_Response([
             'id' => $order_id,
-            'total' => $total,
+            'total' => $order_total,
             'message' => 'Pesanan berhasil dibuat',
         ], 201);
     }
