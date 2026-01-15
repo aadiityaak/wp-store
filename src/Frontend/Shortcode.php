@@ -8,6 +8,7 @@ class Shortcode
     {
         add_shortcode('wp_store_shop', [$this, 'render_shop']);
         add_shortcode('wp_store_single', [$this, 'render_single']);
+        add_shortcode('wp_store_related', [$this, 'render_related']);
         add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
@@ -74,7 +75,7 @@ class Shortcode
 ?>
         <div class="wps-p-4">
             <?php if ($query->have_posts()) : ?>
-                <div class="wps-grid wps-grid-cols-2 wps-grid-cols-4">
+                <div class="wps-grid wps-grid-cols-2 wps-md-grid-cols-4">
                     <?php
                     while ($query->have_posts()) :
                         $query->the_post();
@@ -84,7 +85,7 @@ class Shortcode
                         $image = get_the_post_thumbnail_url($id, 'medium');
                         $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
                     ?>
-                        <div class="wps-card">
+                        <div class="wps-card wps-card-hover wps-transition">
                             <div class="wps-p-2">
                                 <?php if ($image) : ?>
                                     <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160" src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
@@ -111,6 +112,92 @@ class Shortcode
                 <?php wp_reset_postdata(); ?>
             <?php else : ?>
                 <div class="wps-text-sm wps-text-gray-500">Belum ada produk.</div>
+            <?php endif; ?>
+        </div>
+    <?php
+        return ob_get_clean();
+    }
+
+    public function render_related($atts = [])
+    {
+        $atts = shortcode_atts([
+            'id' => 0,
+            'per_page' => 4,
+        ], $atts);
+        $id = (int) $atts['id'];
+        if ($id <= 0) {
+            $loop_id = get_the_ID();
+            if ($loop_id && is_numeric($loop_id)) {
+                $id = (int) $loop_id;
+            }
+        }
+        if ($id <= 0 || get_post_type($id) !== 'store_product') {
+            return '';
+        }
+        $per_page = (int) $atts['per_page'];
+        if ($per_page <= 0 || $per_page > 12) {
+            $per_page = 4;
+        }
+
+        $terms = wp_get_post_terms($id, 'store_product_cat', ['fields' => 'ids']);
+        if (!is_array($terms) || empty($terms)) {
+            return '';
+        }
+
+        $args = [
+            'post_type' => 'store_product',
+            'posts_per_page' => $per_page,
+            'post_status' => 'publish',
+            'post__not_in' => [$id],
+            'tax_query' => [
+                [
+                    'taxonomy' => 'store_product_cat',
+                    'field' => 'term_id',
+                    'terms' => $terms,
+                ],
+            ],
+        ];
+        $query = new \WP_Query($args);
+
+        $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
+
+        ob_start();
+    ?>
+        <div class="wps-p-4">
+            <div class="wps-text-sm wps-text-gray-900 wps-mb-4">Produk Terkait</div>
+            <?php if ($query->have_posts()) : ?>
+                <div class="wps-grid wps-grid-cols-2 wps-md-grid-cols-4">
+                    <?php
+                    while ($query->have_posts()) :
+                        $query->the_post();
+                        $rid = get_the_ID();
+                        $price = get_post_meta($rid, '_store_price', true);
+                        $image = get_the_post_thumbnail_url($rid, 'medium');
+                    ?>
+                        <div class="wps-card wps-card-hover wps-transition">
+                            <div class="wps-p-4">
+                                <?php if ($image) : ?>
+                                    <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160" src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
+                                <?php endif; ?>
+                                <a class="wps-text-sm wps-text-gray-900 wps-mb-2" href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                                <div class="wps-text-sm wps-text-gray-900 wps-mb-3">
+                                    <?php
+                                    if ($price !== '') {
+                                        echo esc_html($currency . ' ' . number_format_i18n((float) $price, 0));
+                                    }
+                                    ?>
+                                </div>
+                                <div class="wps-flex wps-items-center wps-justify-between">
+                                    <div><?php echo do_shortcode('[wp_store_add_to_cart id="' . esc_attr($rid) . '" size="sm"]'); ?></div>
+                                    <a class="wps-btn wps-btn-secondary wps-btn-sm" href="<?php the_permalink(); ?>">Lihat</a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+                <?php wp_reset_postdata(); ?>
+            <?php else : ?>
+                <div class="wps-text-sm wps-text-gray-500">Tidak ada produk terkait.</div>
             <?php endif; ?>
         </div>
     <?php

@@ -15,6 +15,12 @@
   .wps-grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  .wps-md-grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .wps-md-grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
   .wps-col-span-1 {
     grid-column: span 1 / span 1;
   }
@@ -27,10 +33,19 @@
 }
 .wps-card {
   background-color: white;
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   border: 1px solid #e5e7eb;
   overflow: hidden;
+}
+.wps-card-hover:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.wps-transition {
+  transition: all 150ms ease-in-out;
+}
+.wps-text-center {
+  text-align: center;
 }
 .wps-p-6 {
   padding: 1.5rem;
