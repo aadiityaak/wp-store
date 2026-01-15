@@ -136,6 +136,9 @@ class Shortcode
                 $id = (int) $loop_id;
             }
         }
+        if ($id > 0 && get_post_type($id) !== 'store_product') {
+            return '';
+        }
         if ($id <= 0) {
             return '';
         }
@@ -143,10 +146,10 @@ class Shortcode
     ?>
         <script>
             if (typeof window.wpStoreSettings === 'undefined') {
-                window.wpStoreSettings = <?php echo json_encode([
-                                                'restUrl' => esc_url_raw(rest_url('wp-store/v1/')),
-                                                'nonce' => wp_create_nonce('wp_rest'),
-                                            ]); ?>;
+                window.wpStoreSettings = {
+                    restUrl: window.location.origin + '/wp-json/wp-store/v1/',
+                    nonce: '<?php echo wp_create_nonce('wp_rest'); ?>'
+                };
             }
         </script>
         <div x-data="{
@@ -201,10 +204,10 @@ class Shortcode
     ?>
         <script>
             if (typeof window.wpStoreSettings === 'undefined') {
-                window.wpStoreSettings = <?php echo json_encode([
-                                                'restUrl' => esc_url_raw(rest_url('wp-store/v1/')),
-                                                'nonce' => wp_create_nonce('wp_rest'),
-                                            ]); ?>;
+                window.wpStoreSettings = {
+                    restUrl: window.location.origin + '/wp-json/wp-store/v1/',
+                    nonce: '<?php echo wp_create_nonce('wp_rest'); ?>'
+                };
             }
         </script>
         <div x-data="{
@@ -214,7 +217,10 @@ class Shortcode
                 total: 0,
                 async fetchCart() {
                     try {
-                        const res = await fetch(wpStoreSettings.restUrl + 'cart', { credentials: 'same-origin' });
+                        const res = await fetch(wpStoreSettings.restUrl + 'cart', { 
+                            credentials: 'include',
+                            headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                        });
                         const data = await res.json();
                         this.cart = data.items || [];
                         this.total = data.total || 0;
@@ -228,7 +234,7 @@ class Shortcode
                     try {
                         const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                             method: 'POST',
-                            credentials: 'same-origin',
+                            credentials: 'include',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-WP-Nonce': wpStoreSettings.nonce

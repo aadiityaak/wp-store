@@ -67,6 +67,8 @@ class CartController
             'cookie_sent' => $_COOKIE,
             'cookie_key_name' => $this->cookie_key,
             'guest_key_resolved' => $this->get_or_set_guest_key(),
+            'is_user_logged_in' => is_user_logged_in(),
+            'current_user_id' => get_current_user_id(),
             'rows' => $exists ? $wpdb->get_results("SELECT * FROM $table LIMIT 10") : [],
         ], 200);
     }
