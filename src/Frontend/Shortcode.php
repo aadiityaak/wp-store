@@ -160,19 +160,23 @@ class Shortcode
                 loading: false,
                 message: '',
                 showModal: false,
-                basicName: <?php echo wp_json_encode($basic_name ?: ''); ?>,
-                basicOptions: <?php echo wp_json_encode(is_array($basic_values) ? array_values($basic_values) : []); ?>,
-                advName: <?php echo wp_json_encode($adv_name ?: ''); ?>,
-                advOptions: <?php echo wp_json_encode(is_array($adv_values) ? array_values($adv_values) : []); ?>,
+                basicName: <?php echo esc_attr(wp_json_encode($basic_name ?: '')); ?>,
+                basicOptions: <?php echo esc_attr(wp_json_encode(is_array($basic_values) ? array_values($basic_values) : [])); ?>,
+                advName: <?php echo esc_attr(wp_json_encode($adv_name ?: '')); ?>,
+                advOptions: <?php echo esc_attr(wp_json_encode(is_array($adv_values) ? array_values($adv_values) : [])); ?>,
                 selectedBasic: '',
                 selectedAdv: '',
                 hasOptions() {
-                    return (this.basicName && this.basicOptions.length > 0) || (this.advName && this.advOptions.length > 0);
+                    return ((this.basicName && this.basicOptions.length > 0) || (this.advName && this.advOptions.length > 0));
                 },
                 getOptionsPayload() {
                     const opts = {};
-                    if (this.basicName && this.selectedBasic) { opts[this.basicName] = this.selectedBasic; }
-                    if (this.advName && this.selectedAdv) { opts[this.advName] = this.selectedAdv; }
+                    const bName = (this.basicName || '').trim();
+                    const bVal = (this.selectedBasic || '').trim();
+                    const aName = (this.advName || '').trim();
+                    const aVal = (this.selectedAdv || '').trim();
+                    if (bName && bVal) { opts[bName] = bVal; }
+                    if (aName && aVal) { opts[aName] = aVal; }
                     return opts;
                 },
                 async add() {
@@ -229,11 +233,11 @@ class Shortcode
             }">
             <button type="button" @click="add()" :disabled="loading" class="wps-btn wps-btn-primary"><?php echo esc_html($atts['label']); ?></button>
             <span x-text="message"></span>
-            <div x-show="showModal" class="wps-modal-backdrop" @click.self="showModal = false"></div>
-            <div x-show="showModal" class="wps-modal">
+            <div x-show="showModal" x-cloak class="wps-modal-backdrop" @click.self="showModal = false"></div>
+            <div x-show="showModal" x-cloak class="wps-modal">
                 <div class="wps-p-4">
                     <div class="wps-mb-4 wps-text-lg wps-font-medium wps-text-gray-900">Pilih Opsi</div>
-                    <div class="wps-mb-4" x-show="basicName && basicOptions.length">
+                    <div class="wps-mb-4" x-show="basicName && basicOptions.length" x-cloak>
                         <label class="wps-label" x-text="basicName"></label>
                         <select class="wps-select" x-model="selectedBasic">
                             <option value="">-- Pilih --</option>
@@ -242,7 +246,7 @@ class Shortcode
                             </template>
                         </select>
                     </div>
-                    <div class="wps-mb-4" x-show="advName && advOptions.length">
+                    <div class="wps-mb-4" x-show="advName && advOptions.length" x-cloak>
                         <label class="wps-label" x-text="advName"></label>
                         <select class="wps-select" x-model="selectedAdv">
                             <option value="">-- Pilih --</option>

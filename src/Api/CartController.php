@@ -272,11 +272,13 @@ class CartController
     {
         $normalized = [];
         foreach ($options as $k => $v) {
-            $key = sanitize_text_field($k);
+            $key = trim(sanitize_text_field($k));
             if (is_array($v)) {
-                $normalized[$key] = array_map('sanitize_text_field', $v);
+                $normalized[$key] = array_map(function ($x) {
+                    return trim(sanitize_text_field($x));
+                }, $v);
             } else {
-                $normalized[$key] = sanitize_text_field((string) $v);
+                $normalized[$key] = trim(sanitize_text_field((string) $v));
             }
         }
         ksort($normalized);
