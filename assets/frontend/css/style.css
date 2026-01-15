@@ -281,3 +281,69 @@ button.wps-btn-primary {
   width: 24px;
   height: 24px;
 }
+
+.wps-rel {
+  position: relative;
+}
+.wps-absolute {
+  position: absolute;
+}
+.wps-top--6 {
+  top: -6px;
+}
+.wps-right--10 {
+  right: -10px;
+}
+.wps-offcanvas-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9998;
+}
+.wps-offcanvas {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  max-width: 90vw;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+}
+.wps-offcanvas-header {
+  padding: 12px;
+  border-bottom: 1px solid #eeeeee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wps-offcanvas-body {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+}
+.wps-offcanvas-footer {
+  padding: 12px;
+  border-top: 1px solid #eeeeee;
+  display: flex;
+  justify-content: space-between;
+}
+.wps-badge-count {
+  background: #ef4444;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 12px;
+}
+.wps-divider {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.wps-img-40 {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}

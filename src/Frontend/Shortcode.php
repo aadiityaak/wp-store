@@ -160,7 +160,10 @@ class Shortcode
                     try {
                         let currentQty = 0;
                         try {
-                            const resCart = await fetch(wpStoreSettings.restUrl + 'cart', { credentials: 'same-origin' });
+                            const resCart = await fetch(wpStoreSettings.restUrl + 'cart', { 
+                                credentials: 'include',
+                                headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                            });
                             const dataCart = await resCart.json();
                             const item = (dataCart.items || []).find((i) => i.id === <?php echo (int) $id; ?>);
                             currentQty = item ? (item.qty || 0) : 0;
@@ -168,7 +171,7 @@ class Shortcode
                         const nextQty = currentQty + 1;
                         const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                             method: 'POST',
-                            credentials: 'same-origin',
+                            credentials: 'include',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-WP-Nonce': wpStoreSettings.nonce
@@ -264,39 +267,39 @@ class Shortcode
                         this.total = data.total || 0;
                     });
                 }
-            }" x-init="init()" class="wp-store-cart-widget" style="position: relative;">
-            <button type="button" @click="open = true" class="wp-store-cart-button" style="position: relative;">
+            }" x-init="init()" class="wps-rel">
+            <button type="button" @click="open = true" class="wps-btn-icon wps-cart-button wps-rel">
                 <span>🛒</span>
-                <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" style="position: absolute; top: -6px; right: -10px; background: #e11; color: #fff; border-radius: 999px; padding: 0 6px; font-size: 12px;"></span>
+                <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" class="wps-absolute wps-top--6 wps-right--10 wps-bg-blue-500 wps-text-white wps-text-xs rounded-full wps-px-2.5 wps-py-0.5"></span>
             </button>
-            <div class="wp-store-offcanvas-backdrop" x-show="open" @click="open = false" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4);" x-transition.opacity></div>
-            <div class="wp-store-offcanvas" x-show="open" x-transition style="position: fixed; top: 0; right: 0; width: 320px; max-width: 90vw; height: 100vh; background: #fff; box-shadow: -2px 0 8px rgba(0,0,0,0.2); display: flex; flex-direction: column;">
-                <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                    <strong>Keranjang</strong>
-                    <button type="button" @click="open = false">✕</button>
+            <div class="wps-offcanvas-backdrop" x-show="open" @click="open = false" x-transition.opacity></div>
+            <div class="wps-offcanvas" x-show="open" x-transition>
+                <div class="wps-offcanvas-header">
+                    <strong class="wps-text-gray-900">Keranjang</strong>
+                    <button type="button" @click="open = false" class="wps-btn-icon">✕</button>
                 </div>
-                <div style="flex: 1; overflow: auto; padding: 12px;">
+                <div class="wps-offcanvas-body">
                     <template x-if="cart.length === 0">
-                        <div>Keranjang kosong.</div>
+                        <div class="wps-text-sm wps-text-gray-500">Keranjang kosong.</div>
                     </template>
                     <template x-for="item in cart" :key="item.id">
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                            <img :src="item.image" alt="" style="width: 40px; height: 40px; object-fit: cover;" x-show="item.image">
+                        <div class="wps-flex wps-items-center wps-gap-2 wps-divider">
+                            <img :src="item.image" alt="" class="wps-img-40" x-show="item.image">
                             <div style="flex: 1;">
-                                <div x-text="item.title"></div>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <button type="button" @click="decrement(item)">-</button>
-                                    <span x-text="item.qty"></span>
-                                    <button type="button" @click="increment(item)">+</button>
-                                    <button type="button" @click="remove(item)" style="margin-left: auto;">Hapus</button>
+                                <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
+                                <div class="wps-flex wps-items-center wps-gap-2">
+                                    <button type="button" @click="decrement(item)" class="wps-btn wps-btn-secondary">-</button>
+                                    <span x-text="item.qty" class="wps-badge"></span>
+                                    <button type="button" @click="increment(item)" class="wps-btn wps-btn-secondary">+</button>
+                                    <button type="button" @click="remove(item)" class="wps-btn wps-btn-danger" style="margin-left: auto;">Hapus</button>
                                 </div>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div style="padding: 12px; border-top: 1px solid #eee; display: flex; justify-content: space-between;">
-                    <span>Total</span>
-                    <span x-text="total"></span>
+                <div class="wps-offcanvas-footer">
+                    <span class="wps-text-sm wps-text-gray-500">Total</span>
+                    <span x-text="total" class="wps-text-sm wps-text-gray-900"></span>
                 </div>
             </div>
         </div>
