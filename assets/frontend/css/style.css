@@ -442,7 +442,9 @@ button.wps-btn-primary {
   height: 160px;
   object-fit: cover;
 }
-
+.wps-mb-2 {
+  margin-bottom: 0.5rem;
+}
 .wps-w-full {
   width: 100%;
 }

@@ -540,22 +540,21 @@ class Shortcode
                     </div>
                     <div>
                         <template x-if="selectedSubdistrict">
-                            <div class="wps-card" style="margin-top: 1rem;">
+                            <div class="wps-card wps-mb-2">
                                 <div class="wps-p-4">
                                     <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Pilih Pengiriman</div>
-                                    <div class="" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
-                                        <div class="wps-form-group">
-                                            <div class="wps-text-sm wps-text-gray-700 wps-mb-2">Pilih layanan pengiriman</div>
+                                    <div class="wps-grid wps-grid-cols-1 wps-gap-4" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                                        <div class="wps-form-group wps-gap-2">
                                             <div>
                                                 <template x-if="!shippingOptions || shippingOptions.length===0">
                                                     <div class="wps-text-xs wps-text-gray-500">Tidak ada layanan tersedia.</div>
                                                 </template>
                                                 <template x-for="opt in shippingOptions" :key="(opt.courier || '') + ':' + (opt.service || '')">
                                                     <button type="button"
-                                                        class="wps-card wps-p-3 wps-mb-2 wps-text-left"
-                                                        :class="{'wps-border wps-border-blue-500': selectedShippingKey === ((opt.courier || '') + ':' + (opt.service || ''))}"
+                                                        class="wps-card wps-p-3 wps-mb-2 wps-text-left wps-w-full"
+                                                        :class="selectedShippingKey === ((opt.courier || '') + ':' + (opt.service || '')) ? 'wps-bg-blue-50 wps-border wps-border-blue-500 wps-font-bold' : 'wps-border wps-border-gray-200'"
                                                         @click="selectedShippingKey = ((opt.courier || '') + ':' + (opt.service || '')); shippingCourier = opt.courier || ''; shippingService = opt.service || ''; shippingCost = opt.cost || 0">
-                                                        <div class="wps-flex wps-justify-between wps-items-center">
+                                                        <div class="wps-flex wps-justify-between">
                                                             <div>
                                                                 <div class="wps-text-sm wps-text-gray-900">
                                                                     <span x-text="(opt.courier ? opt.courier.toUpperCase() : 'KURIR')"></span>
@@ -572,10 +571,6 @@ class Shortcode
                                                     </button>
                                                 </template>
                                             </div>
-                                        </div>
-                                        <div class="wps-form-group">
-                                            <label class="wps-label">Ongkir (Rp)</label>
-                                            <input class="wps-input" type="number" min="0" step="1" x-model="shippingCost" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -614,9 +609,16 @@ class Shortcode
                                     <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
                                     <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
                                 </div>
-                                <template x-if="shippingCost && shippingCourier">
+                                <template x-if="shippingCost">
                                     <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                                        <span class="wps-text-sm wps-text-gray-500">Ongkir (<span x-text="shippingCourier.toUpperCase()"></span> <span x-text="shippingService"></span>)</span>
+                                        <span class="wps-text-sm wps-text-gray-500">
+                                            Ongkir (
+                                            <template x-if="shippingCourier">
+                                                <span x-text="shippingCourier.toUpperCase() + ' '"></span>
+                                            </template>
+                                            <span x-text="shippingService"></span>
+                                            )
+                                        </span>
                                         <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(shippingCost)"></span>
                                     </div>
                                 </template>
