@@ -160,14 +160,19 @@ class Shortcode
                 loading: false,
                 message: '',
                 showModal: false,
-                basicName: <?php echo esc_attr(wp_json_encode($basic_name ?: '')); ?>,
-                basicOptions: <?php echo esc_attr(wp_json_encode(is_array($basic_values) ? array_values($basic_values) : [])); ?>,
-                advName: <?php echo esc_attr(wp_json_encode($adv_name ?: '')); ?>,
-                advOptions: <?php echo esc_attr(wp_json_encode(is_array($adv_values) ? array_values($adv_values) : [])); ?>,
+                basicName: '<?php echo esc_js($basic_name ?: ''); ?>',
+                basicOptions: JSON.parse('<?php echo esc_js(wp_json_encode(is_array($basic_values) ? array_values($basic_values) : [])); ?>'),
+                advName: '<?php echo esc_js($adv_name ?: ''); ?>',
+                advOptions: JSON.parse('<?php echo esc_js(wp_json_encode(is_array($adv_values) ? array_values($adv_values) : [])); ?>'),
                 selectedBasic: '',
                 selectedAdv: '',
                 hasOptions() {
                     return ((this.basicName && this.basicOptions.length > 0) || (this.advName && this.advOptions.length > 0));
+                },
+                canSubmit() {
+                    const needBasic = !!(this.basicName && this.basicOptions.length);
+                    const needAdv = !!(this.advName && this.advOptions.length);
+                    return (!needBasic || !!this.selectedBasic) && (!needAdv || !!this.selectedAdv);
                 },
                 getOptionsPayload() {
                     const opts = {};
@@ -257,7 +262,7 @@ class Shortcode
                     </div>
                     <div class="wps-flex wps-justify-between wps-items-center">
                         <button type="button" class="wps-btn wps-btn-secondary" @click="showModal = false">Batal</button>
-                        <button type="button" class="wps-btn wps-btn-primary" @click="confirmAdd()" :disabled="(basicName && !selectedBasic) || (advName && !selectedAdv)">Tambah</button>
+                        <button type="button" class="wps-btn wps-btn-primary" @click="confirmAdd()" :disabled="!canSubmit()">Tambah</button>
                     </div>
                 </div>
             </div>
@@ -284,6 +289,14 @@ class Shortcode
                 loading: false,
                 cart: [],
                 total: 0,
+                currency: '<?php echo esc_js((get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp')); ?>',
+                formatPrice(value) {
+                    const v = typeof value === 'number' ? value : parseFloat(value || 0);
+                    if (this.currency === 'USD') {
+                        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
+                    }
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+                },
                 async fetchCart() {
                     try {
                         const res = await fetch(wpStoreSettings.restUrl + 'cart', { 
@@ -298,7 +311,7 @@ class Shortcode
                         this.total = 0;
                     }
                 },
-                async updateItem(id, qty) {
+                async updateItem(item, qty) {
                     this.loading = true;
                     try {
                         const res = await fetch(wpStoreSettings.restUrl + 'cart', {
@@ -308,7 +321,7 @@ class Shortcode
                                 'Content-Type': 'application/json',
                                 'X-WP-Nonce': wpStoreSettings.nonce
                             },
-                            body: JSON.stringify({ id, qty, options: (this.cart.find((i)=>i.id===id)?.options||{}) })
+                            body: JSON.stringify({ id: item.id, qty, options: (item.options || {}) })
                         });
                         const data = await res.json();
                         if (!res.ok) {
@@ -322,9 +335,9 @@ class Shortcode
                         this.loading = false;
                     }
                 },
-                increment(item) { this.updateItem(item.id, item.qty + 1); },
-                decrement(item) { const q = item.qty > 1 ? item.qty - 1 : 0; this.updateItem(item.id, q); },
-                remove(item) { this.updateItem(item.id, 0); },
+                increment(item) { this.updateItem(item, item.qty + 1); },
+                decrement(item) { const q = item.qty > 1 ? item.qty - 1 : 0; this.updateItem(item, q); },
+                remove(item) { this.updateItem(item, 0); },
                 init() {
                     this.fetchCart();
                     document.addEventListener('wp-store:cart-updated', (e) => {
@@ -348,16 +361,28 @@ class Shortcode
                     <template x-if="cart.length === 0">
                         <div class="wps-text-sm wps-text-gray-500">Keranjang kosong.</div>
                     </template>
-                    <template x-for="item in cart" :key="item.id">
+                    <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
                         <div class="wps-flex wps-items-center wps-gap-2 wps-divider">
                             <img :src="item.image" alt="" class="wps-img-40" x-show="item.image">
                             <div style="flex: 1;">
                                 <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
-                                <div class="wps-flex wps-items-center wps-gap-2">
-                                    <button type="button" @click="decrement(item)" class="wps-btn wps-btn-secondary">-</button>
-                                    <span x-text="item.qty" class="wps-badge"></span>
-                                    <button type="button" @click="increment(item)" class="wps-btn wps-btn-secondary">+</button>
-                                    <button type="button" @click="remove(item)" class="wps-btn wps-btn-danger" style="margin-left: auto;">Hapus</button>
+                                <template x-if="item.options && Object.keys(item.options).length">
+                                    <div class="wps-text-xs wps-text-gray-500">
+                                        <span x-text="Object.entries(item.options).map(([k,v]) => k + ': ' + v).join(' • ')"></span>
+                                    </div>
+                                </template>
+                                <div class="wps-text-xs wps-text-gray-500 wps-mb-1">
+                                    <span x-text="formatPrice(item.price)"></span>
+                                    <span> × </span>
+                                    <span x-text="item.qty"></span>
+                                    <span> = </span>
+                                    <span class="wps-text-gray-900" x-text="formatPrice(item.subtotal)"></span>
+                                </div>
+                                <div class="wps-flex wps-items-center wps-gap-1">
+                                    <button type="button" @click="decrement(item)" class="wps-btn wps-btn-secondary wps-btn-sm">-</button>
+                                    <span x-text="item.qty" class="wps-badge wps-badge-sm"></span>
+                                    <button type="button" @click="increment(item)" class="wps-btn wps-btn-secondary wps-btn-sm">+</button>
+                                    <button type="button" @click="remove(item)" class="wps-btn wps-btn-danger wps-btn-sm wps-ml-auto">Hapus</button>
                                 </div>
                             </div>
                         </div>
@@ -365,7 +390,7 @@ class Shortcode
                 </div>
                 <div class="wps-offcanvas-footer">
                     <span class="wps-text-sm wps-text-gray-500">Total</span>
-                    <span x-text="total" class="wps-text-sm wps-text-gray-900"></span>
+                    <span x-text="formatPrice(total)" class="wps-text-sm wps-text-gray-900"></span>
                 </div>
             </div>
         </div>
