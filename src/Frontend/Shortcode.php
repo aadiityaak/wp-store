@@ -7,6 +7,7 @@ class Shortcode
     public function register()
     {
         add_shortcode('wp_store_shop', [$this, 'render_shop']);
+        add_shortcode('wp_store_single', [$this, 'render_single']);
         add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
@@ -84,7 +85,7 @@ class Shortcode
                         $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
                     ?>
                         <div class="wps-card">
-                            <div class="wps-p-4">
+                            <div class="wps-p-2">
                                 <?php if ($image) : ?>
                                     <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160" src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
                                 <?php endif; ?>
@@ -100,8 +101,8 @@ class Shortcode
                                     <?php endif; ?>
                                 </div>
                                 <div class="wps-flex wps-items-center wps-justify-between">
-                                    <div><?php echo do_shortcode('[wp_store_add_to_cart]'); ?></div>
-                                    <a class="wps-btn wps-btn-secondary" href="<?php the_permalink(); ?>">Lihat Detail</a>
+                                    <div><?php echo do_shortcode('[wp_store_add_to_cart size="sm"]'); ?></div>
+                                    <a class="wps-btn wps-btn-secondary wps-btn-sm" href="<?php the_permalink(); ?>">Lihat Detail</a>
                                 </div>
                             </div>
                         </div>
@@ -116,14 +117,74 @@ class Shortcode
         return ob_get_clean();
     }
 
+    public function render_single($atts = [])
+    {
+        $atts = shortcode_atts([
+            'id' => 0,
+        ], $atts);
+        $id = (int) $atts['id'];
+        if ($id <= 0) {
+            $loop_id = get_the_ID();
+            if ($loop_id && is_numeric($loop_id)) {
+                $id = (int) $loop_id;
+            }
+        }
+        if ($id <= 0 || get_post_type($id) !== 'store_product') {
+            return '';
+        }
+        $price = get_post_meta($id, '_store_price', true);
+        $stock = get_post_meta($id, '_store_stock', true);
+        $image = get_the_post_thumbnail_url($id, 'large');
+        $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
+
+        $content = get_post_field('post_content', $id);
+        $content = apply_filters('the_content', $content);
+
+        ob_start();
+    ?>
+        <div class="wps-p-4">
+            <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-4"><?php echo esc_html(get_the_title($id)); ?></div>
+            <div class="wps-flex wps-gap-4 wps-items-start">
+                <div style="flex: 1;">
+                    <?php if ($image) : ?>
+                        <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title($id)); ?>">
+                    <?php endif; ?>
+                </div>
+                <div style="flex: 1;">
+                    <div class="wps-text-sm wps-text-gray-900 wps-mb-4">
+                        <?php
+                        if ($price !== '') {
+                            echo esc_html($currency . ' ' . number_format_i18n((float) $price, 0));
+                        }
+                        ?>
+                        <?php if ($stock !== '') : ?>
+                            <span class="wps-text-gray-500"> • Stok: <?php echo esc_html((int) $stock); ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="wps-mb-4">
+                        <?php echo do_shortcode('[wp_store_add_to_cart id="' . esc_attr($id) . '"]'); ?>
+                    </div>
+                    <div class="wps-text-sm wps-text-gray-500">
+                        <?php echo $content; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php
+        return ob_get_clean();
+    }
+
 
     public function render_add_to_cart($atts = [])
     {
         wp_enqueue_script('alpinejs');
         $atts = shortcode_atts([
             'id' => 0,
-            'label' => 'Tambah'
+            'label' => 'Tambah',
+            'size' => ''
         ], $atts);
+        $size = sanitize_key($atts['size']);
+        $btn_class = 'wps-btn wps-btn-primary' . ($size === 'sm' ? ' wps-btn-sm' : '');
         $id = (int) $atts['id'];
         if ($id <= 0) {
             $loop_id = get_the_ID();
@@ -231,8 +292,8 @@ class Shortcode
                     }
                 }
             }">
-            <button type="button" @click="add()" :disabled="loading" class="wps-btn wps-btn-primary">
-                <?php echo \WpStore\Frontend\Component::icon('cart', 24, 'wps-icon-24 wps-mr-2', 2); ?>
+            <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?>">
+                <?php echo \WpStore\Frontend\Component::icon('cart', 20, 'wps-icon-20 wps-mr-2', 2); ?>
                 <?php echo esc_html($atts['label']); ?>
             </button>
             <span x-text="message"></span>

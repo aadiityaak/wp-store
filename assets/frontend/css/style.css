@@ -27,13 +27,16 @@
 }
 .wps-card {
   background-color: white;
-  border-radius: 0.5rem;
+  border-radius: 0.2rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   border: 1px solid #e5e7eb;
   overflow: hidden;
 }
 .wps-p-6 {
   padding: 1.5rem;
+}
+.wps-p-2 {
+  padding: 0.5rem;
 }
 .wps-p-4 {
   padding: 1rem;
@@ -111,7 +114,7 @@
   border: 1px solid transparent;
   font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 0.375rem;
+  border-radius: 0.2rem;
   cursor: pointer;
   transition: background-color 0.15s ease-in-out;
 }
@@ -298,6 +301,10 @@ button.wps-btn-primary {
   width: 24px;
   height: 24px;
 }
+.wps-icon-20 {
+  width: 20px;
+  height: 20px;
+}
 
 .wps-rel {
   position: relative;
@@ -367,6 +374,11 @@ button.wps-btn-primary {
   height: 40px;
   object-fit: cover;
 }
+.wps-img-320 {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
 .wps-img-160 {
   width: 100%;
   height: 160px;
@@ -377,7 +389,7 @@ button.wps-btn-primary {
   width: 100%;
 }
 .wps-rounded {
-  border-radius: 0.5rem;
+  border-radius: 0.2rem;
 }
 
 .wps-modal-backdrop {
@@ -392,7 +404,7 @@ button.wps-btn-primary {
   left: 50%;
   transform: translate(-50%, -50%);
   background: #ffffff;
-  border-radius: 0.5rem;
+  border-radius: 0.2rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   width: 480px;
   max-width: 95vw;
