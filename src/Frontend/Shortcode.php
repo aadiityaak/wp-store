@@ -137,8 +137,9 @@ class Shortcode
                 };
             }
         </script>
-        <div class="wps-p-4">
-            <div x-data="{
+        <script>
+            window.wpStoreCheckout = function() {
+                return {
                     loading: false,
                     submitting: false,
                     cart: [],
@@ -147,7 +148,12 @@ class Shortcode
                     email: '',
                     phone: '',
                     address: '',
-                    profile: { first_name: '', last_name: '', email: '', phone: '' },
+                    profile: {
+                        first_name: '',
+                        last_name: '',
+                        email: '',
+                        phone: ''
+                    },
                     addresses: [],
                     selectedAddressId: '',
                     provinces: [],
@@ -171,9 +177,17 @@ class Shortcode
                     formatPrice(value) {
                         const v = typeof value === 'number' ? value : parseFloat(value || 0);
                         if (this.currency === 'USD') {
-                            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
+                            return new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'USD',
+                                minimumFractionDigits: 0
+                            }).format(v);
                         }
-                        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+                        return new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 0
+                        }).format(v);
                     },
                     totalWithShipping() {
                         const t = typeof this.total === 'number' ? this.total : parseFloat(this.total || 0);
@@ -183,20 +197,24 @@ class Shortcode
                     async fetchProfile() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
-                                headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
                             });
                             if (!res.ok) return;
                             this.profile = await res.json();
-                        } catch(e) {}
+                        } catch (e) {}
                     },
                     async fetchAddresses() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
-                                headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
                             });
                             if (!res.ok) return;
                             this.addresses = await res.json();
-                        } catch(e) {}
+                        } catch (e) {}
                     },
                     useProfile() {
                         if (!this.profile) return;
@@ -215,7 +233,6 @@ class Shortcode
                         this.selectedProvince = addr.province_id ? String(addr.province_id) : '';
                         await this.loadCities();
                         this.selectedCity = addr.city_id ? String(addr.city_id) : '';
-                        // If postal code provided, set
                         this.postalCode = addr.postal_code || this.postalCode;
                         await this.loadSubdistricts();
                         this.selectedSubdistrict = addr.subdistrict_id ? String(addr.subdistrict_id) : '';
@@ -223,36 +240,54 @@ class Shortcode
                     async loadProvinces() {
                         this.isLoadingProvinces = true;
                         try {
-                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
+                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', {
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
+                            });
                             const data = await res.json();
                             this.provinces = data.data || [];
-                        } catch(e) {
+                        } catch (e) {
                             this.provinces = [];
                         } finally {
                             this.isLoadingProvinces = false;
                         }
                     },
                     async loadCities() {
-                        if (!this.selectedProvince) { this.cities = []; return; }
+                        if (!this.selectedProvince) {
+                            this.cities = [];
+                            return;
+                        }
                         this.isLoadingCities = true;
                         try {
-                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
+                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), {
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
+                            });
                             const data = await res.json();
                             this.cities = data.data || [];
-                        } catch(e) {
+                        } catch (e) {
                             this.cities = [];
                         } finally {
                             this.isLoadingCities = false;
                         }
                     },
                     async loadSubdistricts() {
-                        if (!this.selectedCity) { this.subdistricts = []; return; }
+                        if (!this.selectedCity) {
+                            this.subdistricts = [];
+                            return;
+                        }
                         this.isLoadingSubdistricts = true;
                         try {
-                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
+                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), {
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
+                            });
                             const data = await res.json();
                             this.subdistricts = data.data || [];
-                        } catch(e) {
+                        } catch (e) {
                             this.subdistricts = [];
                         } finally {
                             this.isLoadingSubdistricts = false;
@@ -261,14 +296,16 @@ class Shortcode
                     async fetchCart() {
                         this.loading = true;
                         try {
-                            const res = await fetch(wpStoreSettings.restUrl + 'cart', { 
+                            const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                                 credentials: 'include',
-                                headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
                             });
                             const data = await res.json();
                             this.cart = data.items || [];
                             this.total = data.total || 0;
-                        } catch(e) {
+                        } catch (e) {
                             this.cart = [];
                             this.total = 0;
                         } finally {
@@ -314,7 +351,10 @@ class Shortcode
                                     shipping_courier: this.selectedCourier || '',
                                     shipping_service: this.shippingService || '',
                                     shipping_cost: this.shippingCost || 0,
-                                    items: this.cart.map(i => ({ id: i.id, qty: i.qty }))
+                                    items: this.cart.map(i => ({
+                                        id: i.id,
+                                        qty: i.qty
+                                    }))
                                 })
                             });
                             const data = await res.json();
@@ -327,13 +367,20 @@ class Shortcode
                                 await fetch(wpStoreSettings.restUrl + 'cart', {
                                     method: 'DELETE',
                                     credentials: 'include',
-                                    headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                                    headers: {
+                                        'X-WP-Nonce': wpStoreSettings.nonce
+                                    }
                                 });
-                            } catch(_) {}
+                            } catch (_) {}
                             this.cart = [];
                             this.total = 0;
-                            document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: { items: [], total: 0 } }));
-                        } catch(e) {
+                            document.dispatchEvent(new CustomEvent('wp-store:cart-updated', {
+                                detail: {
+                                    items: [],
+                                    total: 0
+                                }
+                            }));
+                        } catch (e) {
                             this.message = 'Terjadi kesalahan jaringan.';
                         } finally {
                             this.submitting = false;
@@ -345,7 +392,11 @@ class Shortcode
                         this.fetchAddresses();
                         this.loadProvinces();
                     }
-                }" x-init="init()">
+                };
+            };
+        </script>
+        <div class="wps-p-4">
+            <div x-data="wpStoreCheckout()" x-init="init()">
                 <div class="wps-grid wps-grid-cols-2">
                     <div class="wps-card">
                         <div class="wps-p-4">
