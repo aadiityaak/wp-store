@@ -71,56 +71,51 @@ class Shortcode
 
         ob_start();
 ?>
-        <div class="wp-store-wrapper">
-            <div class="wp-store-products">
-                <?php if ($query->have_posts()) : ?>
-                    <div class="wp-store-grid">
-                        <?php
-                        while ($query->have_posts()) :
-                            $query->the_post();
-                            $id = get_the_ID();
-                            $price = get_post_meta($id, '_store_price', true);
-                            $stock = get_post_meta($id, '_store_stock', true);
-                            $image = get_the_post_thumbnail_url($id, 'medium');
-                        ?>
-                            <div class="wp-store-card">
+        <div class="wps-p-4">
+            <?php if ($query->have_posts()) : ?>
+                <div class="wps-grid wps-grid-cols-2 wps-grid-cols-4">
+                    <?php
+                    while ($query->have_posts()) :
+                        $query->the_post();
+                        $id = get_the_ID();
+                        $price = get_post_meta($id, '_store_price', true);
+                        $stock = get_post_meta($id, '_store_stock', true);
+                        $image = get_the_post_thumbnail_url($id, 'medium');
+                        $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
+                    ?>
+                        <div class="wps-card">
+                            <div class="wps-p-4">
                                 <?php if ($image) : ?>
-                                    <div class="wp-store-image">
-                                        <img src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
-                                    </div>
+                                    <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160" src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
                                 <?php endif; ?>
-                                <h3><?php the_title(); ?></h3>
-                                <p><?php echo esc_html(wp_trim_words(get_the_content(), 20)); ?></p>
-                                <div class="wp-store-product-details">
-                                    <span>
-                                        <?php
-                                        if ($price !== '') {
-                                            echo esc_html(number_format_i18n((float) $price, 0));
-                                        }
-                                        ?>
-                                    </span>
+                                <a class="wps-text-sm wps-text-gray-900 wps-mb-4" href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                                <div class="wps-text-sm wps-text-gray-900 wps-mb-4">
+                                    <?php
+                                    if ($price !== '') {
+                                        echo esc_html($currency . ' ' . number_format_i18n((float) $price, 0));
+                                    }
+                                    ?>
                                     <?php if ($stock !== '') : ?>
-                                        <span> | Stok: <?php echo esc_html((int) $stock); ?></span>
+                                        <span class="wps-text-gray-500"> • Stok: <?php echo esc_html((int) $stock); ?></span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="wp-store-card-footer">
-                                    <a href="<?php the_permalink(); ?>">Lihat Detail</a>
-                                </div>
-                                <div>
-                                    <?php echo do_shortcode('[wp_store_add_to_cart]'); ?>
+                                <div class="wps-flex wps-items-center wps-justify-between">
+                                    <div><?php echo do_shortcode('[wp_store_add_to_cart]'); ?></div>
+                                    <a class="wps-btn wps-btn-secondary" href="<?php the_permalink(); ?>">Lihat Detail</a>
                                 </div>
                             </div>
-                        <?php endwhile; ?>
-                    </div>
-                    <?php wp_reset_postdata(); ?>
-                <?php else : ?>
-                    <div>Belum ada produk.</div>
-                <?php endif; ?>
-            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+                <?php wp_reset_postdata(); ?>
+            <?php else : ?>
+                <div class="wps-text-sm wps-text-gray-500">Belum ada produk.</div>
+            <?php endif; ?>
         </div>
     <?php
         return ob_get_clean();
     }
+
 
     public function render_add_to_cart($atts = [])
     {
@@ -236,7 +231,10 @@ class Shortcode
                     }
                 }
             }">
-            <button type="button" @click="add()" :disabled="loading" class="wps-btn wps-btn-primary"><?php echo esc_html($atts['label']); ?></button>
+            <button type="button" @click="add()" :disabled="loading" class="wps-btn wps-btn-primary">
+                <?php echo \WpStore\Frontend\Component::icon('cart', 24, 'wps-icon-24 wps-mr-2', 2); ?>
+                <?php echo esc_html($atts['label']); ?>
+            </button>
             <span x-text="message"></span>
             <div x-show="showModal" x-cloak class="wps-modal-backdrop" @click.self="showModal = false"></div>
             <div x-show="showModal" x-cloak class="wps-modal">
@@ -261,8 +259,8 @@ class Shortcode
                         </select>
                     </div>
                     <div class="wps-flex wps-justify-between wps-items-center">
-                        <button type="button" class="wps-btn wps-btn-secondary" @click="showModal = false">Batal</button>
-                        <button type="button" class="wps-btn wps-btn-primary" @click="confirmAdd()" :disabled="!canSubmit()">Tambah</button>
+                        <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="showModal = false">Batal</button>
+                        <button type="button" class="wps-btn wps-btn-primary wps-btn-sm" @click="confirmAdd()" :disabled="!canSubmit()">Tambah</button>
                     </div>
                 </div>
             </div>
