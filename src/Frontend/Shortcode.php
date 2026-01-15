@@ -142,6 +142,10 @@ class Shortcode
         if ($id <= 0) {
             return '';
         }
+        $basic_name = get_post_meta($id, '_store_option_name', true);
+        $basic_values = get_post_meta($id, '_store_options', true);
+        $adv_name = get_post_meta($id, '_store_option2_name', true);
+        $adv_values = get_post_meta($id, '_store_advanced_options', true);
         ob_start();
     ?>
         <script>
@@ -155,7 +159,30 @@ class Shortcode
         <div x-data="{
                 loading: false,
                 message: '',
+                showModal: false,
+                basicName: <?php echo wp_json_encode($basic_name ?: ''); ?>,
+                basicOptions: <?php echo wp_json_encode(is_array($basic_values) ? array_values($basic_values) : []); ?>,
+                advName: <?php echo wp_json_encode($adv_name ?: ''); ?>,
+                advOptions: <?php echo wp_json_encode(is_array($adv_values) ? array_values($adv_values) : []); ?>,
+                selectedBasic: '',
+                selectedAdv: '',
+                hasOptions() {
+                    return (this.basicName && this.basicOptions.length > 0) || (this.advName && this.advOptions.length > 0);
+                },
+                getOptionsPayload() {
+                    const opts = {};
+                    if (this.basicName && this.selectedBasic) { opts[this.basicName] = this.selectedBasic; }
+                    if (this.advName && this.selectedAdv) { opts[this.advName] = this.selectedAdv; }
+                    return opts;
+                },
                 async add() {
+                    if (this.hasOptions()) {
+                        this.showModal = true;
+                        return;
+                    }
+                    await this.confirmAdd();
+                },
+                async confirmAdd() {
                     this.loading = true;
                     try {
                         let currentQty = 0;
@@ -165,7 +192,13 @@ class Shortcode
                                 headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
                             });
                             const dataCart = await resCart.json();
-                            const item = (dataCart.items || []).find((i) => i.id === <?php echo (int) $id; ?>);
+                            const opts = this.getOptionsPayload();
+                            const item = (dataCart.items || []).find((i) => {
+                                if (i.id !== <?php echo (int) $id; ?>) return false;
+                                const a = i.options || {};
+                                const b = opts || {};
+                                return JSON.stringify(a) === JSON.stringify(b);
+                            });
                             currentQty = item ? (item.qty || 0) : 0;
                         } catch (e) {}
                         const nextQty = currentQty + 1;
@@ -176,7 +209,7 @@ class Shortcode
                                 'Content-Type': 'application/json',
                                 'X-WP-Nonce': wpStoreSettings.nonce
                             },
-                            body: JSON.stringify({ id: <?php echo esc_attr($id); ?>, qty: nextQty })
+                            body: JSON.stringify({ id: <?php echo esc_attr($id); ?>, qty: nextQty, options: this.getOptionsPayload() })
                         });
                         const data = await res.json();
                         if (!res.ok) {
@@ -185,6 +218,7 @@ class Shortcode
                         }
                         document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: data }));
                         this.message = 'Ditambahkan';
+                        this.showModal = false;
                         setTimeout(() => { this.message = ''; }, 1500);
                     } catch (e) {
                         this.message = 'Kesalahan jaringan';
@@ -193,8 +227,36 @@ class Shortcode
                     }
                 }
             }">
-            <button type="button" @click="add()" :disabled="loading"><?php echo esc_html($atts['label']); ?></button>
+            <button type="button" @click="add()" :disabled="loading" class="wps-btn wps-btn-primary"><?php echo esc_html($atts['label']); ?></button>
             <span x-text="message"></span>
+            <div x-show="showModal" class="wps-modal-backdrop" @click.self="showModal = false"></div>
+            <div x-show="showModal" class="wps-modal">
+                <div class="wps-p-4">
+                    <div class="wps-mb-4 wps-text-lg wps-font-medium wps-text-gray-900">Pilih Opsi</div>
+                    <div class="wps-mb-4" x-show="basicName && basicOptions.length">
+                        <label class="wps-label" x-text="basicName"></label>
+                        <select class="wps-select" x-model="selectedBasic">
+                            <option value="">-- Pilih --</option>
+                            <template x-for="opt in basicOptions" :key="opt">
+                                <option :value="opt" x-text="opt"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="wps-mb-4" x-show="advName && advOptions.length">
+                        <label class="wps-label" x-text="advName"></label>
+                        <select class="wps-select" x-model="selectedAdv">
+                            <option value="">-- Pilih --</option>
+                            <template x-for="opt in advOptions" :key="opt.label">
+                                <option :value="opt.label" x-text="opt.label"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="wps-flex wps-justify-between wps-items-center">
+                        <button type="button" class="wps-btn wps-btn-secondary" @click="showModal = false">Batal</button>
+                        <button type="button" class="wps-btn wps-btn-primary" @click="confirmAdd()" :disabled="(basicName && !selectedBasic) || (advName && !selectedAdv)">Tambah</button>
+                    </div>
+                </div>
+            </div>
         </div>
     <?php
         return ob_get_clean();
@@ -242,7 +304,7 @@ class Shortcode
                                 'Content-Type': 'application/json',
                                 'X-WP-Nonce': wpStoreSettings.nonce
                             },
-                            body: JSON.stringify({ id, qty })
+                            body: JSON.stringify({ id, qty, options: (this.cart.find((i)=>i.id===id)?.options||{}) })
                         });
                         const data = await res.json();
                         if (!res.ok) {

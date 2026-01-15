@@ -98,6 +98,7 @@ class CartController
 
         $product_id = isset($data['id']) ? (int) $data['id'] : 0;
         $qty = isset($data['qty']) ? (int) $data['qty'] : 1;
+        $options = isset($data['options']) && is_array($data['options']) ? $this->normalize_options($data['options']) : [];
 
         if ($product_id <= 0 || get_post_type($product_id) !== 'store_product') {
             return new WP_REST_Response(['message' => 'Produk tidak valid'], 400);
@@ -108,7 +109,7 @@ class CartController
         }
 
         $cart = $this->read_cart();
-        $cart = $this->apply_upsert($cart, $product_id, $qty);
+        $cart = $this->apply_upsert($cart, $product_id, $qty, $options);
         $this->write_cart($cart);
 
         return new WP_REST_Response($this->format_cart($cart), 200);
@@ -120,7 +121,7 @@ class CartController
         return new WP_REST_Response($this->format_cart([]), 200);
     }
 
-    private function apply_upsert($cart, $product_id, $qty)
+    private function apply_upsert($cart, $product_id, $qty, $options = [])
     {
         $cart = is_array($cart) ? $cart : [];
 
@@ -130,24 +131,25 @@ class CartController
         foreach ($cart as $row) {
             $id = isset($row['id']) ? (int) $row['id'] : 0;
             $row_qty = isset($row['qty']) ? (int) $row['qty'] : 0;
+            $row_opts = isset($row['opts']) && is_array($row['opts']) ? $this->normalize_options($row['opts']) : [];
 
             if ($id <= 0 || $row_qty <= 0) {
                 continue;
             }
 
-            if ($id === (int) $product_id) {
+            if ($id === (int) $product_id && $this->options_equal($row_opts, $options)) {
                 $found = true;
                 if ($qty > 0) {
-                    $next[] = ['id' => (int) $product_id, 'qty' => (int) $qty];
+                    $next[] = ['id' => (int) $product_id, 'qty' => (int) $qty, 'opts' => $options];
                 }
                 continue;
             }
 
-            $next[] = ['id' => $id, 'qty' => $row_qty];
+            $next[] = ['id' => $id, 'qty' => $row_qty, 'opts' => $row_opts];
         }
 
         if (!$found && $qty > 0) {
-            $next[] = ['id' => (int) $product_id, 'qty' => (int) $qty];
+            $next[] = ['id' => (int) $product_id, 'qty' => (int) $qty, 'opts' => $options];
         }
 
         return $next;
@@ -238,12 +240,13 @@ class CartController
         foreach ($cart as $row) {
             $product_id = isset($row['id']) ? (int) $row['id'] : 0;
             $qty = isset($row['qty']) ? (int) $row['qty'] : 0;
+            $opts = isset($row['opts']) && is_array($row['opts']) ? $row['opts'] : [];
 
             if ($product_id <= 0 || $qty <= 0 || get_post_type($product_id) !== 'store_product') {
                 continue;
             }
 
-            $price = (float) get_post_meta($product_id, '_store_price', true);
+            $price = $this->resolve_price_with_options($product_id, $opts);
             $subtotal = $price * $qty;
             $total += $subtotal;
 
@@ -255,6 +258,7 @@ class CartController
                 'subtotal' => $subtotal,
                 'image' => get_the_post_thumbnail_url($product_id, 'thumbnail') ?: null,
                 'link' => get_permalink($product_id),
+                'options' => $opts,
             ];
         }
 
@@ -262,5 +266,45 @@ class CartController
             'items' => $items,
             'total' => $total,
         ];
+    }
+
+    private function normalize_options($options)
+    {
+        $normalized = [];
+        foreach ($options as $k => $v) {
+            $key = sanitize_text_field($k);
+            if (is_array($v)) {
+                $normalized[$key] = array_map('sanitize_text_field', $v);
+            } else {
+                $normalized[$key] = sanitize_text_field((string) $v);
+            }
+        }
+        ksort($normalized);
+        return $normalized;
+    }
+
+    private function options_equal($a, $b)
+    {
+        $a = $this->normalize_options(is_array($a) ? $a : []);
+        $b = $this->normalize_options(is_array($b) ? $b : []);
+        return wp_json_encode($a) === wp_json_encode($b);
+    }
+
+    private function resolve_price_with_options($product_id, $opts)
+    {
+        $base = (float) get_post_meta($product_id, '_store_price', true);
+        $adv_name = get_post_meta($product_id, '_store_option2_name', true);
+        $adv = get_post_meta($product_id, '_store_advanced_options', true);
+        if (is_array($adv) && $adv_name && isset($opts[$adv_name])) {
+            $label = (string) $opts[$adv_name];
+            foreach ($adv as $row) {
+                $rlabel = isset($row['label']) ? (string) $row['label'] : '';
+                $rprice = isset($row['price']) ? (float) $row['price'] : 0;
+                if ($rlabel !== '' && $rlabel === $label && $rprice > 0) {
+                    return $rprice;
+                }
+            }
+        }
+        return $base;
     }
 }
