@@ -86,6 +86,26 @@ class CheckoutController
         update_post_meta($order_id, '_store_order_total', $total);
         update_post_meta($order_id, '_store_order_items', $lines);
 
+        $address = isset($data['address']) ? sanitize_textarea_field($data['address']) : '';
+        $province_id = isset($data['province_id']) ? sanitize_text_field($data['province_id']) : '';
+        $province_name = isset($data['province_name']) ? sanitize_text_field($data['province_name']) : '';
+        $city_id = isset($data['city_id']) ? sanitize_text_field($data['city_id']) : '';
+        $city_name = isset($data['city_name']) ? sanitize_text_field($data['city_name']) : '';
+        $subdistrict_id = isset($data['subdistrict_id']) ? sanitize_text_field($data['subdistrict_id']) : '';
+        $subdistrict_name = isset($data['subdistrict_name']) ? sanitize_text_field($data['subdistrict_name']) : '';
+        $postal_code = isset($data['postal_code']) ? sanitize_text_field($data['postal_code']) : '';
+        $notes = isset($data['notes']) ? sanitize_textarea_field($data['notes']) : '';
+
+        update_post_meta($order_id, '_store_order_address', $address);
+        update_post_meta($order_id, '_store_order_province_id', $province_id);
+        update_post_meta($order_id, '_store_order_province_name', $province_name);
+        update_post_meta($order_id, '_store_order_city_id', $city_id);
+        update_post_meta($order_id, '_store_order_city_name', $city_name);
+        update_post_meta($order_id, '_store_order_subdistrict_id', $subdistrict_id);
+        update_post_meta($order_id, '_store_order_subdistrict_name', $subdistrict_name);
+        update_post_meta($order_id, '_store_order_postal_code', $postal_code);
+        update_post_meta($order_id, '_store_order_notes', $notes);
+
         return new WP_REST_Response([
             'id' => $order_id,
             'total' => $total,

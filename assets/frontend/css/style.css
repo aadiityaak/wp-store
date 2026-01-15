@@ -44,6 +44,9 @@
 .wps-transition {
   transition: all 150ms ease-in-out;
 }
+.wps-text-bold {
+  font-weight: 700 !important;
+}
 .wps-text-center {
   text-align: center;
 }
@@ -159,6 +162,18 @@ button.wps-btn-primary {
 }
 .wps-btn-secondary:hover {
   background-color: #f9fafb;
+}
+.wps-callout {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+.wps-callout-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  margin-bottom: 0.5rem;
 }
 .wps-btn-danger {
   background-color: white;

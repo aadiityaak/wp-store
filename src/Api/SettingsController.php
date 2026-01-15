@@ -29,7 +29,7 @@ class SettingsController
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'get_rajaongkir_provinces'],
-                'permission_callback' => [$this, 'check_admin_auth'],
+                'permission_callback' => '__return_true',
             ],
         ]);
 
@@ -37,7 +37,7 @@ class SettingsController
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'get_rajaongkir_cities'],
-                'permission_callback' => [$this, 'check_admin_auth'],
+                'permission_callback' => '__return_true',
             ],
         ]);
 
@@ -45,7 +45,7 @@ class SettingsController
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'get_rajaongkir_subdistricts'],
-                'permission_callback' => [$this, 'check_admin_auth'],
+                'permission_callback' => '__return_true',
             ],
         ]);
     }

@@ -143,6 +143,21 @@ class Shortcode
                     name: '',
                     email: '',
                     phone: '',
+                    address: '',
+                    profile: { first_name: '', last_name: '', email: '', phone: '' },
+                    addresses: [],
+                    selectedAddressId: '',
+                    provinces: [],
+                    cities: [],
+                    subdistricts: [],
+                    selectedProvince: '',
+                    selectedCity: '',
+                    selectedSubdistrict: '',
+                    postalCode: '',
+                    notes: '',
+                    isLoadingProvinces: false,
+                    isLoadingCities: false,
+                    isLoadingSubdistricts: false,
                     message: '',
                     currency: '<?php echo esc_js($currency); ?>',
                     formatPrice(value) {
@@ -151,6 +166,84 @@ class Shortcode
                             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
                         }
                         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+                    },
+                    async fetchProfile() {
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
+                                headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                            });
+                            if (!res.ok) return;
+                            this.profile = await res.json();
+                        } catch(e) {}
+                    },
+                    async fetchAddresses() {
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
+                                headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                            });
+                            if (!res.ok) return;
+                            this.addresses = await res.json();
+                        } catch(e) {}
+                    },
+                    useProfile() {
+                        if (!this.profile) return;
+                        const fullName = [this.profile.first_name || '', this.profile.last_name || ''].filter(Boolean).join(' ').trim();
+                        this.name = fullName || this.name;
+                        this.email = this.profile.email || this.email;
+                        this.phone = this.profile.phone || this.phone;
+                    },
+                    async useAddressById() {
+                        const addr = this.addresses.find(a => String(a.id) === String(this.selectedAddressId));
+                        if (!addr) return;
+                        await this.applyAddress(addr);
+                    },
+                    async applyAddress(addr) {
+                        this.address = addr.address || '';
+                        this.selectedProvince = addr.province_id ? String(addr.province_id) : '';
+                        await this.loadCities();
+                        this.selectedCity = addr.city_id ? String(addr.city_id) : '';
+                        // If postal code provided, set
+                        this.postalCode = addr.postal_code || this.postalCode;
+                        await this.loadSubdistricts();
+                        this.selectedSubdistrict = addr.subdistrict_id ? String(addr.subdistrict_id) : '';
+                    },
+                    async loadProvinces() {
+                        this.isLoadingProvinces = true;
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
+                            const data = await res.json();
+                            this.provinces = data.data || [];
+                        } catch(e) {
+                            this.provinces = [];
+                        } finally {
+                            this.isLoadingProvinces = false;
+                        }
+                    },
+                    async loadCities() {
+                        if (!this.selectedProvince) { this.cities = []; return; }
+                        this.isLoadingCities = true;
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
+                            const data = await res.json();
+                            this.cities = data.data || [];
+                        } catch(e) {
+                            this.cities = [];
+                        } finally {
+                            this.isLoadingCities = false;
+                        }
+                    },
+                    async loadSubdistricts() {
+                        if (!this.selectedCity) { this.subdistricts = []; return; }
+                        this.isLoadingSubdistricts = true;
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
+                            const data = await res.json();
+                            this.subdistricts = data.data || [];
+                        } catch(e) {
+                            this.subdistricts = [];
+                        } finally {
+                            this.isLoadingSubdistricts = false;
+                        }
                     },
                     async fetchCart() {
                         this.loading = true;
@@ -168,6 +261,14 @@ class Shortcode
                         } finally {
                             this.loading = false;
                         }
+                    },
+                    async importFromProfile() {
+                        await this.fetchProfile();
+                        if (!this.profile || !this.profile.email) {
+                            window.location.href = '<?php echo esc_js(site_url('/profil-saya/?tab=profile')); ?>';
+                            return;
+                        }
+                        this.useProfile();
                     },
                     async submit() {
                         if (!this.name || this.cart.length === 0) {
@@ -188,6 +289,15 @@ class Shortcode
                                     name: this.name,
                                     email: this.email,
                                     phone: this.phone,
+                                    address: this.address,
+                                    province_id: this.selectedProvince || '',
+                                    province_name: (this.provinces.find(p => String(p.province_id) === String(this.selectedProvince)) || {}).province || '',
+                                    city_id: this.selectedCity || '',
+                                    city_name: (this.cities.find(c => String(c.city_id) === String(this.selectedCity)) || {}).city_name || '',
+                                    subdistrict_id: this.selectedSubdistrict || '',
+                                    subdistrict_name: (this.subdistricts.find(s => String(s.subdistrict_id) === String(this.selectedSubdistrict)) || {}).subdistrict_name || '',
+                                    postal_code: this.postalCode || '',
+                                    notes: this.notes || '',
                                     items: this.cart.map(i => ({ id: i.id, qty: i.qty }))
                                 })
                             });
@@ -215,12 +325,22 @@ class Shortcode
                     },
                     init() {
                         this.fetchCart();
+                        this.fetchProfile();
+                        this.fetchAddresses();
+                        this.loadProvinces();
                     }
                 }" x-init="init()">
                 <div class="wps-grid wps-grid-cols-2">
                     <div class="wps-card">
                         <div class="wps-p-4">
-                            <div class="wps-text-lg wps-font-medium wps-mb-4">Informasi Pemesan</div>
+                            <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Informasi Pemesan</div>
+                            <div class="">
+                                <div class="wps-callout-title">Gunakan Data Tersimpan</div>
+                                <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
+                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()">Impor Profil</button>
+                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary">Kelola Profil</a>
+                                </div>
+                            </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Nama</label>
                                 <input class="wps-input" type="text" x-model="name" placeholder="Nama lengkap">
@@ -232,6 +352,57 @@ class Shortcode
                             <div class="wps-form-group">
                                 <label class="wps-label">Telepon/WA</label>
                                 <input class="wps-input" type="text" x-model="phone" placeholder="08xxxxxxxxxx">
+                            </div>
+                            <div class="wps-form-group" x-show="addresses && addresses.length">
+                                <label class="wps-label wps-text-bold">Alamat Tersimpan</label>
+                                <select class="wps-select" x-model="selectedAddressId" @change="useAddressById()">
+                                    <option value="">-- Pilih alamat --</option>
+                                    <template x-for="addr in addresses" :key="addr.id">
+                                        <option :value="addr.id" x-text="(addr.label ? addr.label + ' - ' : '') + (addr.city_name || '')"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Provinsi</label>
+                                <select class="wps-select" x-model="selectedProvince" @change="selectedCity=''; selectedSubdistrict=''; postalCode=''; loadCities()">
+                                    <option value="">-- Pilih Provinsi --</option>
+                                    <template x-for="prov in provinces" :key="prov.province_id">
+                                        <option :value="prov.province_id" x-text="prov.province"></option>
+                                    </template>
+                                </select>
+                                <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingProvinces">Memuat provinsi...</div>
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Kota/Kabupaten</label>
+                                <select class="wps-select" x-model="selectedCity" @change="selectedSubdistrict=''; postalCode=(cities.find(c => String(c.city_id) === String(selectedCity)) || {}).postal_code || ''; loadSubdistricts()" :disabled="!selectedProvince">
+                                    <option value="">-- Pilih Kota/Kabupaten --</option>
+                                    <template x-for="c in cities" :key="c.city_id">
+                                        <option :value="c.city_id" x-text="c.city_name"></option>
+                                    </template>
+                                </select>
+                                <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingCities">Memuat kota...</div>
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Kecamatan</label>
+                                <select class="wps-select" x-model="selectedSubdistrict" :disabled="!selectedCity">
+                                    <option value="">-- Pilih Kecamatan --</option>
+                                    <template x-for="s in subdistricts" :key="s.subdistrict_id">
+                                        <option :value="s.subdistrict_id" x-text="s.subdistrict_name"></option>
+                                    </template>
+                                </select>
+                                <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingSubdistricts">Memuat kecamatan...</div>
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Alamat Lengkap</label>
+                                <textarea class="wps-textarea" rows="3" x-model="address" placeholder="Nama jalan, nomor rumah, RT/RW, patokan, dsb."></textarea>
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Kode Pos</label>
+                                <input class="wps-input" type="text" x-model="postalCode" placeholder="Contoh: 40285">
+                            </div>
+                            <div class="wps-form-group">
+                                <label class="wps-label">Pesan Tambahan</label>
+                                <textarea class="wps-textarea" rows="3" x-model="notes" placeholder="Catatan untuk pesanan, alamat lengkap, dll."></textarea>
                             </div>
                             <div class="wps-form-group">
                                 <button type="button" class="wps-btn wps-btn-primary" @click="submit()" :disabled="submitting || cart.length === 0">
@@ -246,7 +417,7 @@ class Shortcode
                     </div>
                     <div class="wps-card">
                         <div class="wps-p-4">
-                            <div class="wps-text-lg wps-font-medium wps-mb-4">Ringkasan Keranjang</div>
+                            <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Ringkasan Keranjang</div>
                             <template x-if="loading">
                                 <div class="wps-text-sm wps-text-gray-500">Memuat keranjang...</div>
                             </template>
