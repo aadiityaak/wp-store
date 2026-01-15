@@ -171,9 +171,11 @@ class Shortcode
                     currency: '<?php echo esc_js($currency); ?>',
                     originSubdistrict: '<?php echo esc_js($origin_subdistrict); ?>',
                     shippingCouriers: <?php echo json_encode($active_couriers); ?>,
-                    selectedCourier: '',
+                    shippingCourier: '',
                     shippingService: '',
                     shippingCost: 0,
+                    shippingOptions: [],
+                    selectedShippingKey: '',
                     formatPrice(value) {
                         const v = typeof value === 'number' ? value : parseFloat(value || 0);
                         if (this.currency === 'USD') {
@@ -188,6 +190,57 @@ class Shortcode
                             currency: 'IDR',
                             minimumFractionDigits: 0
                         }).format(v);
+                    },
+                    async calculateAllShipping() {
+                        if (!this.selectedSubdistrict || !Array.isArray(this.shippingCouriers) || this.shippingCouriers.length === 0) {
+                            return;
+                        }
+                        this.shippingOptions = [];
+                        this.selectedShippingKey = '';
+                        this.shippingCourier = '';
+                        this.shippingService = '';
+                        this.shippingCost = 0;
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/calculate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                },
+                                body: JSON.stringify({
+                                    destination_subdistrict: this.selectedSubdistrict,
+                                    courier: this.shippingCouriers.join(':')
+                                })
+                            });
+                            const data = await res.json();
+                            if (res.ok && data && data.success && Array.isArray(data.services)) {
+                                this.shippingOptions = data.services.map(s => ({
+                                    courier: s.courier || '',
+                                    service: s.service || '',
+                                    description: s.description || '',
+                                    cost: s.cost || 0,
+                                    etd: s.etd || ''
+                                }));
+                            }
+                        } catch (e) {}
+                        const first = this.shippingOptions.find(s => s.cost > 0) || this.shippingOptions[0] || null;
+                        if (first) {
+                            this.selectedShippingKey = first.courier + ':' + (first.service || '');
+                            this.shippingCourier = first.courier || '';
+                            this.shippingService = first.service || '';
+                            this.shippingCost = first.cost || 0;
+                        }
+                    },
+                    onSelectService() {
+                        const parts = String(this.selectedShippingKey || '').split(':');
+                        const c = parts[0] || '';
+                        const svc = parts[1] || '';
+                        const opt = this.shippingOptions.find(s => String(s.courier) === String(c) && String(s.service) === String(svc));
+                        if (opt) {
+                            this.shippingCourier = opt.courier || '';
+                            this.shippingService = opt.service || '';
+                            this.shippingCost = opt.cost || 0;
+                        }
                     },
                     totalWithShipping() {
                         const t = typeof this.total === 'number' ? this.total : parseFloat(this.total || 0);
@@ -236,6 +289,7 @@ class Shortcode
                         this.postalCode = addr.postal_code || this.postalCode;
                         await this.loadSubdistricts();
                         this.selectedSubdistrict = addr.subdistrict_id ? String(addr.subdistrict_id) : '';
+                        await this.calculateAllShipping();
                     },
                     async loadProvinces() {
                         this.isLoadingProvinces = true;
@@ -348,7 +402,7 @@ class Shortcode
                                     subdistrict_name: (this.subdistricts.find(s => String(s.subdistrict_id) === String(this.selectedSubdistrict)) || {}).subdistrict_name || '',
                                     postal_code: this.postalCode || '',
                                     notes: this.notes || '',
-                                    shipping_courier: this.selectedCourier || '',
+                                    shipping_courier: this.shippingCourier || '',
                                     shipping_service: this.shippingService || '',
                                     shipping_cost: this.shippingCost || 0,
                                     items: this.cart.map(i => ({
@@ -398,158 +452,178 @@ class Shortcode
         <div class="wps-p-4">
             <div x-data="wpStoreCheckout()" x-init="init()">
                 <div class="wps-grid wps-grid-cols-2">
-                    <div class="wps-card">
-                        <div class="wps-p-4">
-                            <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Informasi Pemesan</div>
-                            <div class="">
-                                <div class="wps-callout-title">Gunakan Data Tersimpan</div>
-                                <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
-                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()">Impor Profil</button>
-                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary">Kelola</a>
-                                </div>
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Nama</label>
-                                <input class="wps-input" type="text" x-model="name" placeholder="Nama lengkap">
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Email</label>
-                                <input class="wps-input" type="email" x-model="email" placeholder="email@contoh.com">
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Telepon/WA</label>
-                                <input class="wps-input" type="text" x-model="phone" placeholder="08xxxxxxxxxx">
-                            </div>
-                            <div class="wps-form-group" x-show="addresses && addresses.length">
-                                <label class="wps-label wps-text-bold">Alamat Tersimpan</label>
-                                <select class="wps-select" x-model="selectedAddressId" @change="useAddressById()">
-                                    <option value="">-- Pilih alamat --</option>
-                                    <template x-for="addr in addresses" :key="addr.id">
-                                        <option :value="addr.id" x-text="(addr.label ? addr.label + ' - ' : '') + (addr.city_name || '')"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Provinsi</label>
-                                <select class="wps-select" x-model="selectedProvince" @change="selectedCity=''; selectedSubdistrict=''; postalCode=''; loadCities()">
-                                    <option value="">-- Pilih Provinsi --</option>
-                                    <template x-for="prov in provinces" :key="prov.province_id">
-                                        <option :value="prov.province_id" x-text="prov.province"></option>
-                                    </template>
-                                </select>
-                                <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingProvinces">Memuat provinsi...</div>
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Kota/Kabupaten</label>
-                                <select class="wps-select" x-model="selectedCity" @change="selectedSubdistrict=''; postalCode=(cities.find(c => String(c.city_id) === String(selectedCity)) || {}).postal_code || ''; loadSubdistricts()" :disabled="!selectedProvince">
-                                    <option value="">-- Pilih Kota/Kabupaten --</option>
-                                    <template x-for="c in cities" :key="c.city_id">
-                                        <option :value="c.city_id" x-text="c.city_name"></option>
-                                    </template>
-                                </select>
-                                <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingCities">Memuat kota...</div>
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Kecamatan</label>
-                                <select class="wps-select" x-model="selectedSubdistrict" :disabled="!selectedCity">
-                                    <option value="">-- Pilih Kecamatan --</option>
-                                    <template x-for="s in subdistricts" :key="s.subdistrict_id">
-                                        <option :value="s.subdistrict_id" x-text="s.subdistrict_name"></option>
-                                    </template>
-                                </select>
-                                <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingSubdistricts">Memuat kecamatan...</div>
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Alamat Lengkap</label>
-                                <textarea class="wps-textarea" rows="3" x-model="address" placeholder="Nama jalan, nomor rumah, RT/RW, patokan, dsb."></textarea>
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Kode Pos</label>
-                                <input class="wps-input" type="text" x-model="postalCode" placeholder="Contoh: 40285">
-                            </div>
-                            <div class="wps-form-group">
-                                <label class="wps-label">Pesan Tambahan</label>
-                                <textarea class="wps-textarea" rows="3" x-model="notes" placeholder="Catatan untuk pesanan, alamat lengkap, dll."></textarea>
-                            </div>
-                            <div class="wps-form-group">
-                                <button type="button" class="wps-btn wps-btn-primary" @click="submit()" :disabled="submitting || cart.length === 0">
-                                    <span x-show="!submitting">Buat Pesanan</span>
-                                    <span x-show="submitting">Mengirim...</span>
-                                </button>
-                            </div>
-                            <template x-if="message">
-                                <div class="wps-alert wps-alert-success" x-text="message"></div>
-                            </template>
-                        </div>
-                    </div>
-                    <template x-if="selectedSubdistrict">
-                        <div class="wps-card" style="margin-top: 1rem;">
+                    <div>
+                        <div class="wps-card">
                             <div class="wps-p-4">
-                                <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Pilih Pengiriman</div>
+                                <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Informasi Pemesan</div>
+                                <div class="">
+                                    <div class="wps-callout-title">Gunakan Data Tersimpan</div>
+                                    <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
+                                        <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()">Impor Profil</button>
+                                        <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary">Kelola</a>
+                                    </div>
+                                </div>
                                 <div class="wps-form-group">
-                                    <label class="wps-label">Kurir</label>
-                                    <select class="wps-select" x-model="selectedCourier">
-                                        <option value="">-- Pilih Kurir --</option>
-                                        <template x-for="c in shippingCouriers" :key="c">
-                                            <option :value="c" x-text="c.toUpperCase()"></option>
+                                    <label class="wps-label">Nama</label>
+                                    <input class="wps-input" type="text" x-model="name" placeholder="Nama lengkap">
+                                </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Email</label>
+                                    <input class="wps-input" type="email" x-model="email" placeholder="email@contoh.com">
+                                </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Telepon/WA</label>
+                                    <input class="wps-input" type="text" x-model="phone" placeholder="08xxxxxxxxxx">
+                                </div>
+                                <div class="wps-form-group" x-show="addresses && addresses.length">
+                                    <label class="wps-label wps-text-bold">Alamat Tersimpan</label>
+                                    <select class="wps-select" x-model="selectedAddressId" @change="useAddressById()">
+                                        <option value="">-- Pilih alamat --</option>
+                                        <template x-for="addr in addresses" :key="addr.id">
+                                            <option :value="addr.id" x-text="(addr.label ? addr.label + ' - ' : '') + (addr.city_name || '')"></option>
                                         </template>
                                     </select>
                                 </div>
-                                <div class="wps-grid wps-grid-cols-2 wps-gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <div class="wps-form-group">
-                                        <label class="wps-label">Layanan</label>
-                                        <input class="wps-input" type="text" x-model="shippingService" placeholder="Contoh: REG, YES">
-                                    </div>
-                                    <div class="wps-form-group">
-                                        <label class="wps-label">Ongkir (Rp)</label>
-                                        <input class="wps-input" type="number" min="0" step="1" x-model="shippingCost" placeholder="Masukkan biaya ongkir">
-                                    </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Provinsi</label>
+                                    <select class="wps-select" x-model="selectedProvince" @change="selectedCity=''; selectedSubdistrict=''; postalCode=''; loadCities()">
+                                        <option value="">-- Pilih Provinsi --</option>
+                                        <template x-for="prov in provinces" :key="prov.province_id">
+                                            <option :value="prov.province_id" x-text="prov.province"></option>
+                                        </template>
+                                    </select>
+                                    <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingProvinces">Memuat provinsi...</div>
                                 </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Kota/Kabupaten</label>
+                                    <select class="wps-select" x-model="selectedCity" @change="selectedSubdistrict=''; postalCode=(cities.find(c => String(c.city_id) === String(selectedCity)) || {}).postal_code || ''; loadSubdistricts()" :disabled="!selectedProvince">
+                                        <option value="">-- Pilih Kota/Kabupaten --</option>
+                                        <template x-for="c in cities" :key="c.city_id">
+                                            <option :value="c.city_id" x-text="c.city_name"></option>
+                                        </template>
+                                    </select>
+                                    <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingCities">Memuat kota...</div>
+                                </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Kecamatan</label>
+                                    <select class="wps-select" x-model="selectedSubdistrict" @change="calculateAllShipping()" :disabled="!selectedCity">
+                                        <option value="">-- Pilih Kecamatan --</option>
+                                        <template x-for="s in subdistricts" :key="s.subdistrict_id">
+                                            <option :value="s.subdistrict_id" x-text="s.subdistrict_name"></option>
+                                        </template>
+                                    </select>
+                                    <div class="wps-text-xs wps-text-gray-500" x-show="isLoadingSubdistricts">Memuat kecamatan...</div>
+                                </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Alamat Lengkap</label>
+                                    <textarea class="wps-textarea" rows="3" x-model="address" placeholder="Nama jalan, nomor rumah, RT/RW, patokan, dsb."></textarea>
+                                </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Kode Pos</label>
+                                    <input class="wps-input" type="text" x-model="postalCode" placeholder="Contoh: 40285">
+                                </div>
+                                <div class="wps-form-group">
+                                    <label class="wps-label">Pesan Tambahan</label>
+                                    <textarea class="wps-textarea" rows="3" x-model="notes" placeholder="Catatan untuk pesanan, alamat lengkap, dll."></textarea>
+                                </div>
+                                <div class="wps-form-group">
+                                    <button type="button" class="wps-btn wps-btn-primary" @click="submit()" :disabled="submitting || cart.length === 0">
+                                        <span x-show="!submitting">Buat Pesanan</span>
+                                        <span x-show="submitting">Mengirim...</span>
+                                    </button>
+                                </div>
+                                <template x-if="message">
+                                    <div class="wps-alert wps-alert-success" x-text="message"></div>
+                                </template>
                             </div>
                         </div>
-                    </template>
-                    <div class="wps-card">
-                        <div class="wps-p-4">
-                            <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Ringkasan Keranjang</div>
-                            <template x-if="loading">
-                                <div class="wps-text-sm wps-text-gray-500">Memuat keranjang...</div>
-                            </template>
-                            <template x-if="!loading && cart.length === 0">
-                                <div class="wps-text-sm wps-text-gray-500">Keranjang kosong.</div>
-                            </template>
-                            <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
-                                <div class="wps-flex wps-items-start wps-gap-2 wps-mb-4">
-                                    <img :src="item.image" alt="" class="wps-img-40" x-show="item.image">
-                                    <div style="flex:1">
-                                        <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
-                                        <template x-if="item.options && Object.keys(item.options).length">
-                                            <div class="wps-text-xs wps-text-gray-500">
-                                                <span x-text="Object.entries(item.options).map(([k,v]) => k + ': ' + v).join(' • ')"></span>
+                    </div>
+                    <div>
+                        <template x-if="selectedSubdistrict">
+                            <div class="wps-card" style="margin-top: 1rem;">
+                                <div class="wps-p-4">
+                                    <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Pilih Pengiriman</div>
+                                    <div class="" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                                        <div class="wps-form-group">
+                                            <div class="wps-text-sm wps-text-gray-700 wps-mb-2">Pilih layanan pengiriman</div>
+                                            <div>
+                                                <template x-if="!shippingOptions || shippingOptions.length===0">
+                                                    <div class="wps-text-xs wps-text-gray-500">Tidak ada layanan tersedia.</div>
+                                                </template>
+                                                <template x-for="opt in shippingOptions" :key="(opt.courier || '') + ':' + (opt.service || '')">
+                                                    <button type="button"
+                                                        class="wps-card wps-p-3 wps-mb-2 wps-text-left"
+                                                        :class="{'wps-border wps-border-blue-500': selectedShippingKey === ((opt.courier || '') + ':' + (opt.service || ''))}"
+                                                        @click="selectedShippingKey = ((opt.courier || '') + ':' + (opt.service || '')); shippingCourier = opt.courier || ''; shippingService = opt.service || ''; shippingCost = opt.cost || 0">
+                                                        <div class="wps-flex wps-justify-between wps-items-center">
+                                                            <div>
+                                                                <div class="wps-text-sm wps-text-gray-900">
+                                                                    <span x-text="(opt.courier ? opt.courier.toUpperCase() : 'KURIR')"></span>
+                                                                    <span> • </span>
+                                                                    <span x-text="(opt.service || '').toUpperCase()"></span>
+                                                                </div>
+                                                                <div class="wps-text-xs wps-text-gray-600" x-text="opt.description || ''"></div>
+                                                            </div>
+                                                            <div class="wps-text-sm wps-text-gray-900" x-text="formatPrice(opt.cost || 0)"></div>
+                                                        </div>
+                                                        <template x-if="opt.etd">
+                                                            <div class="wps-text-xs wps-text-gray-500 wps-mt-1">Estimasi: <span x-text="opt.etd"></span></div>
+                                                        </template>
+                                                    </button>
+                                                </template>
                                             </div>
-                                        </template>
-                                        <div class="wps-text-xs wps-text-gray-500">
-                                            <span x-text="formatPrice(item.price)"></span>
-                                            <span> × </span>
-                                            <span x-text="item.qty"></span>
-                                            <span> = </span>
-                                            <span class="wps-text-gray-900" x-text="formatPrice(item.subtotal)"></span>
+                                        </div>
+                                        <div class="wps-form-group">
+                                            <label class="wps-label">Ongkir (Rp)</label>
+                                            <input class="wps-input" type="number" min="0" step="1" x-model="shippingCost" disabled>
                                         </div>
                                     </div>
                                 </div>
-                            </template>
-                            <div class="wps-flex wps-justify-between wps-items-center">
-                                <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
-                                <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
                             </div>
-                            <template x-if="shippingCost && selectedCourier">
-                                <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                                    <span class="wps-text-sm wps-text-gray-500">Ongkir (<span x-text="selectedCourier.toUpperCase()"></span> <span x-text="shippingService"></span>)</span>
-                                    <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(shippingCost)"></span>
+                        </template>
+                        <div class="wps-card">
+                            <div class="wps-p-4">
+                                <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Ringkasan Keranjang</div>
+                                <template x-if="loading">
+                                    <div class="wps-text-sm wps-text-gray-500">Memuat keranjang...</div>
+                                </template>
+                                <template x-if="!loading && cart.length === 0">
+                                    <div class="wps-text-sm wps-text-gray-500">Keranjang kosong.</div>
+                                </template>
+                                <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
+                                    <div class="wps-flex wps-items-start wps-gap-2 wps-mb-4">
+                                        <img :src="item.image" alt="" class="wps-img-40" x-show="item.image">
+                                        <div style="flex:1">
+                                            <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
+                                            <template x-if="item.options && Object.keys(item.options).length">
+                                                <div class="wps-text-xs wps-text-gray-500">
+                                                    <span x-text="Object.entries(item.options).map(([k,v]) => k + ': ' + v).join(' • ')"></span>
+                                                </div>
+                                            </template>
+                                            <div class="wps-text-xs wps-text-gray-500">
+                                                <span x-text="formatPrice(item.price)"></span>
+                                                <span> × </span>
+                                                <span x-text="item.qty"></span>
+                                                <span> = </span>
+                                                <span class="wps-text-gray-900" x-text="formatPrice(item.subtotal)"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div class="wps-flex wps-justify-between wps-items-center">
+                                    <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
+                                    <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
                                 </div>
-                            </template>
-                            <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium">Grand Total</span>
-                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium" x-text="formatPrice(totalWithShipping())"></span>
+                                <template x-if="shippingCost && shippingCourier">
+                                    <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                        <span class="wps-text-sm wps-text-gray-500">Ongkir (<span x-text="shippingCourier.toUpperCase()"></span> <span x-text="shippingService"></span>)</span>
+                                        <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(shippingCost)"></span>
+                                    </div>
+                                </template>
+                                <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                    <span class="wps-text-sm wps-text-gray-900 wps-font-medium">Grand Total</span>
+                                    <span class="wps-text-sm wps-text-gray-900 wps-font-medium" x-text="formatPrice(totalWithShipping())"></span>
+                                </div>
                             </div>
                         </div>
                     </div>

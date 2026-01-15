@@ -48,6 +48,14 @@ class SettingsController
                 'permission_callback' => '__return_true',
             ],
         ]);
+
+        register_rest_route('wp-store/v1', '/rajaongkir/calculate', [
+            [
+                'methods' => 'POST',
+                'callback' => [$this, 'calculate_rajaongkir_cost'],
+                'permission_callback' => '__return_true',
+            ],
+        ]);
     }
 
     public function check_admin_auth()
@@ -178,6 +186,154 @@ class SettingsController
     {
         $base_url = 'https://rajaongkir.komerce.id/api/v1';
         return $base_url;
+    }
+
+    private function get_cart_total_weight_grams()
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'store_carts';
+        $cookie_key = 'wp_store_cart_key';
+        $cart = [];
+        if (is_user_logged_in()) {
+            $user_id = get_current_user_id();
+            $row = $wpdb->get_row($wpdb->prepare("SELECT cart FROM {$table} WHERE user_id = %d LIMIT 1", $user_id));
+            if ($row && isset($row->cart)) {
+                $data = json_decode($row->cart, true);
+                $cart = is_array($data) ? $data : [];
+            }
+        } else {
+            $key = isset($_COOKIE[$cookie_key]) && is_string($_COOKIE[$cookie_key]) && $_COOKIE[$cookie_key] !== '' ? sanitize_key($_COOKIE[$cookie_key]) : '';
+            if ($key) {
+                $row = $wpdb->get_row($wpdb->prepare("SELECT cart FROM {$table} WHERE guest_key = %s LIMIT 1", $key));
+                if ($row && isset($row->cart)) {
+                    $data = json_decode($row->cart, true);
+                    $cart = is_array($data) ? $data : [];
+                }
+            }
+        }
+        $total = 0;
+        foreach ($cart as $row) {
+            $product_id = isset($row['id']) ? (int) $row['id'] : 0;
+            $qty = isset($row['qty']) ? (int) $row['qty'] : 0;
+            if ($product_id <= 0 || $qty <= 0 || get_post_type($product_id) !== 'store_product') {
+                continue;
+            }
+            $wkg = get_post_meta($product_id, '_store_weight_kg', true);
+            $wkg = $wkg !== '' ? (float) $wkg : 0;
+            $grams = (int) round($wkg * 1000);
+            if ($grams < 1) {
+                $grams = 1;
+            }
+            $total += $grams * $qty;
+        }
+        if ($total < 1) {
+            $total = 1;
+        }
+        return $total;
+    }
+
+    public function calculate_rajaongkir_cost(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $api_key = $settings['rajaongkir_api_key'] ?? '';
+        $origin_subdistrict = isset($settings['shipping_origin_subdistrict']) ? (string) $settings['shipping_origin_subdistrict'] : '';
+        $params = $request->get_json_params();
+        $destination_subdistrict = isset($params['destination_subdistrict']) ? sanitize_text_field($params['destination_subdistrict']) : '';
+        $courier = isset($params['courier']) ? sanitize_text_field($params['courier']) : '';
+        if (empty($api_key) || empty($origin_subdistrict) || empty($destination_subdistrict) || empty($courier)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Pengaturan atau parameter tidak lengkap.'
+            ], 400);
+        }
+        $weight = $this->get_cart_total_weight_grams();
+        $cache_key = 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier]));
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return new WP_REST_Response($cached, 200);
+        }
+        $url = $this->get_rajaongkir_base_url() . '/calculate/domestic-cost';
+        $body = [
+            'origin' => $origin_subdistrict,
+            'destination' => $destination_subdistrict,
+            'weight' => $weight,
+            'courier' => $courier,
+            'price' => 'lowest'
+        ];
+        $response = wp_remote_post($url, [
+            'headers' => [
+                'key' => $api_key,
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ],
+            'body' => $body
+        ]);
+        if (is_wp_error($response)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => $response->get_error_message()
+            ], 500);
+        }
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        $services = [];
+        if (isset($data['data'])) {
+            $d = $data['data'];
+            if (isset($d['couriers']) && is_array($d['couriers'])) {
+                foreach ($d['couriers'] as $cg) {
+                    $code = isset($cg['code']) ? (string) $cg['code'] : (isset($cg['courier']['code']) ? (string) $cg['courier']['code'] : '');
+                    $list = isset($cg['services']) && is_array($cg['services']) ? $cg['services'] : [];
+                    foreach ($list as $row) {
+                        $services[] = [
+                            'courier' => $code,
+                            'service' => isset($row['service']) ? (string) $row['service'] : (isset($row['service_code']) ? (string) $row['service_code'] : ''),
+                            'description' => isset($row['description']) ? (string) $row['description'] : (isset($row['service_name']) ? (string) $row['service_name'] : ''),
+                            'cost' => isset($row['cost']) ? (float) $row['cost'] : (isset($row['value']) ? (float) $row['value'] : 0),
+                            'etd' => isset($row['etd']) ? (string) $row['etd'] : (isset($row['etd_days']) ? (string) $row['etd_days'] : '')
+                        ];
+                    }
+                }
+            } elseif (is_array($d)) {
+                foreach ($d as $row) {
+                    if (isset($row['services']) && is_array($row['services'])) {
+                        $code = isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : '');
+                        foreach ($row['services'] as $s) {
+                            $services[] = [
+                                'courier' => $code,
+                                'service' => isset($s['service']) ? (string) $s['service'] : (isset($s['service_code']) ? (string) $s['service_code'] : ''),
+                                'description' => isset($s['description']) ? (string) $s['description'] : (isset($s['service_name']) ? (string) $s['service_name'] : ''),
+                                'cost' => isset($s['cost']) ? (float) $s['cost'] : (isset($s['value']) ? (float) $s['value'] : 0),
+                                'etd' => isset($s['etd']) ? (string) $s['etd'] : (isset($s['etd_days']) ? (string) $s['etd_days'] : '')
+                            ];
+                        }
+                    } else {
+                        $services[] = [
+                            'courier' => isset($row['courier']) ? (string) $row['courier'] : '',
+                            'service' => isset($row['service']) ? (string) $row['service'] : (isset($row['service_code']) ? (string) $row['service_code'] : ''),
+                            'description' => isset($row['description']) ? (string) $row['description'] : (isset($row['service_name']) ? (string) $row['service_name'] : ''),
+                            'cost' => isset($row['cost']) ? (float) $row['cost'] : (isset($row['value']) ? (float) $row['value'] : 0),
+                            'etd' => isset($row['etd']) ? (string) $row['etd'] : (isset($row['etd_days']) ? (string) $row['etd_days'] : '')
+                        ];
+                    }
+                }
+            }
+        }
+        $chosen = null;
+        foreach ($services as $s) {
+            if ($s['cost'] > 0) {
+                $chosen = $s;
+                break;
+            }
+        }
+        if (!$chosen && !empty($services)) {
+            $chosen = $services[0];
+        }
+        $payload = [
+            'success' => true,
+            'weight' => $weight,
+            'services' => $services
+        ];
+        set_transient($cache_key, $payload, DAY_IN_SECONDS);
+        return new WP_REST_Response($payload, 200);
     }
 
     public function get_rajaongkir_provinces(WP_REST_Request $request)
