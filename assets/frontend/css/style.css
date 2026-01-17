@@ -68,6 +68,9 @@
 .wps-p-3 {
   padding: 0.75rem;
 }
+.wps-pt-0 {
+  padding-top: 0 !important;
+}
 .wps-pb-0 {
   padding-bottom: 0 !important;
 }
@@ -357,7 +360,9 @@ button.wps-btn-primary {
   width: 20px;
   height: 20px;
 }
-
+.wps-d-block {
+  display: block !important;
+}
 .wps-rel {
   position: relative;
 }

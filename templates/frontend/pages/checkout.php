@@ -405,13 +405,14 @@
                         <div class="wps-mb-2">
                             <div class="wps-mt-2" x-show="selectedSubdistrict && shippingOptions.length > 0">
                                 <template x-for="opt in shippingOptions" :key="opt.courier + ':' + opt.service">
-                                    <button type="button" class="wps-nav-item" :class="{ 'active': selectedShippingKey === (opt.courier + ':' + opt.service) }" @click="selectedShippingKey = opt.courier + ':' + opt.service; onSelectService()">
+                                    <button type="button" class="wps-w-full wps-btn wps-d-block wps-btn-secondary wps-btn-sm wps-mb-2" :class="{ 'active': selectedShippingKey === (opt.courier + ':' + opt.service) }" @click="selectedShippingKey = opt.courier + ':' + opt.service; onSelectService()">
                                         <div class="wps-flex wps-justify-between wps-items-center wps-w-full">
                                             <span x-text="opt.courier.toUpperCase() + ' ' + opt.service"></span>
                                             <span x-text="formatPrice(opt.cost)"></span>
                                         </div>
-                                        <div class="wps-text-xxs wps-text-gray-500">
-                                            <span x-text="(opt.description || '') + (opt.etd ? ' • ' + opt.etd : '')"></span>
+                                        <div class="wps-flex wps-justify-between wps-items-center wps-w-full wps-text-xxs wps-text-gray-500">
+                                            <span x-text="(opt.description || '')"></span>
+                                            <span x-text="(opt.etd || '')"></span>
                                         </div>
                                     </button>
                                 </template>

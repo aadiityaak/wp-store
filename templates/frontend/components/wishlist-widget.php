@@ -8,9 +8,31 @@
 </script>
 <div x-data="{
         loading: false,
+        updatingAddKey: '',
+        updatingRemoveKey: '',
         items: [],
         message: '',
         initial: JSON.parse('<?php echo esc_js(wp_json_encode(isset($initial_items) ? $initial_items : [])); ?>'),
+        toastShow: false,
+        toastType: 'success',
+        toastMessage: '',
+        showToast(msg, type) {
+            this.toastMessage = msg || '';
+            this.toastType = type === 'error' ? 'error' : 'success';
+            this.toastShow = true;
+            clearTimeout(this._toastTimer);
+            this._toastTimer = setTimeout(() => { this.toastShow = false; }, 2000);
+        },
+        normalizeOptions(obj) {
+            const o = obj || {};
+            const sorted = {};
+            Object.keys(o).sort().forEach((k) => { sorted[k] = o[k]; });
+            return sorted;
+        },
+        stringifyOptions(obj) {
+            const n = this.normalizeOptions(obj || {});
+            try { return JSON.stringify(n); } catch(e) { return '{}'; }
+        },
         async fetchWishlist() {
             this.loading = true;
             try {
@@ -26,7 +48,14 @@
                 return '<?php echo esc_js($currency); ?> ' + p.toLocaleString('id-ID');
             } catch(e) { return '<?php echo esc_js($currency); ?> ' + (val || 0); }
         },
+        getItemKey(i) {
+            const opts = i && i.options ? i.options : {};
+            let s = '';
+            try { s = JSON.stringify(opts); } catch (e) { s = ''; }
+            return String(i.id) + ':' + s;
+        },
         async remove(item) {
+            this.updatingRemoveKey = this.getItemKey(item);
             try {
                 const res = await fetch(wpStoreSettings.restUrl + 'wishlist', {
                     method: 'DELETE',
@@ -35,23 +64,43 @@
                     body: JSON.stringify({ id: item.id })
                 });
                 const data = await res.json();
-                if (!res.ok) { return; }
+                if (!res.ok) { this.showToast(data.message || 'Gagal menghapus', 'error'); return; }
                 this.items = data.items || [];
                 document.dispatchEvent(new CustomEvent('wp-store:wishlist-updated', { detail: data }));
-            } catch(e) {}
+                this.showToast('Dihapus dari wishlist', 'success');
+            } catch(e) { this.showToast('Kesalahan jaringan', 'error'); }
+            finally { this.updatingRemoveKey = ''; }
         },
         async addToCart(item) {
+            this.updatingAddKey = this.getItemKey(item);
             try {
+                let currentQty = 0;
+                try {
+                    const resCart = await fetch(wpStoreSettings.restUrl + 'cart', {
+                        credentials: 'include',
+                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                    });
+                    const dataCart = await resCart.json();
+                    const opts = this.normalizeOptions(item.options || {});
+                    const found = (dataCart.items || []).find((i) => {
+                        if (i.id !== item.id) return false;
+                        return this.stringifyOptions(i.options || {}) === this.stringifyOptions(opts || {});
+                    });
+                    currentQty = found ? (found.qty || 0) : 0;
+                } catch(e) {}
+                const nextQty = currentQty + 1;
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': wpStoreSettings.nonce },
-                    body: JSON.stringify({ id: item.id, qty: 1, options: (item.options || {}) })
+                    body: JSON.stringify({ id: item.id, qty: nextQty, options: (item.options || {}) })
                 });
                 const data = await res.json();
-                if (!res.ok) { return; }
+                if (!res.ok) { this.showToast(data.message || 'Gagal menambah ke keranjang', 'error'); return; }
                 document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: data }));
-            } catch(e) {}
+                this.showToast('Ditambahkan ke keranjang', 'success');
+            } catch(e) { this.showToast('Kesalahan jaringan', 'error'); }
+            finally { this.updatingAddKey = ''; }
         },
         async clear() {
             try {
@@ -87,7 +136,7 @@
         <template x-if="!items.length">
             <div class="wps-text-sm wps-text-gray-600 wps-mt-4">Belum ada item di wishlist.</div>
         </template>
-        <div class="wps-mt-4">
+        <div class="wps-mt-4" x-show="items.length">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr>
@@ -111,14 +160,34 @@
                             </td>
                             <td style="padding: 8px; text-align: right;">
                                 <div class="wps-flex wps-gap-2" style="justify-content: flex-end;">
-                                    <button class="wps-btn wps-btn-primary wps-btn-sm" @click="addToCart(item)"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Keranjang</button>
-                                    <button class="wps-btn wps-btn-secondary wps-btn-sm" @click="remove(item)"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?>Hapus</button>
+                                    <button class="wps-btn wps-btn-primary wps-btn-sm" @click="addToCart(item)" :disabled="updatingAddKey === getItemKey(item)" :style="(updatingAddKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
+                                        <template x-if="updatingAddKey === getItemKey(item)">
+                                            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                        </template>
+                                        <template x-if="updatingAddKey !== getItemKey(item)">
+                                            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                        </template>
+                                        <span>Keranjang</span>
+                                    </button>
+                                    <button class="wps-btn wps-btn-secondary wps-btn-sm" @click="remove(item)" :disabled="updatingRemoveKey === getItemKey(item)" :style="(updatingRemoveKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
+                                        <template x-if="updatingRemoveKey === getItemKey(item)">
+                                            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                        </template>
+                                        <template x-if="updatingRemoveKey !== getItemKey(item)">
+                                            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                        </template>
+                                        <span>Hapus</span>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
+        </div>
+        <div x-show="toastShow" x-transition x-cloak
+            :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
+            <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
         </div>
     </div>
 </div>

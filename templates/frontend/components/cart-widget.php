@@ -9,6 +9,7 @@
 <div x-data="{
         open: false,
         loading: false,
+        updatingKey: '',
         cart: [],
         total: 0,
         currency: '<?php echo esc_js($currency); ?>',
@@ -18,6 +19,12 @@
                 return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
             }
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+        },
+        getItemKey(i) {
+            const opts = i && i.options ? i.options : {};
+            let s = '';
+            try { s = JSON.stringify(opts); } catch (e) { s = ''; }
+            return String(i.id) + ':' + s;
         },
         async fetchCart() {
             try {
@@ -55,11 +62,12 @@
             } catch(e) {
             } finally {
                 this.loading = false;
+                this.updatingKey = '';
             }
         },
         increment(item) { this.updateItem(item, item.qty + 1); },
         decrement(item) { const q = item.qty > 1 ? item.qty - 1 : 0; this.updateItem(item, q); },
-        remove(item) { this.updateItem(item, 0); },
+        remove(item) { this.updatingKey = this.getItemKey(item); this.updateItem(item, 0); },
         init() {
             this.fetchCart();
             document.addEventListener('wp-store:cart-updated', (e) => {
@@ -104,8 +112,13 @@
                             <button type="button" @click="decrement(item)" class="wps-btn wps-btn-secondary wps-btn-sm" style="padding: 2px 8px; font-size: 12px; line-height: 1; min-width: 24px; height: 22px;">-</button>
                             <span x-text="item.qty" class="wps-badge wps-badge-sm" style="font-size: 12px; padding: 2px 6px; line-height: 1;"></span>
                             <button type="button" @click="increment(item)" class="wps-btn wps-btn-secondary wps-btn-sm" style="padding: 2px 8px; font-size: 12px; line-height: 1; min-width: 24px; height: 22px;">+</button>
-                            <button type="button" @click="remove(item)" class="wps-btn wps-btn-danger wps-btn-sm wps-ml-auto">
-                                <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 14]); ?>
+                            <button type="button" @click="remove(item)" :disabled="loading && updatingKey === getItemKey(item)" class="wps-btn wps-btn-danger wps-btn-sm wps-ml-auto" :style="(loading && updatingKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
+                                <template x-if="loading && updatingKey === getItemKey(item)">
+                                    <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 14]); ?></span>
+                                </template>
+                                <template x-if="!loading || updatingKey !== getItemKey(item)">
+                                    <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 14]); ?></span>
+                                </template>
                             </button>
                         </div>
                     </div>

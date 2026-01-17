@@ -88,7 +88,7 @@ class CustomerProfile
             <!-- Profile Tab -->
             <div x-show="tab === 'profile'">
                 <div class="wps-card">
-                    <div class="wps-p-6 border-b border-gray-200">
+                    <div class="wps-p-6 wps-pb-0 border-b border-gray-200">
                         <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Informasi Profil</h2>
                         <p class="wps-mt-1 wps-text-sm wps-text-gray-500">Perbarui informasi profil dan detail kontak Anda.</p>
                     </div>
@@ -126,51 +126,52 @@ class CustomerProfile
             <!-- Addresses Tab -->
             <div x-show="tab === 'addresses'">
                 <div x-show="!isEditingAddress">
-                    <div class="wps-flex wps-justify-between wps-items-center wps-mb-6">
-                        <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Daftar Alamat</h2>
-                        <button @click="resetAddressForm(); isEditingAddress = true" class="wps-btn wps-btn-primary">
-                            <svg class="wps-w-5 wps-h-5" style="width: 20px; height: 20px; margin-right: 5px;" fill="none" stroke="#fff" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Tambah Alamat
-                        </button>
-                    </div>
-
-                    <div class="wps-grid wps-gap-4" style="display: grid; gap: 1rem;">
-                        <template x-if="addresses.length === 0">
-                            <div class="wps-card wps-p-6 wps-text-center wps-text-gray-500">
-                                Belum ada alamat tersimpan.
-                            </div>
-                        </template>
-                        <template x-for="addr in addresses" :key="addr.id">
-                            <div class="wps-card wps-p-4">
-                                <div class="wps-flex wps-justify-between wps-items-start">
-                                    <div>
-                                        <div class="wps-flex wps-items-center wps-mb-2">
-                                            <span class="wps-badge wps-bg-blue-500 wps-text-white wps-text-xs wps-font-medium wps-px-2.5 wps-py-0.5 rounded-full" x-text="addr.label"></span>
+                    <div class="wps-card wps-p-6">
+                        <div class="wps-flex wps-justify-between wps-items-center wps-mb-6">
+                            <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Daftar Alamat</h2>
+                            <button @click="resetAddressForm(); isEditingAddress = true" class="wps-btn wps-btn-primary">
+                                <svg class="wps-w-5 wps-h-5" style="width: 20px; height: 20px; margin-right: 5px;" fill="none" stroke="#fff" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Tambah Alamat
+                            </button>
+                        </div>
+                        <div class="wps-grid wps-gap-4" style="display: grid; gap: 1rem;">
+                            <template x-if="addresses.length === 0">
+                                <div class="wps-card wps-p-6 wps-text-center wps-text-gray-500">
+                                    Belum ada alamat tersimpan.
+                                </div>
+                            </template>
+                            <template x-for="addr in addresses" :key="addr.id">
+                                <div class="wps-card wps-p-4">
+                                    <div class="wps-flex wps-justify-between wps-items-start">
+                                        <div>
+                                            <div class="wps-flex wps-items-center wps-mb-2">
+                                                <span class="wps-badge wps-bg-blue-500 wps-text-white wps-text-xs wps-font-medium wps-px-2.5 wps-py-0.5 rounded-full" x-text="addr.label"></span>
+                                            </div>
+                                            <p class="wps-text-sm wps-text-gray-900 wps-mb-1" x-text="addr.address"></p>
+                                            <p class="wps-text-sm wps-text-gray-500">
+                                                <span x-text="addr.subdistrict_name"></span>,
+                                                <span x-text="addr.city_name"></span>,
+                                                <span x-text="addr.province_name"></span>
+                                                <span x-text="addr.postal_code"></span>
+                                            </p>
                                         </div>
-                                        <p class="wps-text-sm wps-text-gray-900 wps-mb-1" x-text="addr.address"></p>
-                                        <p class="wps-text-sm wps-text-gray-500">
-                                            <span x-text="addr.subdistrict_name"></span>,
-                                            <span x-text="addr.city_name"></span>,
-                                            <span x-text="addr.province_name"></span>
-                                            <span x-text="addr.postal_code"></span>
-                                        </p>
-                                    </div>
-                                    <div class="wps-flex wps-space-x-2">
-                                        <button @click="editAddress(addr)" class="wps-btn wps-btn-secondary wps-text-sm" style="padding: 0.25rem 0.5rem;">Edit</button>
-                                        <button @click="deleteAddress(addr.id)" class="wps-btn wps-btn-danger wps-text-sm" style="padding: 0.25rem 0.5rem;">Hapus</button>
+                                        <div class="wps-flex wps-space-x-2">
+                                            <button @click="editAddress(addr)" class="wps-btn wps-btn-secondary wps-text-sm" style="padding: 0.25rem 0.5rem;">Edit</button>
+                                            <button @click="deleteAddress(addr.id)" class="wps-btn wps-btn-danger wps-text-sm" style="padding: 0.25rem 0.5rem;">Hapus</button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Address Form -->
                 <div x-show="isEditingAddress">
                     <div class="wps-card">
-                        <div class="wps-p-6 border-b border-gray-200 wps-flex wps-justify-between wps-items-center">
+                        <div class="wps-p-6 wps-mb-0 border-b border-gray-200 wps-flex wps-justify-between wps-items-center">
                             <h2 class="wps-text-lg wps-font-medium wps-text-gray-900" x-text="addressForm.id ? 'Edit Alamat' : 'Tambah Alamat Baru'"></h2>
                             <button @click="cancelEdit()" class="wps-btn-icon wps-text-amber-600 wps-hover-text-amber-700" title="Tutup">
                                 <svg class="wps-icon-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,10 +247,6 @@ class CustomerProfile
             <!-- Wishlist Tab -->
             <div x-show="tab === 'wishlist'">
                 <div class="wps-card">
-                    <div class="wps-p-6 border-b border-gray-200 wps-pb-0">
-                        <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Daftar Wishlist</h2>
-                        <p class="wps-mt-1 wps-text-sm wps-text-gray-500">Kelola produk favorit Anda.</p>
-                    </div>
                     <div class="wps-p-6">
                         <?php echo \WpStore\Frontend\Template::render('components/wishlist-widget', [
                             'currency' => $currency,
