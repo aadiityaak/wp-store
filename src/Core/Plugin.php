@@ -68,5 +68,8 @@ class Plugin
 
         $profile = new \WpStore\Frontend\CustomerProfile();
         $profile->register();
+
+        $page_templates = new \WpStore\Frontend\PageTemplates();
+        $page_templates->register();
     }
 }

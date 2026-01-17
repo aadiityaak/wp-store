@@ -403,12 +403,19 @@
                     <div class="wps-p-4">
                         <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Metode Pengiriman</div>
                         <div class="wps-mb-2">
-                            <select class="wps-select wps-mt-2" x-model="selectedShippingKey" @change="onSelectService()" x-show="selectedSubdistrict" :disabled="!selectedSubdistrict || shippingOptions.length === 0">
-                                <option value="">-- Pilih Layanan --</option>
+                            <div class="wps-mt-2" x-show="selectedSubdistrict && shippingOptions.length > 0">
                                 <template x-for="opt in shippingOptions" :key="opt.courier + ':' + opt.service">
-                                    <option :value="opt.courier + ':' + opt.service" x-text="opt.courier.toUpperCase() + ' ' + opt.service + ' (' + formatPrice(opt.cost) + ')'"></option>
+                                    <button type="button" class="wps-nav-item" :class="{ 'active': selectedShippingKey === (opt.courier + ':' + opt.service) }" @click="selectedShippingKey = opt.courier + ':' + opt.service; onSelectService()">
+                                        <div class="wps-flex wps-justify-between wps-items-center wps-w-full">
+                                            <span x-text="opt.courier.toUpperCase() + ' ' + opt.service"></span>
+                                            <span x-text="formatPrice(opt.cost)"></span>
+                                        </div>
+                                        <div class="wps-text-xxs wps-text-gray-500">
+                                            <span x-text="(opt.description || '') + (opt.etd ? ' • ' + opt.etd : '')"></span>
+                                        </div>
+                                    </button>
                                 </template>
-                            </select>
+                            </div>
                             <div class="wps-text-xs wps-text-gray-500 wps-mt-2" x-show="!originSubdistrict">Asal pengiriman belum diatur di pengaturan.</div>
                             <div class="wps-text-xs wps-text-gray-500 wps-mt-1" x-show="Array.isArray(shippingCouriers) && shippingCouriers.length === 0">Tidak ada kurir aktif di pengaturan.</div>
                             <div class="wps-text-xxs wps-text-gray-500 wps-mt-1" x-show="!selectedSubdistrict">Lengkapi alamat pengiriman untuk menampilkan opsi pengiriman.</div>
