@@ -48,9 +48,17 @@
             formatPrice(value) {
                 const v = typeof value === 'number' ? value : parseFloat(value || 0);
                 if (this.currency === 'USD') {
-                    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
+                    return new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        minimumFractionDigits: 0
+                    }).format(v);
                 }
-                return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(v);
             },
             async calculateAllShipping() {
                 if (!this.selectedSubdistrict || !Array.isArray(this.shippingCouriers) || this.shippingCouriers.length === 0) {
@@ -111,7 +119,9 @@
             async fetchProfile() {
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                        headers: {
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
                     });
                     if (!res.ok) return;
                     this.profile = await res.json();
@@ -120,7 +130,9 @@
             async fetchAddresses() {
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                        headers: {
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
                     });
                     if (!res.ok) return;
                     this.addresses = await res.json();
@@ -152,7 +164,9 @@
                 this.isLoadingProvinces = true;
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', {
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                        headers: {
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
                     });
                     const data = await res.json();
                     this.provinces = data.data || [];
@@ -170,7 +184,9 @@
                 this.isLoadingCities = true;
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), {
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                        headers: {
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
                     });
                     const data = await res.json();
                     this.cities = data.data || [];
@@ -188,7 +204,9 @@
                 this.isLoadingSubdistricts = true;
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), {
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                        headers: {
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
                     });
                     const data = await res.json();
                     this.subdistricts = data.data || [];
@@ -203,7 +221,9 @@
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                         credentials: 'include',
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                        headers: {
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
                     });
                     const data = await res.json();
                     this.cart = data.items || [];
@@ -254,7 +274,10 @@
                             shipping_courier: this.shippingCourier || '',
                             shipping_service: this.shippingService || '',
                             shipping_cost: this.shippingCost || 0,
-                            items: this.cart.map(i => ({ id: i.id, qty: i.qty }))
+                            items: this.cart.map(i => ({
+                                id: i.id,
+                                qty: i.qty
+                            }))
                         })
                     });
                     const data = await res.json();
@@ -267,12 +290,19 @@
                         await fetch(wpStoreSettings.restUrl + 'cart', {
                             method: 'DELETE',
                             credentials: 'include',
-                            headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                            headers: {
+                                'X-WP-Nonce': wpStoreSettings.nonce
+                            }
                         });
                     } catch (_) {}
                     this.cart = [];
                     this.total = 0;
-                    document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: { items: [], total: 0 } }));
+                    document.dispatchEvent(new CustomEvent('wp-store:cart-updated', {
+                        detail: {
+                            items: [],
+                            total: 0
+                        }
+                    }));
                 } catch (e) {
                     this.message = 'Terjadi kesalahan jaringan.';
                 } finally {
@@ -288,7 +318,7 @@
         };
     };
 </script>
-<div class="wps-p-4">
+<div class="">
     <div x-data="wpStoreCheckout()" x-init="init()">
         <div class="wps-grid wps-grid-cols-2">
             <div>
@@ -367,22 +397,25 @@
                         </div>
                     </div>
                 </div>
-                <div class="wps-card wps-mt-4">
+            </div>
+            <div>
+                <div class="wps-card wps-mb-4">
                     <div class="wps-p-4">
                         <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Metode Pengiriman</div>
                         <div class="wps-mb-2">
-                            <div class="wps-text-sm wps-text-gray-500">Pilih layanan kurir</div>
-                            <select class="wps-select wps-mt-2" x-model="selectedShippingKey" @change="onSelectService()" :disabled="!selectedSubdistrict || shippingOptions.length === 0">
+                            <select class="wps-select wps-mt-2" x-model="selectedShippingKey" @change="onSelectService()" x-show="selectedSubdistrict" :disabled="!selectedSubdistrict || shippingOptions.length === 0">
                                 <option value="">-- Pilih Layanan --</option>
                                 <template x-for="opt in shippingOptions" :key="opt.courier + ':' + opt.service">
                                     <option :value="opt.courier + ':' + opt.service" x-text="opt.courier.toUpperCase() + ' ' + opt.service + ' (' + formatPrice(opt.cost) + ')'"></option>
                                 </template>
                             </select>
+                            <div class="wps-text-xs wps-text-gray-500 wps-mt-2" x-show="!originSubdistrict">Asal pengiriman belum diatur di pengaturan.</div>
+                            <div class="wps-text-xs wps-text-gray-500 wps-mt-1" x-show="Array.isArray(shippingCouriers) && shippingCouriers.length === 0">Tidak ada kurir aktif di pengaturan.</div>
+                            <div class="wps-text-xxs wps-text-gray-500 wps-mt-1" x-show="!selectedSubdistrict">Lengkapi alamat pengiriman untuk menampilkan opsi pengiriman.</div>
+                            <div class="wps-text-xs wps-text-gray-500 wps-mt-1" x-show="selectedSubdistrict && shippingOptions.length === 0">Tidak ada layanan tersedia, ubah kurir atau kecamatan.</div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div>
                 <div class="wps-card">
                     <div class="wps-p-4">
                         <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Ringkasan Order</div>

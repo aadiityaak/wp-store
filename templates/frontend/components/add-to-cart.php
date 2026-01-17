@@ -9,6 +9,9 @@
 <div x-data="{
         loading: false,
         message: '',
+        toastShow: false,
+        toastType: 'success',
+        toastMessage: '',
         showModal: false,
         basicName: '<?php echo esc_js($basic_name); ?>',
         basicOptions: JSON.parse('<?php echo esc_js(wp_json_encode($basic_values)); ?>'),
@@ -16,6 +19,13 @@
         advOptions: JSON.parse('<?php echo esc_js(wp_json_encode($adv_values)); ?>'),
         selectedBasic: '',
         selectedAdv: '',
+        showToast(msg, type) {
+            this.toastMessage = msg || '';
+            this.toastType = type === 'error' ? 'error' : 'success';
+            this.toastShow = true;
+            clearTimeout(this._toastTimer);
+            this._toastTimer = setTimeout(() => { this.toastShow = false; }, 2000);
+        },
         normalizeOptions(obj) {
             const o = obj || {};
             const sorted = {};
@@ -80,15 +90,14 @@
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                    this.message = data.message || 'Gagal menambah';
+                    this.showToast(data.message || 'Gagal menambah', 'error');
                     return;
                 }
                 document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: data }));
-                this.message = 'Ditambahkan';
+                this.showToast('Ditambahkan ke keranjang', 'success');
                 this.showModal = false;
-                setTimeout(() => { this.message = ''; }, 1500);
             } catch (e) {
-                this.message = 'Kesalahan jaringan';
+                this.showToast('Kesalahan jaringan', 'error');
             } finally {
                 this.loading = false;
             }
@@ -98,7 +107,10 @@
         <?php echo \WpStore\Frontend\Component::icon('cart', 20, 'wps-icon-20 wps-mr-2', 2); ?>
         <?php echo esc_html($label); ?>
     </button>
-    <span x-text="message"></span>
+    <div x-show="toastShow" x-transition x-cloak
+        :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
+        <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
+    </div>
     <div x-show="showModal" x-cloak class="wps-modal-backdrop" @click.self="showModal = false"></div>
     <div x-show="showModal" x-cloak class="wps-modal">
         <div class="wps-p-4">

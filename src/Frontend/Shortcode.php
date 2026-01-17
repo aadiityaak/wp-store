@@ -65,9 +65,15 @@ class Shortcode
             $per_page = 12;
         }
 
+        $paged = isset($_GET['shop_page']) ? (int) $_GET['shop_page'] : 1;
+        if ($paged <= 0) {
+            $paged = 1;
+        }
+
         $args = [
             'post_type' => 'store_product',
             'posts_per_page' => $per_page,
+            'paged' => $paged,
             'post_status' => 'publish',
         ];
 
@@ -94,7 +100,10 @@ class Shortcode
         }
         return Template::render('pages/shop', [
             'items' => $items,
-            'currency' => $currency
+            'currency' => $currency,
+            'page' => (int) $paged,
+            'pages' => (int) $query->max_num_pages,
+            'total' => (int) $query->found_posts
         ]);
     }
 
