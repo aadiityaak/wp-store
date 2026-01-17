@@ -39,7 +39,8 @@ class ProductColumns
                 if (has_post_thumbnail($post_id)) {
                     echo get_the_post_thumbnail($post_id, [50, 50]);
                 } else {
-                    echo '<span style="color:#ccc">–</span>';
+                    $fallback = WP_STORE_URL . 'assets/frontend/img/noimg.webp';
+                    echo '<img src="' . esc_url($fallback) . '" alt="" style="width:50px;height:50px;object-fit:cover;border-radius:4px;" />';
                 }
                 break;
                 

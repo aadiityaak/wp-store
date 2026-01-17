@@ -2,9 +2,8 @@
     <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-4"><?php echo esc_html($title); ?></div>
     <div class="wps-flex wps-gap-4 wps-items-start">
         <div style="flex: 1;">
-            <?php if (!empty($image)) : ?>
-                <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr($title); ?>">
-            <?php endif; ?>
+            <?php $image_src = (!empty($image) ? $image : (WP_STORE_URL . 'assets/frontend/img/noimg.webp')); ?>
+            <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
         </div>
         <div style="flex: 1;">
             <div class="wps-text-sm wps-text-gray-900 wps-mb-4">

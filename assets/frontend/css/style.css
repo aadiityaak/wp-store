@@ -308,6 +308,10 @@ button.wps-btn-primary {
   font-size: 0.75rem;
   line-height: 1rem;
 }
+.wps-text-xxs {
+  font-size: 0.7rem;
+  line-height: 0.95rem;
+}
 .wps-px-2\.5 {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
