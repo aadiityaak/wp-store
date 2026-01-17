@@ -227,7 +227,7 @@ class Shortcode
         wp_enqueue_script('alpinejs');
         $atts = shortcode_atts([
             'id' => 0,
-            'label' => 'Tambah',
+            'label' => '+',
             'size' => ''
         ], $atts);
         $size = sanitize_key($atts['size']);
@@ -297,9 +297,11 @@ class Shortcode
             'size' => '',
             'label_add' => 'Wishlist',
             'label_remove' => 'Hapus',
+            'icon_only' => '0',
         ], $atts);
         $size = sanitize_key($atts['size']);
         $btn_class = 'wps-btn wps-btn-secondary' . ($size === 'sm' ? ' wps-btn-sm' : '');
+        $icon_only = (string) $atts['icon_only'] === '1';
         $id = (int) $atts['id'];
         if ($id <= 0) {
             $loop_id = get_the_ID();
@@ -319,6 +321,7 @@ class Shortcode
             'id' => $id,
             'label_add' => $atts['label_add'],
             'label_remove' => $atts['label_remove'],
+            'icon_only' => $icon_only,
             'nonce' => $nonce
         ]);
     }

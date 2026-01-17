@@ -103,8 +103,13 @@
             }
         }
     }">
-    <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?>">
-        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 20, 'class' => 'wps-icon-20 wps-mr-2']); ?>
+    <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?>" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
+        <template x-if="loading">
+            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 18, 'class' => 'wps-mr-2']); ?></span>
+        </template>
+        <template x-if="!loading">
+            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 20, 'class' => 'wps-icon-20 wps-mr-2']); ?></span>
+        </template>
         <?php echo esc_html($label); ?>
     </button>
     <div x-show="toastShow" x-transition x-cloak
@@ -135,7 +140,12 @@
             </div>
             <div class="wps-flex wps-justify-between wps-items-center">
                 <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="showModal = false">Batal</button>
-                <button type="button" class="wps-btn wps-btn-primary wps-btn-sm" @click="confirmAdd()" :disabled="!canSubmit()">Tambah</button>
+                <button type="button" class="wps-btn wps-btn-primary wps-btn-sm" @click="confirmAdd()" :disabled="loading || !canSubmit()" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
+                    <template x-if="loading">
+                        <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                    </template>
+                    <span>Tambah</span>
+                </button>
             </div>
         </div>
     </div>
