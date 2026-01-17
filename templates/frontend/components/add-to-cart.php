@@ -104,7 +104,7 @@
         }
     }">
     <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?>">
-        <?php echo \WpStore\Frontend\Component::icon('cart', 20, 'wps-icon-20 wps-mr-2', 2); ?>
+        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 20, 'class' => 'wps-icon-20 wps-mr-2']); ?>
         <?php echo esc_html($label); ?>
     </button>
     <div x-show="toastShow" x-transition x-cloak

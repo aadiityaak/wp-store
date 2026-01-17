@@ -71,7 +71,7 @@
     }" x-init="init()" class="wps-rel">
     <button type="button" @click="open = true" class="wps-btn-icon wps-cart-button wps-rel">
         <span>🛒</span>
-        <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" class="wps-absolute wps-top--6 wps-right--10 wps-bg-blue-500 wps-text-white wps-text-xs rounded-full wps-px-2.5 wps-py-0.5"></span>
+        <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" class="wps-absolute wps-top--6 wps-right--30 wps-bg-blue-500 wps-text-white wps-text-xs rounded-full wps-px-2.5 wps-py-0.5"></span>
     </button>
     <div class="wps-offcanvas-backdrop" x-show="open" @click="open = false" x-transition.opacity></div>
     <div class="wps-offcanvas" x-show="open" x-transition>

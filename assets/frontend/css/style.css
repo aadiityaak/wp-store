@@ -367,6 +367,9 @@ button.wps-btn-primary {
 .wps-right--10 {
   right: -10px;
 }
+.wps-right--30 {
+  right: -30px;
+}
 .wps-ml-auto {
   margin-left: auto;
 }

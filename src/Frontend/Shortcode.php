@@ -13,6 +13,8 @@ class Shortcode
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
         add_shortcode('wp_store_checkout', [$this, 'render_checkout']);
         add_shortcode('store_checkout', [$this, 'render_checkout']);
+        add_shortcode('wp_store_wishlist', [$this, 'render_wishlist']);
+        add_shortcode('wp_store_add_to_wishlist', [$this, 'render_add_to_wishlist']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
 
@@ -271,6 +273,52 @@ class Shortcode
         return Template::render('components/cart-widget', [
             'checkout_url' => $checkout_url,
             'currency' => $currency,
+            'nonce' => $nonce
+        ]);
+    }
+
+    public function render_wishlist($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $nonce = wp_create_nonce('wp_rest');
+        return Template::render('components/wishlist-widget', [
+            'currency' => $currency,
+            'nonce' => $nonce
+        ]);
+    }
+
+    public function render_add_to_wishlist($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        $atts = shortcode_atts([
+            'id' => 0,
+            'size' => '',
+            'label_add' => 'Wishlist',
+            'label_remove' => 'Hapus',
+        ], $atts);
+        $size = sanitize_key($atts['size']);
+        $btn_class = 'wps-btn wps-btn-secondary' . ($size === 'sm' ? ' wps-btn-sm' : '');
+        $id = (int) $atts['id'];
+        if ($id <= 0) {
+            $loop_id = get_the_ID();
+            if ($loop_id && is_numeric($loop_id)) {
+                $id = (int) $loop_id;
+            }
+        }
+        if ($id > 0 && get_post_type($id) !== 'store_product') {
+            return '';
+        }
+        if ($id <= 0) {
+            return '';
+        }
+        $nonce = wp_create_nonce('wp_rest');
+        return Template::render('components/add-to-wishlist', [
+            'btn_class' => $btn_class,
+            'id' => $id,
+            'label_add' => $atts['label_add'],
+            'label_remove' => $atts['label_remove'],
             'nonce' => $nonce
         ]);
     }

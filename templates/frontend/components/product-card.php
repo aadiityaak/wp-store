@@ -17,8 +17,11 @@
       <?php endif; ?>
     </div>
     <div class="wps-flex wps-items-center wps-justify-between">
-      <div><?php echo do_shortcode('[wp_store_add_to_cart id="' . esc_attr($item['id']) . '" size="sm"]'); ?></div>
-      <a class="wps-btn wps-btn-secondary wps-btn-sm" href="<?php echo esc_url($item['link']); ?>"><?php echo esc_html($view_label ?? 'Lihat Detail'); ?></a>
+      <div class="wps-flex wps-gap-2">
+        <?php echo do_shortcode('[wp_store_add_to_cart id="' . esc_attr($item['id']) . '" size="sm"]'); ?>
+        <?php echo do_shortcode('[wp_store_add_to_wishlist id="' . esc_attr($item['id']) . '" size="sm" label_add="Wishlist" label_remove="Hapus"]'); ?>
+      </div>
+      <a class="wps-btn wps-btn-secondary wps-btn-sm" href="<?php echo esc_url($item['link']); ?>"><?php echo esc_html($view_label ?? 'Detail'); ?></a>
     </div>
   </div>
 </div>

@@ -43,7 +43,7 @@ spl_autoload_register(function ($class) {
 
 function wp_store_init()
 {
-    $should_migrate = get_option('wp_store_db_version') !== '1.0.1';
+    $should_migrate = get_option('wp_store_db_version') !== '1.1.0';
     global $wpdb;
     $table_name = $wpdb->prefix . 'store_carts';
     $exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
@@ -61,7 +61,26 @@ function wp_store_init()
             UNIQUE KEY uniq_guest (guest_key)
         ) {$charset_collate};";
         dbDelta($sql);
-        update_option('wp_store_db_version', '1.0.1');
+        update_option('wp_store_db_version', '1.1.0');
+    }
+
+    // Create wishlist table
+    $wishlist_table = $wpdb->prefix . 'store_wishlists';
+    $wishlist_exists = $wpdb->get_var("SHOW TABLES LIKE '$wishlist_table'") === $wishlist_table;
+    if ($should_migrate || !$wishlist_exists) {
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        $charset_collate = $wpdb->get_charset_collate();
+        $sql2 = "CREATE TABLE {$wishlist_table} (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+            guest_key VARCHAR(64) NULL DEFAULT NULL,
+            wishlist LONGTEXT NOT NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_user (user_id),
+            UNIQUE KEY uniq_guest (guest_key)
+        ) {$charset_collate};";
+        dbDelta($sql2);
     }
 
     $plugin = new \WpStore\Core\Plugin();

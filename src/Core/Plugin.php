@@ -45,6 +45,9 @@ class Plugin
         $cart = new \WpStore\Api\CartController();
         add_action('rest_api_init', [$cart, 'register_routes']);
 
+        $wishlist = new \WpStore\Api\WishlistController();
+        add_action('rest_api_init', [$wishlist, 'register_routes']);
+
         $checkout = new \WpStore\Api\CheckoutController();
         add_action('rest_api_init', [$checkout, 'register_routes']);
 

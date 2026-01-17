@@ -1,8 +1,8 @@
 <?php if (!empty($items)) : ?>
     <div class="">
-        <div class="wps-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));<?php echo (count($items) === 1) ? ' max-width: 360px; margin: 0 auto;' : ''; ?>">
+        <div class="wps-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));<?php echo (count($items) === 1) ? ' max-width: 360px;' : ''; ?>">
             <?php foreach ($items as $item) : ?>
-                <?php echo \WpStore\Frontend\Template::render('components/product-card', ['item' => $item, 'currency' => $currency, 'view_label' => 'Lihat Detail']); ?>
+                <?php echo \WpStore\Frontend\Template::render('components/product-card', ['item' => $item, 'currency' => $currency, 'view_label' => 'Detail']); ?>
             <?php endforeach; ?>
         </div>
         <?php if (isset($pages) && (int) $pages > 1) : ?>

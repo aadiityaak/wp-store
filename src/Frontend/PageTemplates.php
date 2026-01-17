@@ -8,6 +8,7 @@ class PageTemplates
         'wp-store-shop.php' => 'WP Store: Shop',
         'wp-store-checkout.php' => 'WP Store: Checkout',
         'wp-store-cart.php' => 'WP Store: Keranjang',
+        'wp-store-wishlist.php' => 'WP Store: Wishlist',
         'wp-store-profile.php' => 'WP Store: Profil',
     ];
 

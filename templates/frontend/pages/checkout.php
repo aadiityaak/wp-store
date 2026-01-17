@@ -449,26 +449,28 @@
                                 </div>
                             </div>
                         </template>
-                        <div class="wps-flex wps-justify-between wps-items-center">
-                            <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
-                            <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
-                        </div>
-                        <template x-if="shippingCost">
-                            <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                                <span class="wps-text-sm wps-text-gray-500">
-                                    Ongkir (
-                                    <template x-if="shippingCourier">
-                                        <span x-text="shippingCourier.toUpperCase() + ' '"></span>
-                                    </template>
-                                    <span x-text="shippingService"></span>
-                                    )
-                                </span>
-                                <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(shippingCost)"></span>
+                        <div class="wps-mt-4">
+                            <div class="wps-flex wps-justify-between wps-items-center">
+                                <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
+                                <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
                             </div>
-                        </template>
-                        <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                            <span class="wps-text-sm wps-text-gray-900 wps-font-medium">Grand Total</span>
-                            <span class="wps-text-sm wps-text-gray-900 wps-font-medium" x-text="formatPrice(totalWithShipping())"></span>
+                            <template x-if="shippingCost">
+                                <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                    <span class="wps-text-sm wps-text-gray-500">
+                                        Ongkir (
+                                        <template x-if="shippingCourier">
+                                            <span x-text="shippingCourier.toUpperCase() + ' '"></span>
+                                        </template>
+                                        <span x-text="shippingService"></span>
+                                        )
+                                    </span>
+                                    <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(shippingCost)"></span>
+                                </div>
+                            </template>
+                            <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium">Grand Total</span>
+                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium" x-text="formatPrice(totalWithShipping())"></span>
+                            </div>
                         </div>
                         <div class="wps-mt-4">
                             <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || cart.length === 0" @click="submit()">

@@ -17,6 +17,9 @@
             <div class="wps-mb-4">
                 <?php echo do_shortcode('[wp_store_add_to_cart id="' . esc_attr($id) . '"]'); ?>
             </div>
+            <div class="wps-mb-4">
+                <?php echo do_shortcode('[wp_store_add_to_wishlist id="' . esc_attr($id) . '"]'); ?>
+            </div>
             <div class="wps-text-sm wps-text-gray-500">
                 <?php echo $content; ?>
             </div>

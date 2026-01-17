@@ -3,6 +3,7 @@
     loading: false,
     products: [],
     cart: [],
+    wishlist: [],
     perPage: perPage || 12,
     page: 1,
     customer: {
@@ -16,6 +17,7 @@
       this.loading = true;
       try {
         await this.fetchCart();
+        await this.fetchWishlist();
         await this.fetchProducts();
       } catch (e) {
       } finally {
@@ -26,6 +28,13 @@
               this.cart = e.detail.items;
           } else {
               this.fetchCart();
+          }
+      });
+      document.addEventListener('wp-store:wishlist-updated', (e) => {
+          if (e.detail && e.detail.items) {
+              this.wishlist = e.detail.items;
+          } else {
+              this.fetchWishlist();
           }
       });
     },
@@ -41,6 +50,20 @@
         this.cart = data.items || [];
       } catch (e) {
         this.cart = [];
+      }
+    },
+    async fetchWishlist() {
+      try {
+        const response = await fetch(wpStoreSettings.restUrl + "wishlist", {
+          credentials: "same-origin",
+        });
+        if (!response.ok) {
+          throw new Error("Gagal mengambil wishlist");
+        }
+        const data = await response.json();
+        this.wishlist = data.items || [];
+      } catch (e) {
+        this.wishlist = [];
       }
     },
     async fetchProducts() {
