@@ -116,7 +116,7 @@
                 <div class="wps-total-amount" x-text="formatPrice(total)"></div>
             </div>
             <?php if (!empty($checkout_url)) : ?>
-                <a href="<?php echo esc_url($checkout_url); ?>" class="wps-btn wps-btn-primary wps-btn-sm wps-checkout-btn" x-show="cart.length > 0"><span class="wps-mr-2">💳</span>Checkout</a>
+                <a href="<?php echo esc_url($checkout_url); ?>" class="wps-btn wps-btn-primary wps-btn-sm wps-checkout-btn" x-show="cart.length > 0"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'credit-card', 'size' => 16, 'class' => 'wps-mr-2']); ?>Checkout</a>
             <?php endif; ?>
         </div>
     </div>
