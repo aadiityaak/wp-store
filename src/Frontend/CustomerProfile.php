@@ -24,6 +24,36 @@ class CustomerProfile
         wp_enqueue_script('wp-store-frontend');
         wp_enqueue_style('wp-store-frontend-css');
 
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $nonce = wp_create_nonce('wp_rest');
+        // Preload wishlist items for logged-in user to avoid empty UI in case of fetch issues
+        global $wpdb;
+        $wishlist_table = $wpdb->prefix . 'store_wishlists';
+        $initial_items = [];
+        if (is_user_logged_in()) {
+            $uid = get_current_user_id();
+            $row = $wpdb->get_row($wpdb->prepare("SELECT wishlist FROM {$wishlist_table} WHERE user_id = %d LIMIT 1", $uid));
+            if ($row && isset($row->wishlist)) {
+                $decoded = json_decode($row->wishlist, true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $entry) {
+                        $pid = isset($entry['id']) ? (int) $entry['id'] : 0;
+                        if ($pid > 0 && get_post_type($pid) === 'store_product') {
+                            $price = (float) get_post_meta($pid, '_store_price', true);
+                            $initial_items[] = [
+                                'id' => $pid,
+                                'title' => get_the_title($pid),
+                                'price' => $price,
+                                'image' => get_the_post_thumbnail_url($pid, 'thumbnail') ?: null,
+                                'link' => get_permalink($pid),
+                                'options' => (isset($entry['opts']) && is_array($entry['opts'])) ? $entry['opts'] : []
+                            ];
+                        }
+                    }
+                }
+            }
+        }
         ob_start();
 ?>
 
@@ -45,6 +75,9 @@ class CustomerProfile
                     </button>
                     <button @click="tab = 'addresses'" :class="{ 'active': tab === 'addresses' }" class="wps-tab">
                         Buku Alamat
+                    </button>
+                    <button @click="tab = 'wishlist'" :class="{ 'active': tab === 'wishlist' }" class="wps-tab">
+                        Wishlist <span class="wps-badge" x-text="wishlistCount" x-show="wishlistCount > 0" style="margin-left:6px;"></span>
                     </button>
                 </div>
             </div>
@@ -209,6 +242,23 @@ class CustomerProfile
                     </div>
                 </div>
             </div>
+
+            <!-- Wishlist Tab -->
+            <div x-show="tab === 'wishlist'">
+                <div class="wps-card">
+                    <div class="wps-p-6 border-b border-gray-200 wps-pb-0">
+                        <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Daftar Wishlist</h2>
+                        <p class="wps-mt-1 wps-text-sm wps-text-gray-500">Kelola produk favorit Anda.</p>
+                    </div>
+                    <div class="wps-p-6">
+                        <?php echo \WpStore\Frontend\Template::render('components/wishlist-widget', [
+                            'currency' => $currency,
+                            'nonce' => $nonce,
+                            'initial_items' => $initial_items
+                        ]); ?>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script>
@@ -217,6 +267,7 @@ class CustomerProfile
                     tab: 'profile',
                     loading: false,
                     message: '',
+                    wishlistCount: 0,
                     profile: {
                         first_name: '',
                         last_name: '',
@@ -251,7 +302,7 @@ class CustomerProfile
                     init() {
                         const urlParams = new URLSearchParams(window.location.search);
                         const tabParam = urlParams.get('tab');
-                        if (tabParam && ['profile', 'addresses'].includes(tabParam)) {
+                        if (tabParam && ['profile', 'addresses', 'wishlist'].includes(tabParam)) {
                             this.tab = tabParam;
                         }
 
@@ -281,6 +332,12 @@ class CustomerProfile
                             }
                         });
                         this.loadProvinces(); // Load provinces early
+                        this.fetchWishlistCount();
+                        document.addEventListener('wp-store:wishlist-updated', (e) => {
+                            const data = e.detail || {};
+                            const items = Array.isArray(data.items) ? data.items : [];
+                            this.wishlistCount = items.length;
+                        });
                     },
 
                     async fetchProfile() {
@@ -294,6 +351,18 @@ class CustomerProfile
                             this.profile = data;
                         } catch (err) {
                             console.error(err);
+                        }
+                    },
+
+                    async fetchWishlistCount() {
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'wishlist', {
+                                credentials: 'same-origin'
+                            });
+                            const data = await res.json();
+                            this.wishlistCount = Array.isArray(data.items) ? data.items.length : 0;
+                        } catch (err) {
+                            this.wishlistCount = 0;
                         }
                     },
 
