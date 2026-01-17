@@ -37,6 +37,18 @@
             isLoadingCities: false,
             isLoadingSubdistricts: false,
             message: '',
+            toastShow: false,
+            toastType: 'error',
+            toastMessage: '',
+            showToast(msg, type) {
+                this.toastMessage = msg || '';
+                this.toastType = type === 'success' ? 'success' : 'error';
+                this.toastShow = true;
+                clearTimeout(this._toastTimer);
+                this._toastTimer = setTimeout(() => {
+                    this.toastShow = false;
+                }, 2000);
+            },
             currency: '<?php echo esc_js($currency); ?>',
             originSubdistrict: '<?php echo esc_js($origin_subdistrict); ?>',
             shippingCouriers: <?php echo json_encode($active_couriers); ?>,
@@ -115,6 +127,18 @@
                 const t = typeof this.total === 'number' ? this.total : parseFloat(this.total || 0);
                 const s = typeof this.shippingCost === 'number' ? this.shippingCost : parseFloat(this.shippingCost || 0);
                 return t + (isNaN(s) ? 0 : s);
+            },
+            getValidationError() {
+                if (!this.name) return 'Nama wajib diisi.';
+                if (!Array.isArray(this.cart) || this.cart.length === 0) return 'Keranjang kosong.';
+                if (!this.selectedProvince) return 'Provinsi wajib dipilih.';
+                if (!this.selectedCity) return 'Kota/Kabupaten wajib dipilih.';
+                if (!this.selectedSubdistrict) return 'Kecamatan wajib dipilih.';
+                if (!this.address || String(this.address).trim() === '') return 'Alamat wajib diisi.';
+                if (Array.isArray(this.shippingOptions) && this.shippingOptions.length > 0) {
+                    if (!this.selectedShippingKey || !this.shippingCourier || !this.shippingService) return 'Wajib pilih ongkir.';
+                }
+                return '';
             },
             async fetchProfile() {
                 try {
@@ -244,8 +268,10 @@
                 this.useProfile();
             },
             async submit() {
-                if (!this.name || this.cart.length === 0) {
-                    this.message = 'Isi nama dan pastikan keranjang berisi.';
+                const err = this.getValidationError();
+                if (err) {
+                    this.message = err;
+                    this.showToast(err, 'error');
                     return;
                 }
                 this.submitting = true;
@@ -405,10 +431,14 @@
                         <div class="wps-mb-2">
                             <div class="wps-mt-2" x-show="selectedSubdistrict && shippingOptions.length > 0">
                                 <template x-for="opt in shippingOptions" :key="opt.courier + ':' + opt.service">
-                                    <button type="button" class="wps-w-full wps-btn wps-d-block wps-btn-secondary wps-btn-sm wps-mb-2" :class="{ 'active': selectedShippingKey === (opt.courier + ':' + opt.service) }" @click="selectedShippingKey = opt.courier + ':' + opt.service; onSelectService()">
+                                    <button type="button" class="wps-w-full wps-btn wps-d-block wps-btn-secondary wps-btn-sm wps-mb-2"
+                                        :style="(selectedShippingKey === (opt.courier + ':' + opt.service)) ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
+                                        @click="selectedShippingKey = opt.courier + ':' + opt.service; onSelectService()">
                                         <div class="wps-flex wps-justify-between wps-items-center wps-w-full">
                                             <span x-text="opt.courier.toUpperCase() + ' ' + opt.service"></span>
-                                            <span x-text="formatPrice(opt.cost)"></span>
+                                            <span class="wps-flex wps-items-center wps-gap-2">
+                                                <span x-text="formatPrice(opt.cost)"></span>
+                                            </span>
                                         </div>
                                         <div class="wps-flex wps-justify-between wps-items-center wps-w-full wps-text-xxs wps-text-gray-500">
                                             <span x-text="(opt.description || '')"></span>
@@ -485,5 +515,9 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div x-show="toastShow" x-transition x-cloak
+        :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
+        <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
     </div>
 </div>
