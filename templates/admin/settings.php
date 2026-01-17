@@ -295,7 +295,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     <div class="wp-store-box-gray">
                         <h3 class="wp-store-subtitle">Tool</h3>
                         <div class="wp-store-mt-4" style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button type="button" @click="runSeeder" class="wp-store-btn wp-store-btn-secondary" :disabled="isSeeding">
+                            <button type="button" @click="openSeederModal" class="wp-store-btn wp-store-btn-secondary" :disabled="isSeeding">
                                 <span class="dashicons dashicons-admin-tools" x-show="!isSeeding"></span>
                                 <span class="dashicons dashicons-update" x-show="isSeeding" style="animation: spin 2s linear infinite;"></span>
                                 <span x-text="isSeeding ? 'Menjalankan Seeder...' : 'Seeder'"></span>
@@ -332,6 +332,21 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         x-cloak>
         <span class="dashicons" :class="notification.type === 'success' ? 'dashicons-yes-alt' : 'dashicons-warning'" class="wp-store-icon-20"></span>
         <span x-text="notification.message"></span>
+    </div>
+    <div x-show="isSeederModalOpen" x-cloak class="wp-store-modal-overlay">
+        <div class="wp-store-modal" @keydown.escape.window="closeSeederModal">
+            <div class="wp-store-modal-header">Konfirmasi Seeder</div>
+            <div class="wp-store-modal-body">
+                Jalankan seeder untuk membuat produk contoh?
+            </div>
+            <div class="wp-store-modal-actions">
+                <button type="button" class="wp-store-btn wp-store-btn-secondary" @click="closeSeederModal" :disabled="isSeeding">Batal</button>
+                <button type="button" class="wp-store-btn wp-store-btn-primary" @click="runSeeder" :disabled="isSeeding">
+                    <span class="dashicons dashicons-update" x-show="isSeeding" style="animation: spin 2s linear infinite;"></span>
+                    <span x-text="isSeeding ? 'Memproses...' : 'Jalankan'"></span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -556,6 +571,49 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
     [x-cloak] {
         display: none !important;
     }
+
+    .wp-store-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 20px;
+    }
+
+    .wp-store-modal {
+        background: #fff;
+        border: 1px solid #c3c4c7;
+        border-radius: 6px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 420px;
+        overflow: hidden;
+    }
+
+    .wp-store-modal-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        font-weight: 600;
+        color: #1d2327;
+    }
+
+    .wp-store-modal-body {
+        padding: 16px 20px;
+        color: #3c434a;
+        font-size: 14px;
+    }
+
+    .wp-store-modal-actions {
+        padding: 14px 20px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        background: #f9fafb;
+    }
 </style>
 
 <script>
@@ -565,6 +623,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             isSaving: false,
             isGenerating: false,
             isSeeding: false,
+            isSeederModalOpen: false,
             notification: {
                 show: false,
                 message: '',
@@ -819,8 +878,13 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 }
             },
 
+            openSeederModal() {
+                this.isSeederModalOpen = true;
+            },
+            closeSeederModal() {
+                this.isSeederModalOpen = false;
+            },
             async runSeeder() {
-                if (!confirm('Jalankan seeder untuk membuat produk contoh?')) return;
                 this.isSeeding = true;
                 const nonce = document.getElementById('_wpnonce').value;
                 try {
@@ -845,6 +909,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     console.error(error);
                 } finally {
                     this.isSeeding = false;
+                    this.closeSeederModal();
                 }
             },
 

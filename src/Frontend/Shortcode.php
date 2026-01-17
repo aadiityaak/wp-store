@@ -72,52 +72,30 @@ class Shortcode
         ];
 
         $query = new \WP_Query($args);
-
-        ob_start();
-?>
-        <div class="wps-p-4">
-            <?php if ($query->have_posts()) : ?>
-                <div class="wps-grid wps-grid-cols-2 wps-md-grid-cols-4">
-                    <?php
-                    while ($query->have_posts()) :
-                        $query->the_post();
-                        $id = get_the_ID();
-                        $price = get_post_meta($id, '_store_price', true);
-                        $stock = get_post_meta($id, '_store_stock', true);
-                        $image = get_the_post_thumbnail_url($id, 'medium');
-                        $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
-                    ?>
-                        <div class="wps-card wps-card-hover wps-transition">
-                            <div class="wps-p-2">
-                                <?php if ($image) : ?>
-                                    <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160" src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
-                                <?php endif; ?>
-                                <a class="wps-text-sm wps-text-gray-900 wps-mb-4" href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-                                <div class="wps-text-sm wps-text-gray-900 wps-mb-4">
-                                    <?php
-                                    if ($price !== '') {
-                                        echo esc_html($currency . ' ' . number_format_i18n((float) $price, 0));
-                                    }
-                                    ?>
-                                    <?php if ($stock !== '') : ?>
-                                        <span class="wps-text-gray-500"> • Stok: <?php echo esc_html((int) $stock); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="wps-flex wps-items-center wps-justify-between">
-                                    <div><?php echo do_shortcode('[wp_store_add_to_cart size="sm"]'); ?></div>
-                                    <a class="wps-btn wps-btn-secondary wps-btn-sm" href="<?php the_permalink(); ?>">Lihat Detail</a>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endwhile; ?>
-                </div>
-                <?php wp_reset_postdata(); ?>
-            <?php else : ?>
-                <div class="wps-text-sm wps-text-gray-500">Belum ada produk.</div>
-            <?php endif; ?>
-        </div>
-    <?php
-        return ob_get_clean();
+        $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
+        $items = [];
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $id = get_the_ID();
+                $price = get_post_meta($id, '_store_price', true);
+                $stock = get_post_meta($id, '_store_stock', true);
+                $image = get_the_post_thumbnail_url($id, 'medium');
+                $items[] = [
+                    'id' => $id,
+                    'title' => get_the_title(),
+                    'link' => get_permalink(),
+                    'image' => $image ? $image : null,
+                    'price' => $price !== '' ? (float) $price : null,
+                    'stock' => $stock !== '' ? (int) $stock : null,
+                ];
+            }
+            wp_reset_postdata();
+        }
+        return Template::render('pages/shop', [
+            'items' => $items,
+            'currency' => $currency
+        ]);
     }
 
     public function render_checkout($atts = [])
@@ -128,7 +106,7 @@ class Shortcode
         $origin_subdistrict = isset($settings['shipping_origin_subdistrict']) ? (string) $settings['shipping_origin_subdistrict'] : '';
         $active_couriers = $settings['shipping_couriers'] ?? ['jne', 'sicepat', 'ide'];
         ob_start();
-    ?>
+?>
         <script>
             if (typeof window.wpStoreSettings === 'undefined') {
                 window.wpStoreSettings = {
