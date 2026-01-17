@@ -28,6 +28,9 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             <div @click="switchTab('system')" class="wp-store-tab" :class="{ 'active': activeTab === 'system' }">
                 Sistem
             </div>
+            <div @click="switchTab('tools')" class="wp-store-tab" :class="{ 'active': activeTab === 'tools' }">
+                Tool
+            </div>
         </div>
 
         <form @submit.prevent="saveSettings" x-ref="form">
@@ -282,6 +285,26 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <option value="Rp" <?php selected($settings['currency_symbol'] ?? 'Rp', 'Rp'); ?>>Rp (Rupiah)</option>
                             <option value="USD" <?php selected($settings['currency_symbol'] ?? 'Rp', 'USD'); ?>>USD (Dollar)</option>
                         </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Tool -->
+            <div x-show="activeTab === 'tools'" class="wp-store-tab-content" x-cloak>
+                <div class="wp-store-form-grid">
+                    <div class="wp-store-box-gray">
+                        <h3 class="wp-store-subtitle">Tool</h3>
+                        <div class="wp-store-mt-4" style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" @click="runSeeder" class="wp-store-btn wp-store-btn-secondary" :disabled="isSeeding">
+                                <span class="dashicons dashicons-admin-tools" x-show="!isSeeding"></span>
+                                <span class="dashicons dashicons-update" x-show="isSeeding" style="animation: spin 2s linear infinite;"></span>
+                                <span x-text="isSeeding ? 'Menjalankan Seeder...' : 'Seeder'"></span>
+                            </button>
+                            <a href="<?php echo admin_url('edit.php?post_type=store_product'); ?>" class="wp-store-btn wp-store-btn-secondary">
+                                <span class="dashicons dashicons-cart"></span>
+                                Produk
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -541,6 +564,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             activeTab: '<?php echo esc_js($active_tab); ?>',
             isSaving: false,
             isGenerating: false,
+            isSeeding: false,
             notification: {
                 show: false,
                 message: '',
@@ -792,6 +816,35 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     console.error(error);
                 } finally {
                     this.isGenerating = false;
+                }
+            },
+
+            async runSeeder() {
+                if (!confirm('Jalankan seeder untuk membuat produk contoh?')) return;
+                this.isSeeding = true;
+                const nonce = document.getElementById('_wpnonce').value;
+                try {
+                    const response = await fetch('/wp-json/wp-store/v1/tools/seed-products', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': nonce
+                        },
+                        body: JSON.stringify({
+                            count: 12
+                        })
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        this.showNotification(result.message || 'Seeder berhasil dijalankan.', 'success');
+                    } else {
+                        this.showNotification(result.message || 'Gagal menjalankan seeder.', 'error');
+                    }
+                } catch (error) {
+                    this.showNotification('Terjadi kesalahan jaringan.', 'error');
+                    console.error(error);
+                } finally {
+                    this.isSeeding = false;
                 }
             },
 

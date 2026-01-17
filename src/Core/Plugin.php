@@ -56,6 +56,9 @@ class Plugin
         
         $raja = new \WpStore\Api\RajaOngkirController();
         add_action('rest_api_init', [$raja, 'register_routes']);
+        
+        $tools = new \WpStore\Api\ToolsController();
+        add_action('rest_api_init', [$tools, 'register_routes']);
     }
 
     private function load_frontend()
