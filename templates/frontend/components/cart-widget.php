@@ -85,7 +85,7 @@
             </template>
             <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
                 <div class="wps-flex wps-items-center wps-gap-2 wps-divider">
-                    <img :src="item.image" alt="" class="wps-img-40" x-show="item.image">
+                    <img :src="item.image ? item.image : '<?php echo esc_url(WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>'" alt="" class="wps-img-40">
                     <div style="flex: 1;">
                         <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
                         <template x-if="item.options && Object.keys(item.options).length">

@@ -16,6 +16,16 @@
         advOptions: JSON.parse('<?php echo esc_js(wp_json_encode($adv_values)); ?>'),
         selectedBasic: '',
         selectedAdv: '',
+        normalizeOptions(obj) {
+            const o = obj || {};
+            const sorted = {};
+            Object.keys(o).sort().forEach((k) => { sorted[k] = o[k]; });
+            return sorted;
+        },
+        stringifyOptions(obj) {
+            const n = this.normalizeOptions(obj || {});
+            try { return JSON.stringify(n); } catch(e) { return '{}'; }
+        },
         hasOptions() {
             return ((this.basicName && this.basicOptions.length > 0) || (this.advName && this.advOptions.length > 0));
         },
@@ -32,7 +42,7 @@
             const aVal = (this.selectedAdv || '').trim();
             if (bName && bVal) { opts[bName] = bVal; }
             if (aName && aVal) { opts[aName] = aVal; }
-            return opts;
+            return this.normalizeOptions(opts);
         },
         async add() {
             if (this.hasOptions()) {
@@ -54,9 +64,7 @@
                     const opts = this.getOptionsPayload();
                     const item = (dataCart.items || []).find((i) => {
                         if (i.id !== <?php echo (int) $id; ?>) return false;
-                        const a = i.options || {};
-                        const b = opts || {};
-                        return JSON.stringify(a) === JSON.stringify(b);
+                        return this.stringifyOptions(i.options || {}) === this.stringifyOptions(opts || {});
                     });
                     currentQty = item ? (item.qty || 0) : 0;
                 } catch (e) {}
