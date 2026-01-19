@@ -38,6 +38,12 @@ class Plugin
 
         $order_meta = new \WpStore\Admin\OrderMetaBoxes();
         $order_meta->register();
+
+        $order_columns = new \WpStore\Admin\OrderColumns();
+        $order_columns->register();
+
+        $order_actions = new \WpStore\Admin\OrderActions();
+        $order_actions->register();
     }
 
     private function load_api()
