@@ -338,20 +338,55 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <option value="USD" <?php selected($settings['currency_symbol'] ?? 'Rp', 'USD'); ?>>USD (Dollar)</option>
                         </select>
                     </div>
+                    <div class="wp-store-grid-2">
+                        <div>
+                            <label class="wp-store-label" for="recaptcha_site_key">reCAPTCHA Site Key</label>
+                            <input name="recaptcha_site_key" type="text" id="recaptcha_site_key" value="<?php echo esc_attr($settings['recaptcha_site_key'] ?? ''); ?>" class="wp-store-input" placeholder="Site Key">
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="recaptcha_secret_key">reCAPTCHA Secret Key</label>
+                            <input name="recaptcha_secret_key" type="text" id="recaptcha_secret_key" value="<?php echo esc_attr($settings['recaptcha_secret_key'] ?? ''); ?>" class="wp-store-input" placeholder="Secret Key">
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Tab: Tool -->
             <div x-show="activeTab === 'tools'" class="wp-store-tab-content" x-cloak>
-                <div class="wp-store-form-grid">
+                <div class="wp-store-grid-3">
                     <div class="wp-store-box-gray">
-                        <h3 class="wp-store-subtitle">Tool</h3>
+                        <h3 class="wp-store-subtitle">Cache RajaOngkir</h3>
+                        <p class="wp-store-helper">Lihat ukuran cache dan bersihkan untuk menghemat API.</p>
+                        <div class="wp-store-mt-4" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <div class="wp-store-helper">
+                                <span x-show="isLoadingCacheStats">Menghitung ukuran cache...</span>
+                                <span x-show="!isLoadingCacheStats">
+                                    <strong x-text="cacheStats.entries"></strong> entri,
+                                    <strong x-text="cacheStats.approx_mb"></strong> MB
+                                </span>
+                            </div>
+                            <button type="button" @click="clearCache" class="wp-store-btn wp-store-btn-secondary" :disabled="isClearing">
+                                <span class="dashicons dashicons-trash" x-show="!isClearing"></span>
+                                <span class="dashicons dashicons-update" x-show="isClearing" style="animation: spin 2s linear infinite;"></span>
+                                <span x-text="isClearing ? 'Membersihkan Cache...' : 'Clear Cache'"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="wp-store-box-gray">
+                        <h3 class="wp-store-subtitle">Seeder Produk</h3>
+                        <p class="wp-store-helper">Buat produk contoh untuk pengujian katalog.</p>
                         <div class="wp-store-mt-4" style="display:flex; gap:10px; flex-wrap:wrap;">
                             <button type="button" @click="openSeederModal" class="wp-store-btn wp-store-btn-secondary" :disabled="isSeeding">
                                 <span class="dashicons dashicons-admin-tools" x-show="!isSeeding"></span>
                                 <span class="dashicons dashicons-update" x-show="isSeeding" style="animation: spin 2s linear infinite;"></span>
                                 <span x-text="isSeeding ? 'Menjalankan Seeder...' : 'Run Seeder'"></span>
                             </button>
+                        </div>
+                    </div>
+                    <div class="wp-store-box-gray">
+                        <h3 class="wp-store-subtitle">Produk</h3>
+                        <p class="wp-store-helper">Kelola daftar produk toko Anda.</p>
+                        <div class="wp-store-mt-4" style="display:flex; gap:10px; flex-wrap:wrap;">
                             <a href="<?php echo admin_url('edit.php?post_type=store_product'); ?>" class="wp-store-btn wp-store-btn-secondary">
                                 <span class="dashicons dashicons-cart"></span>
                                 Produk
@@ -702,12 +737,19 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             isSaving: false,
             isGenerating: false,
             isSeeding: false,
+            isClearing: false,
+            isLoadingCacheStats: false,
             isSeederModalOpen: false,
             isGeneratePagesModalOpen: false,
             notification: {
                 show: false,
                 message: '',
                 type: 'success'
+            },
+            cacheStats: {
+                bytes: 0,
+                entries: 0,
+                approx_mb: 0
             },
             bankAccounts: [],
             indonesianBanks: [
@@ -739,7 +781,6 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 // Initialize history state if needed
                 this.updateUrl(this.activeTab);
 
-                // Load provinces and cascading data
                 this.loadProvinces().then(() => {
                     if (this.settings.shipping_origin_province) {
                         this.loadCities(this.settings.shipping_origin_province).then(() => {
@@ -750,12 +791,12 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     }
                 });
 
-                // Initialize bank accounts
+                this.loadCacheStats();
+
                 const savedAccounts = <?php echo json_encode($settings['store_bank_accounts'] ?? []); ?>;
                 if (Array.isArray(savedAccounts) && savedAccounts.length > 0) {
                     this.bankAccounts = savedAccounts;
                 } else {
-                    // Check legacy
                     const legacyName = '<?php echo esc_js($settings['bank_name'] ?? ''); ?>';
                     const legacyAccount = '<?php echo esc_js($settings['bank_account'] ?? ''); ?>';
                     const legacyHolder = '<?php echo esc_js($settings['bank_holder'] ?? ''); ?>';
@@ -1017,6 +1058,51 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 } finally {
                     this.isSeeding = false;
                     this.closeSeederModal();
+                }
+            },
+            async clearCache() {
+                this.isClearing = true;
+                const nonce = document.getElementById('_wpnonce').value;
+                try {
+                    const response = await fetch('/wp-json/wp-store/v1/tools/clear-cache', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': nonce
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        this.showNotification(result.message || 'Cache berhasil dibersihkan.', 'success');
+                        this.loadCacheStats();
+                    } else {
+                        this.showNotification(result.message || 'Gagal membersihkan cache.', 'error');
+                    }
+                } catch (error) {
+                    this.showNotification('Terjadi kesalahan jaringan.', 'error');
+                    console.error(error);
+                } finally {
+                    this.isClearing = false;
+                }
+            },
+            async loadCacheStats() {
+                this.isLoadingCacheStats = true;
+                const nonce = document.getElementById('_wpnonce').value;
+                try {
+                    const response = await fetch('/wp-json/wp-store/v1/tools/cache-stats', {
+                        method: 'GET',
+                        headers: {
+                            'X-WP-Nonce': nonce
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        this.cacheStats = result;
+                    }
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    this.isLoadingCacheStats = false;
                 }
             },
 

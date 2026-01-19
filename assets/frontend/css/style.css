@@ -90,11 +90,14 @@
 .wps-font-medium {
   font-weight: 600 !important;
 }
+.wps-font-semibold {
+  font-weight: 600 !important;
+}
 .wps-font-bold {
-  font-weight: 700 !important;
+  font-weight: 800 !important;
 }
 .wps-font-extrabold {
-  font-weight: 800 !important;
+  font-weight: 900 !important;
 }
 .wps-text-gray-900 {
   color: #111827;
@@ -241,6 +244,9 @@ button.wps-btn-primary {
 }
 .wps-justify-between {
   justify-content: space-between;
+}
+.wps-justify-center {
+  justify-content: center;
 }
 .wps-items-center {
   align-items: center;

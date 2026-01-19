@@ -86,6 +86,8 @@ class SettingsController
         if (isset($params['currency_symbol'])) $settings['currency_symbol'] = sanitize_text_field($params['currency_symbol']);
         if (isset($params['qris_image_id'])) $settings['qris_image_id'] = absint($params['qris_image_id']);
         if (isset($params['qris_label'])) $settings['qris_label'] = sanitize_text_field($params['qris_label']);
+        if (isset($params['recaptcha_site_key'])) $settings['recaptcha_site_key'] = sanitize_text_field($params['recaptcha_site_key']);
+        if (isset($params['recaptcha_secret_key'])) $settings['recaptcha_secret_key'] = sanitize_text_field($params['recaptcha_secret_key']);
 
         update_option('wp_store_settings', $settings);
 

@@ -16,6 +16,20 @@ class ToolsController
                 'permission_callback' => [$this, 'check_admin_auth'],
             ],
         ]);
+        register_rest_route('wp-store/v1', '/tools/clear-cache', [
+            [
+                'methods' => 'POST',
+                'callback' => [$this, 'clear_cache'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
+        register_rest_route('wp-store/v1', '/tools/cache-stats', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'cache_stats'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
     }
 
     public function check_admin_auth()
@@ -87,6 +101,51 @@ class ToolsController
             'success' => true,
             'message' => 'Seeder berhasil membuat ' . count($created_ids) . ' produk.',
             'created' => $created_ids
+        ], 200);
+    }
+
+    public function clear_cache(WP_REST_Request $request)
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'options';
+        $total = 0;
+        $total += (int) $wpdb->query("DELETE FROM {$table} WHERE option_name IN ('_transient_wp_store_rajaongkir_provinces','_transient_timeout_wp_store_rajaongkir_provinces')");
+        $total += (int) $wpdb->query("DELETE FROM {$table} WHERE option_name LIKE '_transient_wp_store_rajaongkir_cities_%' OR option_name LIKE '_transient_timeout_wp_store_rajaongkir_cities_%'");
+        $total += (int) $wpdb->query("DELETE FROM {$table} WHERE option_name LIKE '_transient_wp_store_rajaongkir_subdistricts_%' OR option_name LIKE '_transient_timeout_wp_store_rajaongkir_subdistricts_%'");
+        $total += (int) $wpdb->query("DELETE FROM {$table} WHERE option_name LIKE '_transient_wp_store_rajaongkir_cost_%' OR option_name LIKE '_transient_timeout_wp_store_rajaongkir_cost_%'");
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => 'Cache berhasil dibersihkan.',
+            'deleted_rows' => $total
+        ], 200);
+    }
+
+    public function cache_stats(WP_REST_Request $request)
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'options';
+        $sql = "
+            SELECT
+                COALESCE(SUM(LENGTH(option_value)),0) AS total_bytes,
+                COUNT(*) AS total_entries
+            FROM {$table}
+            WHERE
+                option_name NOT LIKE '_transient_timeout%%' AND (
+                    option_name = '_transient_wp_store_rajaongkir_provinces' OR
+                    option_name LIKE '_transient_wp_store_rajaongkir_cities_%%' OR
+                    option_name LIKE '_transient_wp_store_rajaongkir_subdistricts_%%' OR
+                    option_name LIKE '_transient_wp_store_rajaongkir_cost_%%'
+                )
+        ";
+        $row = $wpdb->get_row($sql, ARRAY_A);
+        $bytes = isset($row['total_bytes']) ? (int) $row['total_bytes'] : 0;
+        $entries = isset($row['total_entries']) ? (int) $row['total_entries'] : 0;
+        $mb = round($bytes / 1048576, 2);
+        return new WP_REST_Response([
+            'success' => true,
+            'bytes' => $bytes,
+            'entries' => $entries,
+            'approx_mb' => $mb
         ], 200);
     }
 }

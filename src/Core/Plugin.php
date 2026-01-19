@@ -71,6 +71,9 @@ class Plugin
         
         $tools = new \WpStore\Api\ToolsController();
         add_action('rest_api_init', [$tools, 'register_routes']);
+        
+        $captcha = new \WpStore\Api\CaptchaController();
+        add_action('rest_api_init', [$captcha, 'register_routes']);
     }
 
     private function load_frontend()

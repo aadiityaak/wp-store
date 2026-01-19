@@ -148,6 +148,9 @@
                 }
                 return '';
             },
+            canSubmit() {
+                return this.getValidationError() === '';
+            },
             async fetchProfile() {
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
@@ -527,17 +530,19 @@
                         </div>
                         <div class="wps-mt-4">
                             <div class="wps-text-lg wps-font-medium wps-mb-2 wps-text-bold">Metode Pembayaran</div>
-                            <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
-                                <label class="wps-flex wps-items-center wps-gap-2">
-                                    <input type="radio" name="payment_method" value="transfer_bank" x-model="paymentMethod">
+                            <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2 wps-flex-wrap">
+                                <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
+                                    :style="paymentMethod === 'transfer_bank' ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
+                                    @click="paymentMethod = 'transfer_bank'">
                                     <span class="wps-text-sm wps-text-gray-900">Transfer Bank</span>
-                                </label>
-                                <label class="wps-flex wps-items-center wps-gap-2">
-                                    <input type="radio" name="payment_method" value="qris" x-model="paymentMethod">
+                                </button>
+                                <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
+                                    :style="paymentMethod === 'qris' ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
+                                    @click="paymentMethod = 'qris'">
                                     <span class="wps-text-sm wps-text-gray-900">QRIS</span>
-                                </label>
+                                </button>
                             </div>
-                            <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || cart.length === 0" @click="submit()">
+                            <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || !canSubmit()" @click="submit()">
                                 <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                 <span x-show="submitting">Memproses...</span>
                                 <span x-show="!submitting">Buat Pesanan</span>

@@ -7,12 +7,37 @@ class CustomerProfile
     public function register()
     {
         add_shortcode('store_customer_profile', [$this, 'render_profile']);
+        add_shortcode('wp_store_profile', [$this, 'render_profile']);
     }
 
     public function render_profile($atts = [])
     {
         if (!is_user_logged_in()) {
-            return '<div class="wp-store-notice">Silakan login untuk mengakses halaman profil.</div>';
+            $redirect = esc_url(site_url('/profil-saya/'));
+            $login_url = esc_url(wp_login_url($redirect));
+            $can_register = (bool) get_option('users_can_register');
+            $register_url = $can_register ? esc_url(function_exists('wp_registration_url') ? wp_registration_url() : site_url('/wp-login.php?action=register')) : '';
+            ob_start();
+            ?>
+            <div class="wps-container" style="max-width: 720px; margin: 40px auto;">
+                <div class="wps-card">
+                    <div class="wps-p-6 wps-text-center">
+                        <h2 class="wps-text-xl wps-font-medium wps-text-gray-900">Masuk untuk Mengelola Profil</h2>
+                        <p class="wps-mt-2 wps-text-sm wps-text-gray-600">Halaman ini khusus untuk pelanggan terdaftar. Silakan masuk untuk melihat dan memperbarui data profil, buku alamat, serta wishlist Anda.</p>
+                        <div class="wps-flex wps-justify-center wps-items-center wps-gap-3 wps-mt-4">
+                            <a href="<?php echo $login_url; ?>" class="wps-btn wps-btn-primary">Masuk</a>
+                            <?php if ($can_register && $register_url) : ?>
+                                <a href="<?php echo $register_url; ?>" class="wps-btn wps-btn-secondary">Daftar</a>
+                            <?php endif; ?>
+                        </div>
+                        <div class="wps-mt-4">
+                            <a href="<?php echo esc_url(site_url('/')); ?>" class="wps-link">Kembali ke Beranda</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php
+            return ob_get_clean();
         }
 
         wp_enqueue_script('alpinejs');
@@ -31,8 +56,13 @@ class CustomerProfile
         global $wpdb;
         $wishlist_table = $wpdb->prefix . 'store_wishlists';
         $initial_items = [];
+        $orders = [];
+        $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
+        $tracking_base = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
         if (is_user_logged_in()) {
             $uid = get_current_user_id();
+            $user = get_userdata($uid);
+            $email = $user ? $user->user_email : '';
             $row = $wpdb->get_row($wpdb->prepare("SELECT wishlist FROM {$wishlist_table} WHERE user_id = %d LIMIT 1", $uid));
             if ($row && isset($row->wishlist)) {
                 $decoded = json_decode($row->wishlist, true);
@@ -52,6 +82,34 @@ class CustomerProfile
                         }
                     }
                 }
+            }
+            if ($email) {
+                $q = new \WP_Query([
+                    'post_type' => 'store_order',
+                    'post_status' => 'publish',
+                    'posts_per_page' => 20,
+                    'orderby' => 'date',
+                    'order' => 'DESC',
+                    'meta_query' => [
+                        [
+                            'key' => '_store_order_email',
+                            'value' => $email,
+                            'compare' => '='
+                        ]
+                    ]
+                ]);
+                foreach ($q->posts as $p) {
+                    $oid = $p->ID;
+                    $orders[] = [
+                        'id' => $oid,
+                        'date' => get_the_date('d M Y', $oid),
+                        'total' => (float) get_post_meta($oid, '_store_order_total', true),
+                        'status' => (string) (get_post_meta($oid, '_store_order_status', true) ?: 'pending'),
+                        'tracking_url' => add_query_arg(['order' => $oid], $tracking_base),
+                        'items' => (array) (get_post_meta($oid, '_store_order_items', true) ?: [])
+                    ];
+                }
+                wp_reset_postdata();
             }
         }
         ob_start();
@@ -78,6 +136,9 @@ class CustomerProfile
                     </button>
                     <button @click="tab = 'wishlist'" :class="{ 'active': tab === 'wishlist' }" class="wps-tab">
                         Wishlist <span class="wps-badge" x-text="wishlistCount" x-show="wishlistCount > 0" style="margin-left:6px;"></span>
+                    </button>
+                    <button @click="tab = 'orders'" :class="{ 'active': tab === 'orders' }" class="wps-tab">
+                        Pesanan
                     </button>
                 </div>
             </div>
@@ -282,6 +343,46 @@ class CustomerProfile
                     </div>
                 </div>
             </div>
+            
+            <!-- Orders Tab -->
+            <div x-show="tab === 'orders'">
+                <div class="wps-card wps-p-6">
+                    <div class="wps-flex wps-justify-between wps-items-center wps-mb-4">
+                        <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Riwayat Pesanan</h2>
+                    </div>
+                    <template x-if="orders.length === 0">
+                        <div class="wps-text-center wps-text-gray-500">Belum ada pesanan.</div>
+                    </template>
+                    <div class="wps-grid wps-gap-4" style="display: grid; gap: 1rem;">
+                        <template x-for="order in orders" :key="order.id">
+                            <div class="wps-card wps-p-4">
+                                <div class="wps-flex wps-justify-between wps-items-center">
+                                    <div>
+                                        <div class="wps-text-sm wps-text-gray-900 wps-font-medium">#<span x-text="order.id"></span></div>
+                                        <div class="wps-text-xs wps-text-gray-500" x-text="order.date"></div>
+                                    </div>
+                                    <div class="wps-text-sm wps-text-gray-900 wps-font-medium"><?php echo esc_html(($currency ?: 'Rp')); ?> <span x-text="formatCurrency(order.total)"></span></div>
+                                </div>
+                                <div class="wps-flex wps-justify-between wps-items-center wps-mt-3">
+                                    <span class="wps-badge wps-bg-blue-500 wps-text-white wps-text-xs wps-font-medium wps-px-2.5 wps-py-0.5 rounded-full" x-text="statusLabel(order.status)"></span>
+                                    <a :href="order.tracking_url" class="wps-btn wps-btn-secondary">Tracking</a>
+                                </div>
+                                <div class="wps-mt-3">
+                                    <div class="wps-text-xs wps-text-gray-500">Item:</div>
+                                    <ul class="wps-mt-1">
+                                        <template x-for="it in (Array.isArray(order.items) ? order.items : [])" :key="String(it.product_id) + '-' + String(it.qty)">
+                                            <li class="wps-text-sm wps-text-gray-900">
+                                                <span x-text="(it.title || 'Produk') + ' x' + (it.qty || 1)"></span>
+                                                <span class="wps-text-gray-500"> — <?php echo esc_html(($currency ?: 'Rp')); ?> <span x-text="formatCurrency(it.subtotal || 0)"></span></span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script>
@@ -294,6 +395,7 @@ class CustomerProfile
                     toastType: 'success',
                     toastMessage: '',
                     wishlistCount: 0,
+                    orders: <?php echo wp_json_encode($orders); ?>,
                     profile: {
                         first_name: '',
                         last_name: '',
@@ -328,7 +430,7 @@ class CustomerProfile
                     init() {
                         const urlParams = new URLSearchParams(window.location.search);
                         const tabParam = urlParams.get('tab');
-                        if (tabParam && ['profile', 'addresses', 'wishlist'].includes(tabParam)) {
+                        if (tabParam && ['profile', 'addresses', 'wishlist', 'orders'].includes(tabParam)) {
                             this.tab = tabParam;
                         }
 
@@ -364,6 +466,21 @@ class CustomerProfile
                             const items = Array.isArray(data.items) ? data.items : [];
                             this.wishlistCount = items.length;
                         });
+                    },
+                    formatCurrency(n) {
+                        try { return Number(n || 0).toLocaleString('id-ID'); } catch (e) { return String(n || 0); }
+                    },
+                    statusLabel(s) {
+                        const m = {
+                            pending: 'Pending',
+                            awaiting_payment: 'Menunggu Pembayaran',
+                            paid: 'Sudah Dibayar',
+                            processing: 'Sedang Diproses',
+                            shipped: 'Dikirim',
+                            completed: 'Selesai',
+                            cancelled: 'Dibatalkan'
+                        };
+                        return m[s] || s;
                     },
 
                     async fetchProfile() {

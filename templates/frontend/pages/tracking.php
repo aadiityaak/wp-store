@@ -238,6 +238,11 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                             <input type="hidden" name="action" value="wp_store_upload_payment_proof">
                             <input type="hidden" name="order_id" value="<?php echo esc_attr($order_id); ?>">
                             <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_upload); ?>">
+                            <?php if (!is_user_logged_in()) : ?>
+                                <div class="wps-mb-2">
+                                    <?php echo \WpStore\Frontend\Template::render('components/captcha'); ?>
+                                </div>
+                            <?php endif; ?>
                             <div class="wps-flex wps-items-center wps-gap-2">
                                 <input type="file" name="proof" accept="image/*,.pdf" required class="wps-input">
                                 <button type="submit" class="wps-btn wps-btn-primary">Upload</button>
