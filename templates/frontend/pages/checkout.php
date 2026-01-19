@@ -11,6 +11,7 @@
         return {
             loading: false,
             submitting: false,
+            loggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
             cart: [],
             total: 0,
             paymentMethod: 'transfer_bank',
@@ -354,8 +355,10 @@
             },
             init() {
                 this.fetchCart();
-                this.fetchProfile();
-                this.fetchAddresses();
+                if (this.loggedIn) {
+                    this.fetchProfile();
+                    this.fetchAddresses();
+                }
                 this.loadProvinces();
             }
         };
@@ -368,13 +371,15 @@
                 <div class="wps-card">
                     <div class="wps-p-4">
                         <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Informasi Pemesan</div>
-                        <div class="">
-                            <div class="wps-callout-title">Gunakan Data Tersimpan</div>
-                            <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
-                                <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
-                                <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
+                        <?php if (is_user_logged_in()) : ?>
+                            <div class="">
+                                <div class="wps-callout-title">Gunakan Data Tersimpan</div>
+                                <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
+                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
+                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                         <div class="wps-form-group">
                             <label class="wps-label">Nama</label>
                             <input class="wps-input" type="text" x-model="name" placeholder="Nama lengkap">
@@ -543,9 +548,9 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div x-show="toastShow" x-transition x-cloak
-        :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
-        <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
+        <div x-show="toastShow" x-transition x-cloak
+            :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
+            <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
+        </div>
     </div>
 </div>

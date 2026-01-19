@@ -177,6 +177,64 @@ class RajaOngkirController
                 }
             }
         }
+        if (empty($services)) {
+            $codes = preg_split('/[:,]+/', (string) $courier);
+            $codes = array_values(array_filter(array_map('trim', $codes)));
+            foreach ($codes as $c) {
+                $single = [
+                    'origin' => $origin_subdistrict,
+                    'destination' => $destination_subdistrict,
+                    'weight' => $weight,
+                    'courier' => $c,
+                    'price' => 'lowest'
+                ];
+                $resp = wp_remote_post($url, [
+                    'headers' => [
+                        'key' => $api_key,
+                        'Content-Type' => 'application/x-www-form-urlencoded'
+                    ],
+                    'body' => $single
+                ]);
+                if (is_wp_error($resp)) {
+                    continue;
+                }
+                $b2 = wp_remote_retrieve_body($resp);
+                $d2 = json_decode($b2, true);
+                if (isset($d2['data'])) {
+                    $dd = $d2['data'];
+                    if (isset($dd['couriers']) && is_array($dd['couriers'])) {
+                        foreach ($dd['couriers'] as $cg) {
+                            $code = isset($cg['code']) ? (string) $cg['code'] : (isset($cg['courier']['code']) ? (string) $cg['courier']['code'] : $c);
+                            $list = isset($cg['services']) && is_array($cg['services']) ? $cg['services'] : [];
+                            foreach ($list as $row) {
+                                $services[] = [
+                                    'courier' => $code,
+                                    'service' => isset($row['service']) ? (string) $row['service'] : (isset($row['service_code']) ? (string) $row['service_code'] : ''),
+                                    'description' => isset($row['description']) ? (string) $row['description'] : (isset($row['service_name']) ? (string) $row['service_name'] : ''),
+                                    'cost' => isset($row['cost']) ? (float) $row['cost'] : (isset($row['value']) ? (float) $row['value'] : 0),
+                                    'etd' => isset($row['etd']) ? (string) $row['etd'] : (isset($row['etd_days']) ? (string) $row['etd_days'] : '')
+                                ];
+                            }
+                        }
+                    } elseif (is_array($dd)) {
+                        foreach ($dd as $row) {
+                            if (isset($row['services']) && is_array($row['services'])) {
+                                $code = isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : $c);
+                                foreach ($row['services'] as $s) {
+                                    $services[] = [
+                                        'courier' => $code,
+                                        'service' => isset($s['service']) ? (string) $s['service'] : (isset($s['service_code']) ? (string) $s['service_code'] : ''),
+                                        'description' => isset($s['description']) ? (string) $s['description'] : (isset($s['service_name']) ? (string) $s['service_name'] : ''),
+                                        'cost' => isset($s['cost']) ? (float) $s['cost'] : (isset($s['value']) ? (float) $s['value'] : 0),
+                                        'etd' => isset($s['etd']) ? (string) $s['etd'] : (isset($s['etd_days']) ? (string) $s['etd_days'] : '')
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         $payload = [
             'success' => true,
             'weight' => $weight,
@@ -412,4 +470,3 @@ class RajaOngkirController
         ], 500);
     }
 }
-
