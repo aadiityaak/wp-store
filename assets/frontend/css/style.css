@@ -344,6 +344,9 @@ button.wps-btn-primary {
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;
 }
+.wps-pl-1 {
+  padding-left: 0.25rem;
+}
 .rounded-full {
   border-radius: 9999px;
 }
@@ -557,4 +560,16 @@ button.wps-btn-primary {
 }
 .wps-rounded-md {
   border-radius: 0.375rem;
+}
+/* Captcha refresh spin */
+.wps-captcha-refresh:hover svg {
+  animation: spin 1s linear 0.4;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

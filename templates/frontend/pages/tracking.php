@@ -173,7 +173,7 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                     <?php if (!empty($proofs)) : ?>
                         <div class="wps-mt-3">
                             <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Bukti Transfer</div>
-                            <div class="wps-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
+                            <div class="wps-grid" id="wps-proofs-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
                                 <?php foreach ($proofs as $pid) :
                                     $url = wp_get_attachment_url($pid);
                                     $mime = get_post_mime_type($pid);
@@ -248,41 +248,47 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                 <button type="submit" class="wps-btn wps-btn-primary">Upload</button>
                             </div>
                             <div class="wps-text-xs wps-text-gray-500 wps-mt-1">Format yang didukung: JPG, PNG, WEBP, PDF.</div>
-                            <div id="wps-upload-msg" class="wps-text-sm wps-mt-2"></div>
                         </form>
                         <div id="wps-upload-preview" class="wps-mt-2" style="display:none;">
                             <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Preview</div>
                             <div class="wps-card wps-p-2" id="wps-upload-preview-box"></div>
                         </div>
-                        <?php if (!empty($proofs)) : ?>
-                            <div class="wps-mt-3">
-                                <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Bukti yang Diupload</div>
-                                <div class="wps-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
-                                    <?php foreach ($proofs as $pid) :
-                                        $url = wp_get_attachment_url($pid);
-                                        $mime = get_post_mime_type($pid);
-                                    ?>
-                                        <div class="wps-card wps-p-2">
-                                            <?php if ($mime && strpos($mime, 'image/') === 0) : ?>
-                                                <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener">
-                                                    <img src="<?php echo esc_url($url); ?>" alt="Bukti Transfer" style="width:100%; height:120px; object-fit:cover;">
-                                                </a>
-                                            <?php else : ?>
-                                                <a class="wps-text-sm wps-text-primary-700" href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener">Lihat Dokumen</a>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endif; ?>
+
                         <script>
                             (function() {
                                 var f = document.getElementById('wps-upload-proof');
                                 if (!f) return;
-                                var msg = document.getElementById('wps-upload-msg');
                                 var fileInput = f.querySelector('input[type="file"]');
                                 var pvWrap = document.getElementById('wps-upload-preview');
                                 var pvBox = document.getElementById('wps-upload-preview-box');
+
+                                function showToast(message, type) {
+                                    var el = document.getElementById('wp-store-frontend-toast');
+                                    if (!el) {
+                                        el = document.createElement('div');
+                                        el.id = 'wp-store-frontend-toast';
+                                        el.style.position = 'fixed';
+                                        el.style.bottom = '30px';
+                                        el.style.right = '30px';
+                                        el.style.padding = '12px 16px';
+                                        el.style.background = '#fff';
+                                        el.style.boxShadow = '0 3px 10px rgba(0,0,0,.1)';
+                                        el.style.borderLeft = '4px solid #46b450';
+                                        el.style.borderRadius = '4px';
+                                        el.style.zIndex = '9999';
+                                        el.style.display = 'none';
+                                        el.style.color = '#111827';
+                                        el.style.fontSize = '14px';
+                                        document.body.appendChild(el);
+                                    }
+                                    el.style.borderLeftColor = (type === 'error' ? '#d63638' : '#46b450');
+                                    el.textContent = message || '';
+                                    el.style.display = '';
+                                    clearTimeout(el._timer);
+                                    el._timer = setTimeout(function() {
+                                        el.style.display = 'none';
+                                    }, 2200);
+                                }
                                 if (fileInput) {
                                     fileInput.addEventListener('change', function() {
                                         if (!fileInput.files || !fileInput.files[0]) {
@@ -315,7 +321,6 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                 }
                                 f.addEventListener('submit', function(e) {
                                     e.preventDefault();
-                                    msg.textContent = '';
                                     var btn = f.querySelector('button[type="submit"]');
                                     if (btn) btn.disabled = true;
                                     var fd = new FormData(f);
@@ -329,12 +334,11 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                         })
                                         .then(function(j) {
                                             if (j && j.success) {
-                                                msg.className = 'wps-text-sm wps-text-green-700 wps-mt-2';
-                                                msg.textContent = 'Bukti transfer berhasil diunggah.';
+                                                showToast('Bukti transfer berhasil diunggah.', 'success');
                                                 if (pvWrap) pvWrap.style.display = 'none';
                                                 if (pvBox) pvBox.innerHTML = '';
                                                 if (j.data && j.data.url) {
-                                                    var grid = f.parentNode.querySelector('.wps-grid');
+                                                    var grid = document.getElementById('wps-proofs-grid');
                                                     if (grid) {
                                                         var mime = '';
                                                         if (fileInput && fileInput.files && fileInput.files[0]) {
@@ -369,13 +373,11 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                                 }
                                                 f.reset();
                                             } else {
-                                                msg.className = 'wps-text-sm wps-text-red-700 wps-mt-2';
-                                                msg.textContent = (j && j.data && j.data.message) ? j.data.message : 'Gagal mengunggah.';
+                                                showToast((j && j.data && j.data.message) ? j.data.message : 'Gagal mengunggah.', 'error');
                                             }
                                         })
                                         .catch(function() {
-                                            msg.className = 'wps-text-sm wps-text-red-700 wps-mt-2';
-                                            msg.textContent = 'Terjadi kesalahan.';
+                                            showToast('Terjadi kesalahan.', 'error');
                                         })
                                         .finally(function() {
                                             if (btn) btn.disabled = false;
