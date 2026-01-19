@@ -74,8 +74,14 @@
 .wps-pb-0 {
   padding-bottom: 0 !important;
 }
+.wps-mt-3 {
+  margin-top: 0.75rem;
+}
 .wps-mt-4 {
   margin-top: 1rem;
+}
+.wps-mt-6 {
+  margin-top: 1.5rem;
 }
 .wps-text-lg {
   font-size: 1.125rem;
@@ -508,4 +514,31 @@ button.wps-btn-primary {
   width: 480px;
   max-width: 95vw;
   z-index: 10001;
+}
+
+.wps-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e5e7eb;
+}
+.wps-table-head tr {
+  background: #f9fafb;
+  font-weight: 600;
+}
+.wps-th {
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.wps-td {
+  padding: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.wps-table-striped tbody tr:nth-child(odd) {
+  background: #fcfcfd;
+}
+
+.wps-summary-box {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
 }

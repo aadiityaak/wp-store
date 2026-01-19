@@ -33,18 +33,32 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                         <?php if (empty($items)) : ?>
                             <div class="wps-text-sm wps-text-gray-500">Tidak ada item.</div>
                         <?php else : ?>
-                            <?php foreach ($items as $it) :
-                                $title = isset($it['title']) ? (string) $it['title'] : '';
-                                $qty = isset($it['qty']) ? (int) $it['qty'] : 0;
-                                $price = isset($it['price']) ? (float) $it['price'] : 0;
-                                $subtotal = isset($it['subtotal']) ? (float) $it['subtotal'] : ($price * $qty);
-                            ?>
-                                <div class="wps-flex wps-justify-between wps-items-center wps-mb-2" style="padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html($title); ?></div>
-                                    <div class="wps-text-xs wps-text-gray-700"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')); ?> × <?php echo esc_html($qty); ?> = <span class="wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($subtotal, 0, ',', '.')); ?></span></div>
-                                </div>
-                            <?php endforeach; ?>
-                            <div class="wps-mt-4 wps-p-4" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
+                            <table class="wps-text-sm wps-table wps-table-striped">
+                                <thead class="wps-table-head">
+                                    <tr>
+                                        <th class="wps-text-left wps-th">Produk</th>
+                                        <th class="wps-text-right wps-th">Harga</th>
+                                        <th class="wps-text-right wps-th">Qty</th>
+                                        <th class="wps-text-right wps-th">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($items as $it) :
+                                        $title = isset($it['title']) ? (string) $it['title'] : '';
+                                        $qty = isset($it['qty']) ? (int) $it['qty'] : 0;
+                                        $price = isset($it['price']) ? (float) $it['price'] : 0;
+                                        $subtotal = isset($it['subtotal']) ? (float) $it['subtotal'] : ($price * $qty);
+                                    ?>
+                                        <tr>
+                                            <td class="wps-text-gray-900 wps-td"><?php echo esc_html($title); ?></td>
+                                            <td class="wps-text-gray-700 wps-text-right wps-td"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')); ?></td>
+                                            <td class="wps-text-gray-700 wps-text-right wps-td"><?php echo esc_html($qty); ?></td>
+                                            <td class="wps-text-gray-900 wps-text-right wps-td"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($subtotal, 0, ',', '.')); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                            <div class="wps-mt-4 wps-p-4 wps-summary-box">
                                 <div class="wps-flex wps-justify-between wps-items-center">
                                     <div class="wps-text-sm wps-text-gray-500">Total Produk</div>
                                     <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total - $shipping_cost, 0, ',', '.')); ?></div>
@@ -74,4 +88,3 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
         <?php endif; ?>
     </div>
 </div>
-

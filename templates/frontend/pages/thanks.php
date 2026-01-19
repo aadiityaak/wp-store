@@ -50,13 +50,13 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                         <?php if (empty($items)) : ?>
                             <div class="wps-text-sm wps-text-gray-500">Tidak ada item.</div>
                         <?php else : ?>
-                            <table class="wps-text-sm" style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb;">
-                                <thead>
-                                    <tr style="background:#f9fafb; font-weight:600;">
-                                        <th style="text-align:left; padding:8px; border-bottom:1px solid #e5e7eb;">Produk</th>
-                                        <th style="text-align:right; padding:8px; border-bottom:1px solid #e5e7eb;">Harga</th>
-                                        <th style="text-align:right; padding:8px; border-bottom:1px solid #e5e7eb;">Qty</th>
-                                        <th style="text-align:right; padding:8px; border-bottom:1px solid #e5e7eb;">Subtotal</th>
+                            <table class="wps-text-sm wps-table wps-table-striped">
+                                <thead class="wps-table-head">
+                                    <tr>
+                                        <th class="wps-text-left wps-th">Produk</th>
+                                        <th class="wps-text-right wps-th">Harga</th>
+                                        <th class="wps-text-right wps-th">Qty</th>
+                                        <th class="wps-text-right wps-th">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -66,11 +66,11 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                                         $price = isset($it['price']) ? (float) $it['price'] : 0;
                                         $subtotal = isset($it['subtotal']) ? (float) $it['subtotal'] : ($price * $qty);
                                     ?>
-                                        <tr style="<?php echo ($i % 2 === 1) ? 'background:#fcfcfd;' : ''; ?>">
-                                            <td class="wps-text-gray-900" style="padding:8px; border-bottom:1px solid #f1f5f9;"><?php echo esc_html($title); ?></td>
-                                            <td class="wps-text-gray-700" style="padding:8px; border-bottom:1px solid #f1f5f9; text-align:right;"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')); ?></td>
-                                            <td class="wps-text-gray-700" style="padding:8px; border-bottom:1px solid #f1f5f9; text-align:right;"><?php echo esc_html($qty); ?></td>
-                                            <td class="wps-text-gray-900" style="padding:8px; border-bottom:1px solid #f1f5f9; text-align:right;"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($subtotal, 0, ',', '.')); ?></td>
+                                        <tr>
+                                            <td class="wps-text-gray-900 wps-td"><?php echo esc_html($title); ?></td>
+                                            <td class="wps-text-gray-700 wps-text-right wps-td"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')); ?></td>
+                                            <td class="wps-text-gray-700 wps-text-right wps-td"><?php echo esc_html($qty); ?></td>
+                                            <td class="wps-text-gray-900 wps-text-right wps-td"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($subtotal, 0, ',', '.')); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -91,15 +91,15 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                             </div>
                         <?php endif; ?>
                     </div>
-                </div>
-                <div>
-                    <div class="wps-text-lg wps-font-medium wps-text-gray-900">Alamat Pengiriman</div>
+                    <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mt-4">Alamat Pengiriman</div>
                     <div class="wps-mt-2 wps-text-sm wps-text-gray-700">
                         <div><?php echo esc_html($address); ?></div>
                         <div><?php echo esc_html($subdistrict_name); ?>, <?php echo esc_html($city_name); ?>, <?php echo esc_html($province_name); ?> <?php echo esc_html($postal_code); ?></div>
                     </div>
+                </div>
+                <div>
                     <?php if (!empty($bank_accounts)) : ?>
-                        <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mt-6">Informasi Pembayaran</div>
+                        <div class="wps-text-lg wps-font-medium wps-text-gray-900">Informasi Pembayaran</div>
                         <div class="wps-text-sm wps-text-gray-700 wps-mt-1">Silakan melakukan pembayaran dan gunakan nomor pesanan <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span> sebagai berita.</div>
                         <div class="wps-mt-3">
                             <div class="wps-flex wps-justify-between wps-items-center">
@@ -118,7 +118,7 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                                 </div>
                             <?php endforeach; ?>
                         </div>
-                        <div class="wps-text-xs wps-text-gray-500 wps-mt-2">Setelah pembayaran, kirim bukti transfer melalui kontak yang tersedia atau tunggu konfirmasi dari kami.</div>
+                        <div class="wps-text-xs wps-text-gray-500 wps-mt-4">Setelah pembayaran, kirim bukti transfer melalui kontak yang tersedia atau tunggu konfirmasi dari kami.</div>
                         <?php
                         $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
                         $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
@@ -129,13 +129,12 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                         ?>
                         <?php if (!empty($tracking_url)) : ?>
                             <div class="wps-mt-4 wps-p-4" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; text-align:center;">
-                                <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Scan untuk Lacak Pesanan</div>
                                 <div class="wps-mt-2">
                                     <a href="<?php echo esc_url($tracking_target); ?>" target="_blank" rel="noopener">
                                         <img src="<?php echo esc_url($qr_src); ?>" alt="QR Tracking" style="width:160px;height:160px;">
                                     </a>
                                 </div>
-                                <div class="wps-text-xs wps-text-gray-500 wps-mt-2"><?php echo esc_html($tracking_target); ?></div>
+                                <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Scan untuk Lacak Pesanan</div>
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
@@ -143,7 +142,10 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
             </div>
         <?php endif; ?>
         <div class="wps-text-center wps-mt-6">
-            <a class="wps-btn wps-btn-primary" href="<?php echo esc_url($shop_url); ?>">Kembali Belanja</a>
+            <a class="wps-btn wps-btn-primary" href="<?php echo esc_url($shop_url); ?>">
+                <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 18, 'class' => 'wps-mr-2']); ?>
+                Kembali Belanja
+            </a>
         </div>
     </div>
 </div>
