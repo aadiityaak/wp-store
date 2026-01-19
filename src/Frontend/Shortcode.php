@@ -72,7 +72,7 @@ class Shortcode
                         $url = get_permalink($pid);
                         if ($url) return esc_url_raw($url);
                     }
-                    return esc_url_raw(site_url('/tracking/'));
+                    return esc_url_raw(site_url('/tracking-order/'));
                 })(),
             ]
         );

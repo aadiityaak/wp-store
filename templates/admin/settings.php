@@ -260,7 +260,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         ]);
                         ?>
                     </div>
-                    
+
                     <div>
                         <label class="wp-store-label" for="page_thanks">Halaman Terima Kasih (Thanks)</label>
                         <?php
@@ -272,7 +272,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         ]);
                         ?>
                     </div>
-                    
+
                     <div>
                         <label class="wp-store-label" for="page_tracking">Halaman Tracking Order</label>
                         <?php
@@ -290,7 +290,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         <p class="wp-store-helper">Belum punya halaman? Klik tombol di bawah ini untuk membuat halaman Toko, Profil, Keranjang, Checkout, Terima Kasih, dan Tracking Order secara otomatis dengan shortcode yang sesuai.</p>
 
                         <div class="wp-store-mt-4">
-                            <button type="button" @click="generatePages" class="wp-store-btn wp-store-btn-secondary" :disabled="isGenerating">
+                            <button type="button" @click="openGeneratePagesModal" class="wp-store-btn wp-store-btn-secondary" :disabled="isGenerating">
                                 <span class="dashicons dashicons-plus-alt" x-show="!isGenerating"></span>
                                 <span class="dashicons dashicons-update" x-show="isGenerating" style="animation: spin 2s linear infinite;"></span>
                                 <span x-text="isGenerating ? 'Sedang Membuat...' : 'Buat Halaman Otomatis'"></span>
@@ -368,6 +368,21 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 <button type="button" class="wp-store-btn wp-store-btn-primary" @click="runSeeder" :disabled="isSeeding">
                     <span class="dashicons dashicons-update" x-show="isSeeding" style="animation: spin 2s linear infinite;"></span>
                     <span x-text="isSeeding ? 'Memproses...' : 'Jalankan'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div x-show="isGeneratePagesModalOpen" x-cloak class="wp-store-modal-overlay">
+        <div class="wp-store-modal" @keydown.escape.window="closeGeneratePagesModal">
+            <div class="wp-store-modal-header">Konfirmasi Pembuatan Halaman</div>
+            <div class="wp-store-modal-body">
+                Buat halaman Toko, Profil, Keranjang, Checkout, Terima Kasih, dan Tracking Order secara otomatis?
+            </div>
+            <div class="wp-store-modal-actions">
+                <button type="button" class="wp-store-btn wp-store-btn-secondary" @click="closeGeneratePagesModal" :disabled="isGenerating">Batal</button>
+                <button type="button" class="wp-store-btn wp-store-btn-primary" @click="generatePages" :disabled="isGenerating">
+                    <span class="dashicons dashicons-update" x-show="isGenerating" style="animation: spin 2s linear infinite;"></span>
+                    <span x-text="isGenerating ? 'Memproses...' : 'Buat'"></span>
                 </button>
             </div>
         </div>
@@ -648,6 +663,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             isGenerating: false,
             isSeeding: false,
             isSeederModalOpen: false,
+            isGeneratePagesModalOpen: false,
             notification: {
                 show: false,
                 message: '',
@@ -871,8 +887,6 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             },
 
             async generatePages() {
-                if (!confirm('Apakah Anda yakin ingin membuat halaman-halaman ini?')) return;
-
                 this.isGenerating = true;
                 const nonce = document.getElementById('_wpnonce').value;
 
@@ -899,6 +913,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     console.error(error);
                 } finally {
                     this.isGenerating = false;
+                    this.closeGeneratePagesModal();
                 }
             },
 
@@ -907,6 +922,12 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             },
             closeSeederModal() {
                 this.isSeederModalOpen = false;
+            },
+            openGeneratePagesModal() {
+                this.isGeneratePagesModalOpen = true;
+            },
+            closeGeneratePagesModal() {
+                this.isGeneratePagesModalOpen = false;
             },
             async runSeeder() {
                 this.isSeeding = true;

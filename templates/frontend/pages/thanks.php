@@ -20,7 +20,7 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
 <div class="wps-container">
     <div class="wps-card wps-p-6">
         <div class="wps-text-center">
-            <div class="wps-text-2xl wps-font-semibold wps-text-gray-900">Terima Kasih</div>
+            <div class="wps-text-2xl wps-font-extrabold wps-text-gray-900">Terima Kasih</div>
             <div class="wps-text-sm wps-text-gray-600 wps-mt-1">Pesanan Anda sudah kami terima.</div>
             <?php if ($order_exists) : ?>
                 <div class="wps-mt-2 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span></div>
@@ -50,17 +50,31 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                         <?php if (empty($items)) : ?>
                             <div class="wps-text-sm wps-text-gray-500">Tidak ada item.</div>
                         <?php else : ?>
-                            <?php foreach ($items as $it) :
-                                $title = isset($it['title']) ? (string) $it['title'] : '';
-                                $qty = isset($it['qty']) ? (int) $it['qty'] : 0;
-                                $price = isset($it['price']) ? (float) $it['price'] : 0;
-                                $subtotal = isset($it['subtotal']) ? (float) $it['subtotal'] : ($price * $qty);
-                            ?>
-                                <div class="wps-flex wps-justify-between wps-items-center wps-mb-2" style="padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html($title); ?></div>
-                                    <div class="wps-text-xs wps-text-gray-700"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')); ?> × <?php echo esc_html($qty); ?> = <span class="wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($subtotal, 0, ',', '.')); ?></span></div>
-                                </div>
-                            <?php endforeach; ?>
+                            <table class="wps-text-sm" style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb;">
+                                <thead>
+                                    <tr style="background:#f9fafb; font-weight:600;">
+                                        <th style="text-align:left; padding:8px; border-bottom:1px solid #e5e7eb;">Produk</th>
+                                        <th style="text-align:right; padding:8px; border-bottom:1px solid #e5e7eb;">Harga</th>
+                                        <th style="text-align:right; padding:8px; border-bottom:1px solid #e5e7eb;">Qty</th>
+                                        <th style="text-align:right; padding:8px; border-bottom:1px solid #e5e7eb;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($items as $i => $it) :
+                                        $title = isset($it['title']) ? (string) $it['title'] : '';
+                                        $qty = isset($it['qty']) ? (int) $it['qty'] : 0;
+                                        $price = isset($it['price']) ? (float) $it['price'] : 0;
+                                        $subtotal = isset($it['subtotal']) ? (float) $it['subtotal'] : ($price * $qty);
+                                    ?>
+                                        <tr style="<?php echo ($i % 2 === 1) ? 'background:#fcfcfd;' : ''; ?>">
+                                            <td class="wps-text-gray-900" style="padding:8px; border-bottom:1px solid #f1f5f9;"><?php echo esc_html($title); ?></td>
+                                            <td class="wps-text-gray-700" style="padding:8px; border-bottom:1px solid #f1f5f9; text-align:right;"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')); ?></td>
+                                            <td class="wps-text-gray-700" style="padding:8px; border-bottom:1px solid #f1f5f9; text-align:right;"><?php echo esc_html($qty); ?></td>
+                                            <td class="wps-text-gray-900" style="padding:8px; border-bottom:1px solid #f1f5f9; text-align:right;"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($subtotal, 0, ',', '.')); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                             <div class="wps-mt-4 wps-p-4" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
                                 <div class="wps-flex wps-justify-between wps-items-center">
                                     <div class="wps-text-sm wps-text-gray-500">Total Produk</div>
@@ -107,7 +121,7 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                         <div class="wps-text-xs wps-text-gray-500 wps-mt-2">Setelah pembayaran, kirim bukti transfer melalui kontak yang tersedia atau tunggu konfirmasi dari kami.</div>
                         <?php
                         $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
-                        $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking/');
+                        $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
                         if ($tracking_url) {
                             $tracking_target = add_query_arg(['order' => $order_id], $tracking_url);
                             $qr_src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($tracking_target);
