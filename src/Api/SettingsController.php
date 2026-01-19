@@ -80,6 +80,7 @@ class SettingsController
         if (isset($params['page_profile'])) $settings['page_profile'] = absint($params['page_profile']);
         if (isset($params['page_cart'])) $settings['page_cart'] = absint($params['page_cart']);
         if (isset($params['page_checkout'])) $settings['page_checkout'] = absint($params['page_checkout']);
+        if (isset($params['page_thanks'])) $settings['page_thanks'] = absint($params['page_thanks']);
 
         if (isset($params['currency_symbol'])) $settings['currency_symbol'] = sanitize_text_field($params['currency_symbol']);
 
@@ -111,6 +112,10 @@ class SettingsController
             'page_checkout' => [
                 'title' => 'Checkout',
                 'content' => '[wp_store_checkout]'
+            ],
+            'page_thanks' => [
+                'title' => 'Terima Kasih',
+                'content' => '[wp_store_thanks]'
             ],
         ];
 

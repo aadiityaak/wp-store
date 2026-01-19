@@ -13,6 +13,8 @@ class Shortcode
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
         add_shortcode('wp_store_checkout', [$this, 'render_checkout']);
         add_shortcode('store_checkout', [$this, 'render_checkout']);
+        add_shortcode('wp_store_thanks', [$this, 'render_thanks']);
+        add_shortcode('store_thanks', [$this, 'render_thanks']);
         add_shortcode('wp_store_wishlist', [$this, 'render_wishlist']);
         add_shortcode('wp_store_add_to_wishlist', [$this, 'render_add_to_wishlist']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
@@ -52,6 +54,15 @@ class Shortcode
             [
                 'restUrl' => esc_url_raw(rest_url('wp-store/v1/')),
                 'nonce' => wp_create_nonce('wp_rest'),
+                'thanksUrl' => (function () {
+                    $settings = get_option('wp_store_settings', []);
+                    $pid = isset($settings['page_thanks']) ? absint($settings['page_thanks']) : 0;
+                    if ($pid) {
+                        $url = get_permalink($pid);
+                        if ($url) return esc_url_raw($url);
+                    }
+                    return esc_url_raw(site_url('/thanks/'));
+                })(),
             ]
         );
     }
@@ -122,6 +133,17 @@ class Shortcode
             'origin_subdistrict' => $origin_subdistrict,
             'active_couriers' => $active_couriers,
             'nonce' => $nonce
+        ]);
+    }
+
+    public function render_thanks($atts = [])
+    {
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $order_id = isset($_GET['order']) ? absint($_GET['order']) : 0;
+        return Template::render('pages/thanks', [
+            'currency' => $currency,
+            'order_id' => $order_id,
         ]);
     }
 

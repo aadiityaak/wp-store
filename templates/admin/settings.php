@@ -260,10 +260,22 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         ]);
                         ?>
                     </div>
+                    
+                    <div>
+                        <label class="wp-store-label" for="page_thanks">Halaman Terima Kasih (Thanks)</label>
+                        <?php
+                        wp_dropdown_pages([
+                            'name' => 'page_thanks',
+                            'selected' => $settings['page_thanks'] ?? 0,
+                            'show_option_none' => '-- Pilih Halaman --',
+                            'class' => 'wp-store-input'
+                        ]);
+                        ?>
+                    </div>
 
                     <div class="wp-store-box-gray">
                         <h3 class="wp-store-subtitle">Generate Halaman Otomatis</h3>
-                        <p class="wp-store-helper">Belum punya halaman? Klik tombol di bawah ini untuk membuat halaman Toko, Profil, Keranjang, dan Checkout secara otomatis dengan shortcode yang sesuai.</p>
+                        <p class="wp-store-helper">Belum punya halaman? Klik tombol di bawah ini untuk membuat halaman Toko, Profil, Keranjang, Checkout, dan Terima Kasih secara otomatis dengan shortcode yang sesuai.</p>
 
                         <div class="wp-store-mt-4">
                             <button type="button" @click="generatePages" class="wp-store-btn wp-store-btn-secondary" :disabled="isGenerating">
