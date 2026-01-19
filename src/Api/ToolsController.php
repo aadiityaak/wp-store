@@ -97,6 +97,8 @@ class ToolsController
             }
             $created_ids[] = (int) $post_id;
         }
+        do_action('wp_store_tools_products_seeded', $created_ids);
+        do_action('wp_store_after_seed_products', $created_ids);
         return new WP_REST_Response([
             'success' => true,
             'message' => 'Seeder berhasil membuat ' . count($created_ids) . ' produk.',
@@ -113,6 +115,7 @@ class ToolsController
         $total += (int) $wpdb->query("DELETE FROM {$table} WHERE option_name LIKE '_transient_wp_store_rajaongkir_cities_%' OR option_name LIKE '_transient_timeout_wp_store_rajaongkir_cities_%'");
         $total += (int) $wpdb->query("DELETE FROM {$table} WHERE option_name LIKE '_transient_wp_store_rajaongkir_subdistricts_%' OR option_name LIKE '_transient_timeout_wp_store_rajaongkir_subdistricts_%'");
         $total += (int) $wpdb->query("DELETE FROM {$table} WHERE option_name LIKE '_transient_wp_store_rajaongkir_cost_%' OR option_name LIKE '_transient_timeout_wp_store_rajaongkir_cost_%'");
+        do_action('wp_store_tools_cache_cleared', $total);
         return new WP_REST_Response([
             'success' => true,
             'message' => 'Cache berhasil dibersihkan.',

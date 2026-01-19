@@ -31,6 +31,7 @@ class CheckoutController
     public function create_order(WP_REST_Request $request)
     {
         $data = $request->get_json_params();
+        $data = apply_filters('wp_store_before_create_order', $data, $request);
 
         $name = isset($data['name']) ? sanitize_text_field($data['name']) : '';
         $email = isset($data['email']) ? sanitize_email($data['email']) : '';
@@ -68,15 +69,16 @@ class CheckoutController
             ];
         }
 
+        $lines = apply_filters('wp_store_checkout_lines', $lines, $data);
         if (empty($lines)) {
             return new WP_REST_Response(['message' => 'Keranjang kosong'], 400);
         }
 
-        $order_post = [
+        $order_post = apply_filters('wp_store_order_post_args', [
             'post_type' => 'store_order',
             'post_status' => 'publish',
             'post_title' => $name . ' - ' . current_time('mysql'),
-        ];
+        ], $data);
 
         $order_id = wp_insert_post($order_post);
 
@@ -96,9 +98,10 @@ class CheckoutController
         if (!in_array($payment_method, ['transfer_bank', 'qris'], true)) {
             $payment_method = 'transfer_bank';
         }
+        $payment_method = apply_filters('wp_store_payment_method', $payment_method, $data, $order_id);
         update_post_meta($order_id, '_store_order_payment_method', $payment_method);
         if (!get_post_meta($order_id, '_store_order_status', true)) {
-            update_post_meta($order_id, '_store_order_status', 'awaiting_payment');
+            update_post_meta($order_id, '_store_order_status', apply_filters('wp_store_default_order_status', 'awaiting_payment', $order_id, $data));
         }
 
         $address = isset($data['address']) ? sanitize_textarea_field($data['address']) : '';
@@ -153,6 +156,7 @@ class CheckoutController
                 'address' => $address,
             ],
         ];
+        $shipping_snapshot = apply_filters('wp_store_shipping_snapshot', $shipping_snapshot, $order_id, $data);
         $shipping_json = wp_json_encode($shipping_snapshot);
         if (is_user_logged_in()) {
             $user_id = get_current_user_id();
@@ -175,6 +179,8 @@ class CheckoutController
             }
         }
 
+        do_action('wp_store_order_created', $order_id, $data, $lines, $order_total);
+        do_action('wp_store_after_create_order', $order_id, $data, $lines, $order_total);
         return new WP_REST_Response([
             'id' => $order_id,
             'total' => $order_total,

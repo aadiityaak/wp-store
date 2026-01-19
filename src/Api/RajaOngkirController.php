@@ -98,6 +98,7 @@ class RajaOngkirController
         $api_key = $settings['rajaongkir_api_key'] ?? '';
         $origin_subdistrict = isset($settings['shipping_origin_subdistrict']) ? (string) $settings['shipping_origin_subdistrict'] : '';
         $params = $request->get_json_params();
+        $params = apply_filters('wp_store_before_calculate_shipping', $params, $request);
         $destination_subdistrict = isset($params['destination_subdistrict']) ? sanitize_text_field($params['destination_subdistrict']) : '';
         $courier = isset($params['courier']) ? sanitize_text_field($params['courier']) : '';
         if (empty($api_key) || empty($origin_subdistrict) || empty($destination_subdistrict) || empty($courier)) {
@@ -106,8 +107,8 @@ class RajaOngkirController
                 'message' => 'Pengaturan atau parameter tidak lengkap.'
             ], 400);
         }
-        $weight = $this->get_cart_total_weight_grams();
-        $cache_key = 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier]));
+        $weight = apply_filters('wp_store_shipping_weight', $this->get_cart_total_weight_grams(), $params);
+        $cache_key = apply_filters('wp_store_shipping_cache_key', 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier])), $params);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             return new WP_REST_Response($cached, 200);
@@ -235,12 +236,16 @@ class RajaOngkirController
                 }
             }
         }
+        $services = apply_filters('wp_store_shipping_services', $services, $params);
         $payload = [
             'success' => true,
             'weight' => $weight,
             'services' => $services
         ];
+        $payload = apply_filters('wp_store_shipping_payload', $payload, $params);
+        $payload = apply_filters('wp_store_after_calculate_shipping', $payload, $params);
         set_transient($cache_key, $payload, DAY_IN_SECONDS);
+        do_action('wp_store_shipping_calculated', $payload, $params);
         return new WP_REST_Response($payload, 200);
     }
 

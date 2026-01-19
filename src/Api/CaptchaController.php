@@ -19,13 +19,14 @@ class CaptchaController
 
     private function random_code($length = 5)
     {
+        $length = (int) apply_filters('wp_store_captcha_code_length', $length);
         $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         $code = '';
         for ($i = 0; $i < $length; $i++) {
             $idx = wp_rand(0, strlen($chars) - 1);
             $code .= $chars[$idx];
         }
-        return $code;
+        return apply_filters('wp_store_captcha_code', $code);
     }
 
     private function svg_image($code)
@@ -54,7 +55,7 @@ class CaptchaController
             $x += 26;
         }
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $w . '" height="' . $h . '"><rect width="100%" height="100%" fill="' . $bg . '"/>' . $noise . $text . '</svg>';
-        return $svg;
+        return apply_filters('wp_store_captcha_svg', $svg, $code);
     }
 
     public function new_captcha()
@@ -63,6 +64,7 @@ class CaptchaController
         $id = wp_generate_uuid4();
         set_transient('wp_store_captcha_' . $id, $code, 10 * MINUTE_IN_SECONDS);
         $svg = $this->svg_image($code);
+        do_action('wp_store_captcha_created', $id, $code);
         return new WP_REST_Response([
             'success' => true,
             'id' => $id,
