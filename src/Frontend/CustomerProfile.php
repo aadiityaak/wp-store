@@ -85,7 +85,7 @@ class CustomerProfile
             <!-- Notification -->
             <div x-show="message" x-transition class="wps-alert wps-alert-success" x-text="message"></div>
             <div x-show="toastShow" x-transition x-cloak
-                 :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
+                :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
                 <span class="wps-text-sm wps-text-gray-900" x-text="toastMessage"></span>
             </div>
 
@@ -123,8 +123,8 @@ class CustomerProfile
                                     </template>
                                     <template x-if="!loading">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="wps-mr-2" viewBox="0 0 16 16">
-                                            <path d="M12 2h-2v3h2z"/>
-                                            <path d="M1.5 0A1.5 1.5 0 0 0 0 1.5v13A1.5 1.5 0 0 0 1.5 16h13a1.5 1.5 0 0 0 1.5-1.5V2.914a1.5 1.5 0 0 0-.44-1.06L14.147.439A1.5 1.5 0 0 0 13.086 0zM4 6a1 1 0 0 1-1-1V1h10v4a1 1 0 0 1-1 1zM3 9h10a1 1 0 0 1 1 1v5H2v-5a1 1 0 0 1 1-1"/>
+                                            <path d="M12 2h-2v3h2z" />
+                                            <path d="M1.5 0A1.5 1.5 0 0 0 0 1.5v13A1.5 1.5 0 0 0 1.5 16h13a1.5 1.5 0 0 0 1.5-1.5V2.914a1.5 1.5 0 0 0-.44-1.06L14.147.439A1.5 1.5 0 0 0 13.086 0zM4 6a1 1 0 0 1-1-1V1h10v4a1 1 0 0 1-1 1zM3 9h10a1 1 0 0 1 1 1v5H2v-5a1 1 0 0 1 1-1" />
                                         </svg>
                                     </template>
                                     <span x-show="!loading">Simpan Perubahan</span>
@@ -170,8 +170,14 @@ class CustomerProfile
                                             </p>
                                         </div>
                                         <div class="wps-flex wps-space-x-2">
-                                            <button @click="editAddress(addr)" class="wps-btn wps-btn-secondary wps-text-sm" style="padding: 0.25rem 0.5rem;">Edit</button>
-                                            <button @click="deleteAddress(addr.id)" class="wps-btn wps-btn-danger wps-text-sm" style="padding: 0.25rem 0.5rem;">Hapus</button>
+                                            <button @click="editAddress(addr)" class="wps-btn wps-btn-secondary wps-text-sm" style="padding: 0.25rem 0.5rem;">
+                                                <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                                <span>Edit</span>
+                                            </button>
+                                            <button @click="deleteAddress(addr.id)" class="wps-btn wps-btn-danger wps-text-sm" style="padding: 0.25rem 0.5rem;">
+                                                <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'trash', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                                <span>Hapus</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -246,7 +252,15 @@ class CustomerProfile
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-6">
                                     <button type="button" @click="cancelEdit()" class="wps-btn wps-btn-secondary">Batal</button>
                                     <button type="submit" class="wps-btn wps-btn-primary" :disabled="loading">
-                                        <span x-show="loading">Menyimpan...</span>
+                                        <template x-if="loading">
+                                            <span class="wps-mr-2"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                        </template>
+                                        <template x-if="!loading">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="wps-mr-2" viewBox="0 0 16 16">
+                                                <path d="M12 2h-2v3h2z" />
+                                                <path d="M1.5 0A1.5 1.5 0 0 0 0 1.5v13A1.5 1.5 0 0 0 1.5 16h13a1.5 1.5 0 0 0 1.5-1.5V2.914a1.5 1.5 0 0 0-.44-1.06L14.147.439A1.5 1.5 0 0 0 13.086 0zM4 6a1 1 0 0 1-1-1V1h10v4a1 1 0 0 1-1 1zM3 9h10a1 1 0 0 1 1 1v5H2v-5a1 1 0 0 1 1-1" />
+                                            </svg>
+                                        </template>
                                         <span x-show="!loading">Simpan Alamat</span>
                                     </button>
                                 </div>
@@ -408,7 +422,7 @@ class CustomerProfile
                             this.loading = false;
                         }
                     },
-                    
+
                     showToast(msg, type) {
                         this.toastMessage = msg || '';
                         this.toastType = type === 'success' ? 'success' : 'error';
@@ -687,11 +701,21 @@ class CustomerProfile
                                 await this.fetchAddresses();
                                 this.isEditingAddress = false;
                                 this.message = isUpdate ? 'Alamat diperbarui' : 'Alamat ditambahkan';
+                                this.showToast(this.message, 'success');
                                 setTimeout(() => this.message = '', 3000);
                                 this.clearEditParam();
+                            } else {
+                                const data = await res.json().catch(() => ({}));
+                                const msg = data && data.message ? data.message : 'Gagal menyimpan alamat';
+                                this.message = msg;
+                                this.showToast(msg, 'error');
+                                setTimeout(() => this.message = '', 3000);
                             }
                         } catch (err) {
-                            console.error(err);
+                            const msg = 'Terjadi kesalahan jaringan.';
+                            this.message = msg;
+                            this.showToast(msg, 'error');
+                            setTimeout(() => this.message = '', 3000);
                         } finally {
                             this.loading = false;
                         }
