@@ -92,6 +92,14 @@ class CheckoutController
         $order_total = $total + max(0, $shipping_cost);
         update_post_meta($order_id, '_store_order_total', $order_total);
         update_post_meta($order_id, '_store_order_items', $lines);
+        $payment_method = isset($data['payment_method']) ? sanitize_key($data['payment_method']) : 'transfer_bank';
+        if (!in_array($payment_method, ['transfer_bank', 'qris'], true)) {
+            $payment_method = 'transfer_bank';
+        }
+        update_post_meta($order_id, '_store_order_payment_method', $payment_method);
+        if (!get_post_meta($order_id, '_store_order_status', true)) {
+            update_post_meta($order_id, '_store_order_status', 'awaiting_payment');
+        }
 
         $address = isset($data['address']) ? sanitize_textarea_field($data['address']) : '';
         $province_id = isset($data['province_id']) ? sanitize_text_field($data['province_id']) : '';

@@ -13,6 +13,7 @@
             submitting: false,
             cart: [],
             total: 0,
+            paymentMethod: 'transfer_bank',
             name: '',
             email: '',
             phone: '',
@@ -306,6 +307,7 @@
                             shipping_courier: this.shippingCourier || '',
                             shipping_service: this.shippingService || '',
                             shipping_cost: this.shippingCost || 0,
+                            payment_method: this.paymentMethod || 'transfer_bank',
                             items: this.cart.map(i => ({
                                 id: i.id,
                                 qty: i.qty,
@@ -519,6 +521,17 @@
                             </div>
                         </div>
                         <div class="wps-mt-4">
+                            <div class="wps-text-lg wps-font-medium wps-mb-2 wps-text-bold">Metode Pembayaran</div>
+                            <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
+                                <label class="wps-flex wps-items-center wps-gap-2">
+                                    <input type="radio" name="payment_method" value="transfer_bank" x-model="paymentMethod">
+                                    <span class="wps-text-sm wps-text-gray-900">Transfer Bank</span>
+                                </label>
+                                <label class="wps-flex wps-items-center wps-gap-2">
+                                    <input type="radio" name="payment_method" value="qris" x-model="paymentMethod">
+                                    <span class="wps-text-sm wps-text-gray-900">QRIS</span>
+                                </label>
+                            </div>
                             <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || cart.length === 0" @click="submit()">
                                 <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                 <span x-show="submitting">Memproses...</span>

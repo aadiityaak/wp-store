@@ -13,6 +13,7 @@ $province_name = $order_exists ? get_post_meta($order_id, '_store_order_province
 $city_name = $order_exists ? get_post_meta($order_id, '_store_order_city_name', true) : '';
 $subdistrict_name = $order_exists ? get_post_meta($order_id, '_store_order_subdistrict_name', true) : '';
 $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_code', true) : '';
+$payment_method = $order_exists ? get_post_meta($order_id, '_store_order_payment_method', true) : '';
 $settings = get_option('wp_store_settings', []);
 $shop_id = isset($settings['page_shop']) ? absint($settings['page_shop']) : 0;
 $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
@@ -115,45 +116,60 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                     </div>
                 </div>
                 <div>
-                    <?php if (!empty($bank_accounts)) : ?>
-                        <div class="wps-text-lg wps-font-medium wps-text-gray-900">Informasi Pembayaran</div>
-                        <div class="wps-text-sm wps-text-gray-700 wps-mt-1">Silakan melakukan pembayaran dan gunakan nomor pesanan <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span> sebagai berita.</div>
-                        <div class="wps-mt-3">
-                            <div class="wps-flex wps-justify-between wps-items-center">
-                                <div class="wps-text-sm wps-text-gray-500">Total yang harus dibayar</div>
-                                <div class="wps-text-sm wps-text-gray-900 wps-font-medium"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total, 0, ',', '.')); ?></div>
-                            </div>
+                    <div class="wps-text-lg wps-font-medium wps-text-gray-900">Informasi Pembayaran</div>
+                    <div class="wps-text-sm wps-text-gray-700 wps-mt-1">Gunakan nomor pesanan <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span> sebagai berita.</div>
+                    <div class="wps-mt-3">
+                        <div class="wps-flex wps-justify-between wps-items-center">
+                            <div class="wps-text-sm wps-text-gray-500">Total yang harus dibayar</div>
+                            <div class="wps-text-sm wps-text-gray-900 wps-font-medium"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total, 0, ',', '.')); ?></div>
                         </div>
-                        <div class="wps-mt-3">
-                            <?php foreach ($bank_accounts as $acc) : ?>
-                                <div class="wps-card wps-p-4 wps-mb-2">
-                                    <div class="wps-text-sm wps-text-gray-900 wps-font-medium" style="margin-bottom:6px;"><?php echo esc_html($acc['bank_name'] ?? ''); ?></div>
-                                    <div class="wps-text-sm wps-text-gray-700">
-                                        <div>No. Rekening: <span class="wps-font-medium"><?php echo esc_html($acc['bank_account'] ?? ''); ?></span></div>
-                                        <div>Atas Nama: <span class="wps-font-medium"><?php echo esc_html($acc['bank_holder'] ?? ''); ?></span></div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="wps-text-xs wps-text-gray-500 wps-mt-4">Setelah pembayaran, kirim bukti transfer melalui kontak yang tersedia atau tunggu konfirmasi dari kami.</div>
+                    </div>
+                    <?php if ($payment_method === 'qris') : ?>
                         <?php
-                        $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
-                        $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
-                        if ($tracking_url) {
-                            $tracking_target = add_query_arg(['order' => $order_id], $tracking_url);
-                            $qr_src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($tracking_target);
-                        }
+                        $qris_id = isset($settings['qris_image_id']) ? absint($settings['qris_image_id']) : 0;
+                        $qris_src = $qris_id ? wp_get_attachment_image_url($qris_id, 'medium') : '';
+                        $qris_label = isset($settings['qris_label']) ? (string) $settings['qris_label'] : 'QRIS';
                         ?>
-                        <?php if (!empty($tracking_url)) : ?>
-                            <div class="wps-mt-4 wps-p-4" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; text-align:center;">
-                                <div class="wps-mt-2">
-                                    <a href="<?php echo esc_url($tracking_target); ?>" target="_blank" rel="noopener">
-                                        <img src="<?php echo esc_url($qr_src); ?>" alt="QR Tracking" style="width:160px;height:160px;">
-                                    </a>
-                                </div>
-                                <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Scan untuk Lacak Pesanan</div>
+                        <div class="wps-mt-3 wps-p-4" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; text-align:center;">
+                            <div class="wps-text-sm wps-text-gray-900 wps-font-medium" style="margin-bottom:8px;"><?php echo esc_html($qris_label); ?></div>
+                            <div class="wps-mt-2">
+                                <img src="<?php echo esc_url($qris_src ?: WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>" alt="QRIS" style="width:180px;height:180px; object-fit:contain;">
                             </div>
+                            <div class="wps-text-xs wps-text-gray-500 wps-mt-2">Scan untuk membayar via QRIS.</div>
+                        </div>
+                    <?php else : ?>
+                        <?php if (!empty($bank_accounts)) : ?>
+                            <div class="wps-mt-3">
+                                <?php foreach ($bank_accounts as $acc) : ?>
+                                    <div class="wps-card wps-p-4 wps-mb-2">
+                                        <div class="wps-text-sm wps-text-gray-900 wps-font-medium" style="margin-bottom:6px;"><?php echo esc_html($acc['bank_name'] ?? ''); ?></div>
+                                        <div class="wps-text-sm wps-text-gray-700">
+                                            <div>No. Rekening: <span class="wps-font-medium"><?php echo esc_html($acc['bank_account'] ?? ''); ?></span></div>
+                                            <div>Atas Nama: <span class="wps-font-medium"><?php echo esc_html($acc['bank_holder'] ?? ''); ?></span></div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="wps-text-xs wps-text-gray-500 wps-mt-4">Setelah pembayaran, kirim bukti transfer melalui kontak yang tersedia atau tunggu konfirmasi dari kami.</div>
                         <?php endif; ?>
+                    <?php endif; ?>
+                    <?php
+                    $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
+                    $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
+                    if ($tracking_url) {
+                        $tracking_target = add_query_arg(['order' => $order_id], $tracking_url);
+                        $qr_src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($tracking_target);
+                    }
+                    ?>
+                    <?php if (!empty($tracking_url)) : ?>
+                        <div class="wps-mt-4 wps-p-4" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; text-align:center;">
+                            <div class="wps-mt-2">
+                                <a href="<?php echo esc_url($tracking_target); ?>" target="_blank" rel="noopener">
+                                    <img src="<?php echo esc_url($qr_src); ?>" alt="QR Tracking" style="width:160px;height:160px;">
+                                </a>
+                            </div>
+                            <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Scan untuk Lacak Pesanan</div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
