@@ -50,6 +50,8 @@ class CartController
                 user_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
                 guest_key VARCHAR(64) NULL DEFAULT NULL,
                 cart LONGTEXT NOT NULL,
+                shipping_data LONGTEXT NULL DEFAULT NULL,
+                total_price DECIMAL(10,2) NULL DEFAULT NULL,
                 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (id),
                 UNIQUE KEY uniq_user (user_id),

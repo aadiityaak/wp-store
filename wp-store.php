@@ -43,7 +43,7 @@ spl_autoload_register(function ($class) {
 
 function wp_store_init()
 {
-    $should_migrate = get_option('wp_store_db_version') !== '1.1.0';
+    $should_migrate = get_option('wp_store_db_version') !== '1.2.0';
     global $wpdb;
     $table_name = $wpdb->prefix . 'store_carts';
     $exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
@@ -55,13 +55,15 @@ function wp_store_init()
             user_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
             guest_key VARCHAR(64) NULL DEFAULT NULL,
             cart LONGTEXT NOT NULL,
+            shipping_data LONGTEXT NULL DEFAULT NULL,
+            total_price DECIMAL(10,2) NULL DEFAULT NULL,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY uniq_user (user_id),
             UNIQUE KEY uniq_guest (guest_key)
         ) {$charset_collate};";
         dbDelta($sql);
-        update_option('wp_store_db_version', '1.1.0');
+        update_option('wp_store_db_version', '1.2.0');
     }
 
     // Create wishlist table

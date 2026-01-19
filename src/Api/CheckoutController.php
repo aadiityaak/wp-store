@@ -47,12 +47,14 @@ class CheckoutController
         foreach ($items as $item) {
             $product_id = isset($item['id']) ? (int) $item['id'] : 0;
             $qty = isset($item['qty']) ? (int) $item['qty'] : 1;
+            $opts = isset($item['options']) && is_array($item['options']) ? $item['options'] : [];
 
             if ($product_id <= 0 || $qty <= 0 || get_post_type($product_id) !== 'store_product') {
                 continue;
             }
 
-            $price = (float) get_post_meta($product_id, '_store_price', true);
+            $opts = $this->normalize_options($opts);
+            $price = $this->resolve_price_with_options($product_id, $opts);
             $subtotal = $price * $qty;
             $total += $subtotal;
 
@@ -62,6 +64,7 @@ class CheckoutController
                 'qty' => $qty,
                 'price' => $price,
                 'subtotal' => $subtotal,
+                'options' => $opts,
             ];
         }
 
@@ -113,10 +116,95 @@ class CheckoutController
         update_post_meta($order_id, '_store_order_shipping_service', $shipping_service);
         update_post_meta($order_id, '_store_order_shipping_cost', $shipping_cost);
 
+        global $wpdb;
+        $table = $wpdb->prefix . 'store_carts';
+        $snapshot_items = array_map(function ($l) {
+            return [
+                'id' => isset($l['product_id']) ? (int) $l['product_id'] : 0,
+                'qty' => isset($l['qty']) ? (int) $l['qty'] : 0,
+                'price_at_purchase' => isset($l['price']) ? (float) $l['price'] : 0,
+                'subtotal' => isset($l['subtotal']) ? (float) $l['subtotal'] : 0,
+            ];
+        }, $lines);
+        $shipping_snapshot = [
+            'courier' => $shipping_courier,
+            'service' => $shipping_service,
+            'cost' => $shipping_cost,
+            'items' => $snapshot_items,
+            'total_products' => $total,
+            'grand_total' => $order_total,
+            'destination' => [
+                'province_id' => $province_id,
+                'province_name' => $province_name,
+                'city_id' => $city_id,
+                'city_name' => $city_name,
+                'subdistrict_id' => $subdistrict_id,
+                'subdistrict_name' => $subdistrict_name,
+                'postal_code' => $postal_code,
+                'address' => $address,
+            ],
+        ];
+        $shipping_json = wp_json_encode($shipping_snapshot);
+        if (is_user_logged_in()) {
+            $user_id = get_current_user_id();
+            $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE user_id = %d LIMIT 1", $user_id));
+            if ($exists) {
+                $wpdb->update($table, ['shipping_data' => $shipping_json, 'total_price' => $order_total], ['user_id' => $user_id], ['%s', '%f'], ['%d']);
+            } else {
+                $wpdb->insert($table, ['user_id' => $user_id, 'cart' => wp_json_encode([]), 'shipping_data' => $shipping_json, 'total_price' => $order_total], ['%d', '%s', '%s', '%f']);
+            }
+        } else {
+            $cookie_key = 'wp_store_cart_key';
+            $key = isset($_COOKIE[$cookie_key]) && is_string($_COOKIE[$cookie_key]) && $_COOKIE[$cookie_key] !== '' ? sanitize_key($_COOKIE[$cookie_key]) : '';
+            if ($key !== '') {
+                $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE guest_key = %s LIMIT 1", $key));
+                if ($exists) {
+                    $wpdb->update($table, ['shipping_data' => $shipping_json, 'total_price' => $order_total], ['guest_key' => $key], ['%s', '%f'], ['%s']);
+                } else {
+                    $wpdb->insert($table, ['guest_key' => $key, 'cart' => wp_json_encode([]), 'shipping_data' => $shipping_json, 'total_price' => $order_total], ['%s', '%s', '%s', '%f']);
+                }
+            }
+        }
+
         return new WP_REST_Response([
             'id' => $order_id,
             'total' => $order_total,
             'message' => 'Pesanan berhasil dibuat',
         ], 201);
+    }
+
+    private function normalize_options($options)
+    {
+        $normalized = [];
+        foreach ($options as $k => $v) {
+            $key = trim(sanitize_text_field($k));
+            if (is_array($v)) {
+                $normalized[$key] = array_map(function ($x) {
+                    return trim(sanitize_text_field($x));
+                }, $v);
+            } else {
+                $normalized[$key] = trim(sanitize_text_field((string) $v));
+            }
+        }
+        ksort($normalized);
+        return $normalized;
+    }
+
+    private function resolve_price_with_options($product_id, $opts)
+    {
+        $base = (float) get_post_meta($product_id, '_store_price', true);
+        $adv_name = get_post_meta($product_id, '_store_option2_name', true);
+        $adv = get_post_meta($product_id, '_store_advanced_options', true);
+        if (is_array($adv) && $adv_name && isset($opts[$adv_name])) {
+            $label = (string) $opts[$adv_name];
+            foreach ($adv as $row) {
+                $rlabel = isset($row['label']) ? (string) $row['label'] : '';
+                $rprice = isset($row['price']) ? (float) $row['price'] : 0;
+                if ($rlabel !== '' && $rlabel === $label && $rprice > 0) {
+                    return $rprice;
+                }
+            }
+        }
+        return $base;
     }
 }

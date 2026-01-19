@@ -302,7 +302,8 @@
                             shipping_cost: this.shippingCost || 0,
                             items: this.cart.map(i => ({
                                 id: i.id,
-                                qty: i.qty
+                                qty: i.qty,
+                                options: i.options || {}
                             }))
                         })
                     });
