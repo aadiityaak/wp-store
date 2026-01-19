@@ -81,6 +81,7 @@ class SettingsController
         if (isset($params['page_cart'])) $settings['page_cart'] = absint($params['page_cart']);
         if (isset($params['page_checkout'])) $settings['page_checkout'] = absint($params['page_checkout']);
         if (isset($params['page_thanks'])) $settings['page_thanks'] = absint($params['page_thanks']);
+        if (isset($params['page_tracking'])) $settings['page_tracking'] = absint($params['page_tracking']);
 
         if (isset($params['currency_symbol'])) $settings['currency_symbol'] = sanitize_text_field($params['currency_symbol']);
 
@@ -116,6 +117,10 @@ class SettingsController
             'page_thanks' => [
                 'title' => 'Terima Kasih',
                 'content' => '[wp_store_thanks]'
+            ],
+            'page_tracking' => [
+                'title' => 'Tracking Order',
+                'content' => '[wp_store_tracking]'
             ],
         ];
 

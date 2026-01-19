@@ -15,6 +15,8 @@ class Shortcode
         add_shortcode('store_checkout', [$this, 'render_checkout']);
         add_shortcode('wp_store_thanks', [$this, 'render_thanks']);
         add_shortcode('store_thanks', [$this, 'render_thanks']);
+        add_shortcode('wp_store_tracking', [$this, 'render_tracking']);
+        add_shortcode('store_tracking', [$this, 'render_tracking']);
         add_shortcode('wp_store_wishlist', [$this, 'render_wishlist']);
         add_shortcode('wp_store_add_to_wishlist', [$this, 'render_add_to_wishlist']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
@@ -62,6 +64,15 @@ class Shortcode
                         if ($url) return esc_url_raw($url);
                     }
                     return esc_url_raw(site_url('/thanks/'));
+                })(),
+                'trackingUrl' => (function () {
+                    $settings = get_option('wp_store_settings', []);
+                    $pid = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
+                    if ($pid) {
+                        $url = get_permalink($pid);
+                        if ($url) return esc_url_raw($url);
+                    }
+                    return esc_url_raw(site_url('/tracking/'));
                 })(),
             ]
         );
@@ -123,6 +134,7 @@ class Shortcode
     public function render_checkout($atts = [])
     {
         wp_enqueue_script('alpinejs');
+        wp_enqueue_script('wp-store-frontend');
         $settings = get_option('wp_store_settings', []);
         $currency = ($settings['currency_symbol'] ?? 'Rp');
         $origin_subdistrict = isset($settings['shipping_origin_subdistrict']) ? (string) $settings['shipping_origin_subdistrict'] : '';
@@ -142,6 +154,17 @@ class Shortcode
         $currency = ($settings['currency_symbol'] ?? 'Rp');
         $order_id = isset($_GET['order']) ? absint($_GET['order']) : 0;
         return Template::render('pages/thanks', [
+            'currency' => $currency,
+            'order_id' => $order_id,
+        ]);
+    }
+
+    public function render_tracking($atts = [])
+    {
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $order_id = isset($_GET['order']) ? absint($_GET['order']) : 0;
+        return Template::render('pages/tracking', [
             'currency' => $currency,
             'order_id' => $order_id,
         ]);
