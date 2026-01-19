@@ -159,6 +159,14 @@ class CustomerProfile
                     </div>
                     <div class="wps-p-6">
                         <form @submit.prevent="saveProfile">
+                            <div class="wps-flex wps-items-center wps-gap-4" style="margin-bottom:12px;">
+                                <img :src="profile.avatar_url || '<?php echo esc_url(WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>'" alt="Foto Profil" style="width:72px;height:72px;border-radius:9999px;object-fit:cover;border:1px solid #e5e7eb;">
+                                <div>
+                                    <button type="button" class="wps-btn wps-btn-secondary" @click="$refs.avatarInput.click()">Ubah Foto</button>
+                                    <input type="file" x-ref="avatarInput" @change="onAvatarSelected" accept="image/*" style="display:none;">
+                                    <p class="wps-text-xs wps-text-gray-500" style="margin-top:6px;">PNG/JPG/WebP, maks ~2MB</p>
+                                </div>
+                            </div>
                             <div class="wps-grid wps-grid-cols-2 wps-gap-4" style="grid-template-columns: 1fr 1fr; display: grid; gap: 1rem;">
                                 <div class="wps-form-group">
                                     <label class="wps-label">Nama Depan</label>
@@ -400,7 +408,8 @@ class CustomerProfile
                         first_name: '',
                         last_name: '',
                         email: '',
-                        phone: ''
+                        phone: '',
+                        avatar_url: ''
                     },
                     addresses: [],
                     isEditingAddress: false,
@@ -494,6 +503,39 @@ class CustomerProfile
                             this.profile = data;
                         } catch (err) {
                             console.error(err);
+                        }
+                    },
+                    
+                    onAvatarSelected(e) {
+                        const file = e.target && e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                        if (!file) return;
+                        this.uploadAvatar(file).finally(() => { try { e.target.value = ''; } catch (_) {} });
+                    },
+
+                    async uploadAvatar(file) {
+                        this.loading = true;
+                        try {
+                            const fd = new FormData();
+                            fd.append('avatar', file);
+                            const res = await fetch(wpStoreSettings.restUrl + 'customer/avatar', {
+                                method: 'POST',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                },
+                                body: fd
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                                this.profile.avatar_url = data.avatar_url || this.profile.avatar_url;
+                                this.showToast(data.message || 'Foto profil diperbarui', 'success');
+                            } else {
+                                const msg = data && data.message ? data.message : 'Gagal memperbarui foto profil';
+                                this.showToast(msg, 'error');
+                            }
+                        } catch (err) {
+                            this.showToast('Kesalahan jaringan saat unggah foto', 'error');
+                        } finally {
+                            this.loading = false;
                         }
                     },
 
