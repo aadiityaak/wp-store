@@ -81,8 +81,8 @@
         <span>🛒</span>
         <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" class="wps-absolute wps-top--6 wps-right--30 wps-bg-blue-500 wps-text-white wps-text-xs rounded-full wps-px-2.5 wps-py-0.5"></span>
     </button>
-    <div class="wps-offcanvas-backdrop" x-show="open" @click="open = false" x-transition.opacity></div>
-    <div class="wps-offcanvas" x-show="open" x-transition>
+    <div class="wps-offcanvas-backdrop" x-show="open" @click="open = false" x-transition.opacity x-cloak></div>
+    <div class="wps-offcanvas" x-show="open" x-transition x-cloak>
         <div class="wps-offcanvas-header">
             <strong class="wps-text-gray-900">Keranjang</strong>
             <button type="button" @click="open = false" class="wps-btn-icon">✕</button>

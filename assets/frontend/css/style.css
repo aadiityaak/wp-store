@@ -573,3 +573,7 @@ button.wps-btn-primary {
     transform: rotate(360deg);
   }
 }
+/* Prevent Alpine flash before initialization */
+[x-cloak] {
+  display: none !important;
+}
