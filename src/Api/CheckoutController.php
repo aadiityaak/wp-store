@@ -103,6 +103,23 @@ class CheckoutController
         if (!get_post_meta($order_id, '_store_order_status', true)) {
             update_post_meta($order_id, '_store_order_status', apply_filters('wp_store_default_order_status', 'awaiting_payment', $order_id, $data));
         }
+        $payment_info = apply_filters('wp_store_payment_init', [
+            'payment_url' => '',
+            'payment_token' => '',
+            'expires_at' => 0,
+            'extra' => new \stdClass(),
+        ], $order_id, $payment_method, $data, $order_total);
+        if (is_array($payment_info)) {
+            $purl = isset($payment_info['payment_url']) ? (string) $payment_info['payment_url'] : '';
+            $ptok = isset($payment_info['payment_token']) ? (string) $payment_info['payment_token'] : '';
+            $pexp = isset($payment_info['expires_at']) ? (int) $payment_info['expires_at'] : 0;
+            $pextra = isset($payment_info['extra']) && is_array($payment_info['extra']) ? $payment_info['extra'] : new \stdClass();
+            update_post_meta($order_id, '_store_order_payment_url', $purl);
+            update_post_meta($order_id, '_store_order_payment_token', $ptok);
+            update_post_meta($order_id, '_store_order_payment_expires_at', $pexp);
+            update_post_meta($order_id, '_store_order_payment_extra', $pextra);
+            do_action('wp_store_payment_initialized', $order_id, $payment_info);
+        }
 
         $address = isset($data['address']) ? sanitize_textarea_field($data['address']) : '';
         $province_id = isset($data['province_id']) ? sanitize_text_field($data['province_id']) : '';
@@ -181,11 +198,21 @@ class CheckoutController
 
         do_action('wp_store_order_created', $order_id, $data, $lines, $order_total);
         do_action('wp_store_after_create_order', $order_id, $data, $lines, $order_total);
-        return new WP_REST_Response([
+        $resp = [
             'id' => $order_id,
             'total' => $order_total,
             'message' => 'Pesanan berhasil dibuat',
-        ], 201);
+        ];
+        if (isset($payment_info) && is_array($payment_info)) {
+            if (!empty($payment_info['payment_url'])) {
+                $resp['payment_url'] = (string) $payment_info['payment_url'];
+            }
+            if (!empty($payment_info['payment_token'])) {
+                $resp['payment_token'] = (string) $payment_info['payment_token'];
+            }
+        }
+        $resp = apply_filters('wp_store_payment_response', $resp, $order_id, isset($payment_info) ? $payment_info : null, $data);
+        return new WP_REST_Response($resp, 201);
     }
 
     private function normalize_options($options)
