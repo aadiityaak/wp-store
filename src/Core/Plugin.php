@@ -35,6 +35,9 @@ class Plugin
 
         $settings = new \WpStore\Admin\Settings();
         $settings->register();
+
+        $order_meta = new \WpStore\Admin\OrderMetaBoxes();
+        $order_meta->register();
     }
 
     private function load_api()

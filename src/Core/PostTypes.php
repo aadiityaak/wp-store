@@ -109,11 +109,10 @@ class PostTypes
             'hierarchical' => false,
             'menu_position' => 8,
             'menu_icon' => 'dashicons-clipboard',
-            'supports' => ['title', 'editor'],
+            'supports' => ['title'],
             'show_in_rest' => false,
         ];
 
         register_post_type('store_order', $args);
     }
 }
-

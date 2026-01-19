@@ -31,6 +31,16 @@ class AdminMenu
             'wp-store',
             [$this, 'render_dashboard']
         );
+
+        // Add quick link to Orders under Products menu
+        add_submenu_page(
+            'edit.php?post_type=store_product',
+            'Pesanan',
+            'Pesanan',
+            'edit_posts',
+            'edit.php?post_type=store_order',
+            null
+        );
     }
 
     public function render_dashboard()
