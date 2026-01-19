@@ -22,6 +22,41 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                 <div class="wps-mt-1 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span></div>
             <?php else : ?>
                 <div class="wps-text-sm wps-text-gray-600 wps-mt-1">Masukkan parameter <span class="wps-font-medium">order</span> di URL untuk melihat status.</div>
+                <?php
+                $settings = get_option('wp_store_settings', []);
+                $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
+                $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
+                ?>
+                <div class="wps-mt-4" style="max-width:420px; margin:0 auto;">
+                    <form id="wps-find-order" class="wps-flex wps-items-center wps-gap-2">
+                        <input type="number" min="1" step="1" id="wps-order-id" class="wps-input" placeholder="Masukkan Nomor Order (contoh: 651)">
+                        <button type="submit" class="wps-btn wps-btn-primary">Lacak</button>
+                    </form>
+                    <div id="wps-find-msg" class="wps-text-xs wps-text-gray-500 wps-mt-1">Format benar: <?php echo esc_html($tracking_url); ?>?order=ID</div>
+                </div>
+                <script>
+                    (function() {
+                        var f = document.getElementById('wps-find-order');
+                        if (!f) return;
+                        var input = document.getElementById('wps-order-id');
+                        var msg = document.getElementById('wps-find-msg');
+                        var base = <?php echo wp_json_encode($tracking_url); ?>;
+                        f.addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            var val = input && typeof input.value === 'string' ? input.value.trim() : '';
+                            var id = parseInt(val, 10);
+                            if (!id || id <= 0) {
+                                if (msg) {
+                                    msg.className = 'wps-text-xs wps-text-red-700 wps-mt-1';
+                                    msg.textContent = 'Nomor order tidak valid.';
+                                }
+                                return;
+                            }
+                            var url = base + (base.indexOf('?') === -1 ? '?order=' + encodeURIComponent(String(id)) : '&order=' + encodeURIComponent(String(id)));
+                            window.location.href = url;
+                        });
+                    })();
+                </script>
             <?php endif; ?>
         </div>
         <?php if ($order_exists) : ?>
@@ -115,6 +150,8 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                     $tracking_number = get_post_meta($order_id, '_store_order_tracking_number', true);
                     $payment_method = get_post_meta($order_id, '_store_order_payment_method', true);
                     $settings = get_option('wp_store_settings', []);
+                    $proofs = get_post_meta($order_id, '_store_order_payment_proofs', true);
+                    $proofs = is_array($proofs) ? $proofs : [];
                     $bank_accounts = [];
                     if (isset($settings['store_bank_accounts']) && is_array($settings['store_bank_accounts'])) {
                         $bank_accounts = $settings['store_bank_accounts'];
@@ -132,6 +169,27 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                     <div class="wps-mt-2 wps-text-sm wps-text-gray-700 wps-bg-primary-100 wps-text-primary-800 wps-p-2 wps-rounded-md wps-font-medium"><?php echo esc_html($status_label); ?></div>
                     <?php if (!empty($tracking_number)) : ?>
                         <div class="wps-mt-2 wps-text-sm wps-text-gray-700">No. Resi: <span class="wps-font-medium"><?php echo esc_html($tracking_number); ?></span></div>
+                    <?php endif; ?>
+                    <?php if (!empty($proofs)) : ?>
+                        <div class="wps-mt-3">
+                            <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Bukti Transfer</div>
+                            <div class="wps-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
+                                <?php foreach ($proofs as $pid) :
+                                    $url = wp_get_attachment_url($pid);
+                                    $mime = get_post_mime_type($pid);
+                                ?>
+                                    <div class="wps-card wps-p-2">
+                                        <?php if ($mime && strpos($mime, 'image/') === 0) : ?>
+                                            <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener">
+                                                <img src="<?php echo esc_url($url); ?>" alt="Bukti Transfer" style="width:100%; height:120px; object-fit:cover;">
+                                            </a>
+                                        <?php else : ?>
+                                            <a class="wps-text-sm wps-text-primary-700" href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener">Lihat Dokumen</a>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     <?php endif; ?>
                     <?php if (in_array($status, ['pending', 'awaiting_payment'], true)) : ?>
                         <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mt-6">Informasi Pembayaran</div>
@@ -172,8 +230,6 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                             <?php endif; ?>
                         <?php endif; ?>
                         <?php
-                        $proofs = get_post_meta($order_id, '_store_order_payment_proofs', true);
-                        $proofs = is_array($proofs) ? $proofs : [];
                         $ajax_url = admin_url('admin-ajax.php');
                         $nonce_upload = wp_create_nonce('wp_store_upload_payment_proof');
                         ?>
@@ -189,6 +245,10 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                             <div class="wps-text-xs wps-text-gray-500 wps-mt-1">Format yang didukung: JPG, PNG, WEBP, PDF.</div>
                             <div id="wps-upload-msg" class="wps-text-sm wps-mt-2"></div>
                         </form>
+                        <div id="wps-upload-preview" class="wps-mt-2" style="display:none;">
+                            <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Preview</div>
+                            <div class="wps-card wps-p-2" id="wps-upload-preview-box"></div>
+                        </div>
                         <?php if (!empty($proofs)) : ?>
                             <div class="wps-mt-3">
                                 <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Bukti yang Diupload</div>
@@ -215,13 +275,47 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                 var f = document.getElementById('wps-upload-proof');
                                 if (!f) return;
                                 var msg = document.getElementById('wps-upload-msg');
+                                var fileInput = f.querySelector('input[type="file"]');
+                                var pvWrap = document.getElementById('wps-upload-preview');
+                                var pvBox = document.getElementById('wps-upload-preview-box');
+                                if (fileInput) {
+                                    fileInput.addEventListener('change', function() {
+                                        if (!fileInput.files || !fileInput.files[0]) {
+                                            if (pvWrap) pvWrap.style.display = 'none';
+                                            if (pvBox) pvBox.innerHTML = '';
+                                            return;
+                                        }
+                                        var f0 = fileInput.files[0];
+                                        var mime = f0.type || '';
+                                        var url = URL.createObjectURL(f0);
+                                        if (pvBox) {
+                                            pvBox.innerHTML = '';
+                                            if (mime.indexOf('image/') === 0) {
+                                                var img = document.createElement('img');
+                                                img.src = url;
+                                                img.alt = 'Preview';
+                                                img.style.width = '100%';
+                                                img.style.height = '160px';
+                                                img.style.objectFit = 'cover';
+                                                pvBox.appendChild(img);
+                                            } else {
+                                                var link = document.createElement('span');
+                                                link.className = 'wps-text-sm wps-text-primary-700';
+                                                link.textContent = 'Dokumen ' + (f0.name || '');
+                                                pvBox.appendChild(link);
+                                            }
+                                            if (pvWrap) pvWrap.style.display = '';
+                                        }
+                                    });
+                                }
                                 f.addEventListener('submit', function(e) {
                                     e.preventDefault();
                                     msg.textContent = '';
                                     var btn = f.querySelector('button[type="submit"]');
                                     if (btn) btn.disabled = true;
                                     var fd = new FormData(f);
-                                    fetch(f.action, {
+                                    var act = f.getAttribute('action') || '';
+                                    fetch(act, {
                                             method: 'POST',
                                             body: fd
                                         })
@@ -232,11 +326,12 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                             if (j && j.success) {
                                                 msg.className = 'wps-text-sm wps-text-green-700 wps-mt-2';
                                                 msg.textContent = 'Bukti transfer berhasil diunggah.';
+                                                if (pvWrap) pvWrap.style.display = 'none';
+                                                if (pvBox) pvBox.innerHTML = '';
                                                 if (j.data && j.data.url) {
                                                     var grid = f.parentNode.querySelector('.wps-grid');
                                                     if (grid) {
                                                         var mime = '';
-                                                        var fileInput = f.querySelector('input[type="file"]');
                                                         if (fileInput && fileInput.files && fileInput.files[0]) {
                                                             mime = fileInput.files[0].type || '';
                                                         }

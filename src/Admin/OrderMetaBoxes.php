@@ -8,6 +8,7 @@ class OrderMetaBoxes
     {
         add_action('cmb2_admin_init', [$this, 'register_metaboxes']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
+        add_action('add_meta_boxes', [$this, 'add_proofs_box']);
     }
 
     public function enqueue_styles()
@@ -139,5 +140,51 @@ class OrderMetaBoxes
             'id'   => '_store_order_admin_note',
             'type' => 'textarea_small',
         ]);
+    }
+
+    public function add_proofs_box()
+    {
+        add_meta_box(
+            'wp_store_order_proofs',
+            'Bukti Transfer',
+            [$this, 'render_proofs_box'],
+            'store_order',
+            'normal',
+            'default'
+        );
+    }
+
+    public function render_proofs_box($post)
+    {
+        $order_id = isset($post->ID) ? (int) $post->ID : 0;
+        if ($order_id <= 0) {
+            echo '<p>Tidak ada data.</p>';
+            return;
+        }
+        $proofs = get_post_meta($order_id, '_store_order_payment_proofs', true);
+        $proofs = is_array($proofs) ? $proofs : [];
+        if (empty($proofs)) {
+            echo '<p class="description">Belum ada bukti transfer.</p>';
+            return;
+        }
+        echo '<div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px;">';
+        foreach ($proofs as $pid) {
+            $url = wp_get_attachment_url($pid);
+            $mime = get_post_mime_type($pid);
+            echo '<div class="wps-card" style="border:1px solid #e5e7eb; border-radius:6px; padding:8px;">';
+            if ($mime && strpos($mime, 'image/') === 0) {
+                $thumb = wp_get_attachment_image_url($pid, 'medium');
+                $thumb = $thumb ?: $url;
+                echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener">';
+                echo '<img src="' . esc_url($thumb) . '" alt="Bukti Transfer" style="width:100%; height:140px; object-fit:cover;">';
+                echo '</a>';
+            } else {
+                $title = get_the_title($pid);
+                echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener" class="button button-small">Lihat Dokumen</a>';
+                echo '<div style="margin-top:6px; font-size:12px; color:#374151;">' . esc_html($title) . '</div>';
+            }
+            echo '</div>';
+        }
+        echo '</div>';
     }
 }

@@ -5,7 +5,7 @@
   background: #fff;
   color: #1f2937;
   padding: 10px 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   border-left: 4px solid #46b450;
   border-radius: 4px;
   z-index: 9999;
@@ -30,5 +30,34 @@
   vertical-align: middle;
 }
 @keyframes wps-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.post-type-store_order .wp-list-table .column-order_status {
+  width: 190px;
+  max-width: 190px;
+}
+.post-type-store_order .wp-list-table .column-order_payment {
+  width: 160px;
+  max-width: 160px;
+}
+.post-type-store_order .wp-list-table .column-order_total {
+  width: 140px;
+  max-width: 140px;
+  text-align: right;
+}
+.post-type-store_order .wp-list-table .column-order_proofs {
+  width: 90px;
+  max-width: 90px;
+}
+.post-type-store_order .wp-list-table .column-order_tracking {
+  width: 80px;
+  max-width: 80px;
+}
+.post-type-store_order .wp-list-table .column-order_proofs img {
+  display: block;
+}
+.post-type-store_order .wp-list-table .column-order_tracking .button {
+  white-space: nowrap;
 }

@@ -77,7 +77,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                                 <span class="dashicons dashicons-trash"></span> Hapus
                             </button>
 
-                            <div class="wp-store-grid-2">
+                            <div class="wp-store-grid-3">
                                 <div>
                                     <label class="wp-store-label">Nama Bank</label>
                                     <select x-model="account.bank_name" class="wp-store-input">
@@ -90,10 +90,10 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                                     <label class="wp-store-label">Nomor Rekening</label>
                                     <input type="text" x-model="account.bank_account" class="wp-store-input" placeholder="Contoh: 1234567890">
                                 </div>
-                            </div>
-                            <div class="wp-store-mt-4">
-                                <label class="wp-store-label">Atas Nama</label>
-                                <input type="text" x-model="account.bank_holder" class="wp-store-input" placeholder="Contoh: Nama Pemilik">
+                                <div>
+                                    <label class="wp-store-label">Atas Nama</label>
+                                    <input type="text" x-model="account.bank_holder" class="wp-store-input" placeholder="Contoh: Nama Pemilik">
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -350,7 +350,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <button type="button" @click="openSeederModal" class="wp-store-btn wp-store-btn-secondary" :disabled="isSeeding">
                                 <span class="dashicons dashicons-admin-tools" x-show="!isSeeding"></span>
                                 <span class="dashicons dashicons-update" x-show="isSeeding" style="animation: spin 2s linear infinite;"></span>
-                                <span x-text="isSeeding ? 'Menjalankan Seeder...' : 'Seeder'"></span>
+                                <span x-text="isSeeding ? 'Menjalankan Seeder...' : 'Run Seeder'"></span>
                             </button>
                             <a href="<?php echo admin_url('edit.php?post_type=store_product'); ?>" class="wp-store-btn wp-store-btn-secondary">
                                 <span class="dashicons dashicons-cart"></span>
@@ -497,6 +497,18 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
+    }
+
+    .wp-store-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+    }
+
+    @media (max-width: 640px) {
+        .wp-store-grid-3 {
+            grid-template-columns: 1fr;
+        }
     }
 
     .wp-store-label {

@@ -21,9 +21,11 @@ class OrderColumns
             // Insert Status right after Title
             $new[$key] = $label;
             if ($key === 'title') {
-                $new['order_status'] = 'Status';
                 $new['order_payment'] = 'Metode Pembayaran';
+                $new['order_total'] = 'Harga';
+                $new['order_proofs'] = 'Bukti Transfer';
                 $new['order_tracking'] = 'Tracking';
+                $new['order_status'] = 'Status';
             }
         }
         return $new;
@@ -57,7 +59,7 @@ class OrderColumns
             $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
             if ($tracking_url) {
                 $url = add_query_arg(['order' => $post_id], $tracking_url);
-                echo '<a class="button button-small" href="' . esc_url($url) . '" target="_blank" rel="noopener">Buka Tracking</a>';
+                echo '<a class="button button-small" href="' . esc_url($url) . '" target="_blank" rel="noopener">Tracking</a>';
             } else {
                 echo '-';
             }
@@ -67,6 +69,36 @@ class OrderColumns
             $method = get_post_meta($post_id, '_store_order_payment_method', true);
             $label = ($method === 'qris') ? 'QRIS' : 'Transfer Bank';
             echo esc_html($label);
+            return;
+        }
+        if ($column === 'order_total') {
+            $settings = get_option('wp_store_settings', []);
+            $currency = isset($settings['currency_symbol']) ? (string) $settings['currency_symbol'] : 'Rp';
+            $total = get_post_meta($post_id, '_store_order_total', true);
+            $total = is_numeric($total) ? (float) $total : 0;
+            echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total, 0, ',', '.'));
+            return;
+        }
+        if ($column === 'order_proofs') {
+            $proofs = get_post_meta($post_id, '_store_order_payment_proofs', true);
+            $proofs = is_array($proofs) ? $proofs : [];
+            $count = count($proofs);
+            if ($count === 0) {
+                echo '';
+                return;
+            }
+            $first = (int) $proofs[0];
+            $mime = $first ? get_post_mime_type($first) : '';
+            $url = $first ? wp_get_attachment_url($first) : '';
+            if ($mime && strpos($mime, 'image/') === 0) {
+                $thumb = wp_get_attachment_image_url($first, 'thumbnail');
+                echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener"><img src="' . esc_url($thumb ?: $url) . '" alt="Bukti" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></a>';
+            } else {
+                echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener" class="button button-small">Dokumen</a>';
+            }
+            if ($count > 1) {
+                echo '<span style="margin-left:6px; font-size:11px; color:#6b7280;">+' . esc_html($count - 1) . '</span>';
+            }
             return;
         }
     }
