@@ -83,5 +83,8 @@ class Plugin
 
         $page_templates = new \WpStore\Frontend\PageTemplates();
         $page_templates->register();
+
+        $public_actions = new \WpStore\Frontend\OrderPublicActions();
+        $public_actions->register();
     }
 }

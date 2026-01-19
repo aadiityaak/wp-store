@@ -75,6 +75,12 @@ class OrderColumns
     {
         $screen = get_current_screen();
         if ($screen && $screen->post_type === 'store_order' && $screen->base === 'edit') {
+            wp_enqueue_style(
+                'wp-store-order-columns',
+                WP_STORE_URL . 'assets/admin/css/order-columns.css',
+                [],
+                WP_STORE_VERSION
+            );
             wp_enqueue_script(
                 'wp-store-order-columns',
                 WP_STORE_URL . 'assets/admin/js/order-columns.js',
