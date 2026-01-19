@@ -167,16 +167,15 @@
                                         <template x-if="updatingAddKey !== getItemKey(item)">
                                             <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
                                         </template>
-                                        <span>Keranjang</span>
+                                        <span>+</span>
                                     </button>
                                     <button class="wps-btn wps-btn-secondary wps-btn-sm" @click="remove(item)" :disabled="updatingRemoveKey === getItemKey(item)" :style="(updatingRemoveKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
                                         <template x-if="updatingRemoveKey === getItemKey(item)">
                                             <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
                                         </template>
                                         <template x-if="updatingRemoveKey !== getItemKey(item)">
-                                            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                            <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'trash', 'size' => 16, 'class' => '']); ?></span>
                                         </template>
-                                        <span>Hapus</span>
                                     </button>
                                 </div>
                             </td>

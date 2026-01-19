@@ -361,8 +361,8 @@
                         <div class="">
                             <div class="wps-callout-title">Gunakan Data Tersimpan</div>
                             <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
-                                <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'user', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
-                                <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'settings', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
+                                <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
+                                <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
                             </div>
                         </div>
                         <div class="wps-form-group">
