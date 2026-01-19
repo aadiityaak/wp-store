@@ -41,6 +41,7 @@ class Settings
                 );
             }
             wp_enqueue_script('alpinejs');
+            wp_enqueue_media();
         }
     }
 

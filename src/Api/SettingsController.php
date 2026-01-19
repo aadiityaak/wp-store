@@ -84,6 +84,8 @@ class SettingsController
         if (isset($params['page_tracking'])) $settings['page_tracking'] = absint($params['page_tracking']);
 
         if (isset($params['currency_symbol'])) $settings['currency_symbol'] = sanitize_text_field($params['currency_symbol']);
+        if (isset($params['qris_image_id'])) $settings['qris_image_id'] = absint($params['qris_image_id']);
+        if (isset($params['qris_label'])) $settings['qris_label'] = sanitize_text_field($params['qris_label']);
 
         update_option('wp_store_settings', $settings);
 

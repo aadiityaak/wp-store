@@ -103,6 +103,34 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <span class="dashicons dashicons-plus-alt2"></span> Tambah Rekening
                         </button>
                     </div>
+
+                    <div class="wp-store-box-gray wp-store-mt-4">
+                        <h3 class="wp-store-subtitle">QRIS</h3>
+                        <p class="wp-store-helper">Unggah gambar QRIS untuk pembayaran cepat.</p>
+                        <div class="wp-store-grid-2">
+                            <div>
+                                <label class="wp-store-label">Label</label>
+                                <input type="text" name="qris_label" class="wp-store-input" value="<?php echo esc_attr($settings['qris_label'] ?? 'QRIS'); ?>">
+                            </div>
+                            <div>
+                                <label class="wp-store-label">Gambar QRIS</label>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div style="width:140px; height:140px; border:1px solid #e5e7eb; border-radius:6px; display:flex; align-items:center; justify-content:center; background:#f9fafb; overflow:hidden;">
+                                        <?php
+                                        $qris_id = isset($settings['qris_image_id']) ? absint($settings['qris_image_id']) : 0;
+                                        $qris_src = $qris_id ? wp_get_attachment_image_url($qris_id, 'medium') : '';
+                                        ?>
+                                        <img src="<?php echo esc_url($qris_src ?: WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>" alt="" style="max-width:100%; max-height:100%;">
+                                    </div>
+                                    <div style="display:flex; gap:8px;">
+                                        <button type="button" class="wp-store-btn wp-store-btn-secondary" @click="selectQrisImage">Pilih Gambar</button>
+                                        <button type="button" class="wp-store-btn wp-store-btn-secondary" @click="clearQrisImage">Hapus</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="qris_image_id" :value="settings.qris_image_id">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -691,7 +719,8 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 shipping_origin_province: '<?php echo esc_js($settings['shipping_origin_province'] ?? ''); ?>',
                 shipping_origin_city: '<?php echo esc_js($settings['shipping_origin_city'] ?? ''); ?>',
                 shipping_origin_subdistrict: '<?php echo esc_js($settings['shipping_origin_subdistrict'] ?? ''); ?>',
-                rajaongkir_account_type: '<?php echo esc_js($settings['rajaongkir_account_type'] ?? 'starter'); ?>'
+                rajaongkir_account_type: '<?php echo esc_js($settings['rajaongkir_account_type'] ?? 'starter'); ?>',
+                qris_image_id: '<?php echo esc_js($settings['qris_image_id'] ?? ''); ?>'
             },
 
             init() {
@@ -839,6 +868,27 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 window.history.pushState({
                     tab: tab
                 }, '', newUrl);
+            },
+            selectQrisImage() {
+                const frame = wp.media({
+                    title: 'Pilih Gambar QRIS',
+                    button: {
+                        text: 'Gunakan Gambar Ini'
+                    },
+                    multiple: false
+                });
+                frame.on('select', () => {
+                    const attachment = frame.state().get('selection').first().toJSON();
+                    this.settings.qris_image_id = attachment.id;
+                    const img = document.querySelector('.wp-store-tab-content [alt=""]');
+                    if (img) img.src = attachment.url;
+                });
+                frame.open();
+            },
+            clearQrisImage() {
+                this.settings.qris_image_id = '';
+                const img = document.querySelector('.wp-store-tab-content [alt=""]');
+                if (img) img.src = '<?php echo esc_js(WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>';
             },
 
             async saveSettings() {
