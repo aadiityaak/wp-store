@@ -136,7 +136,13 @@
                 if (!this.selectedSubdistrict) return 'Kecamatan wajib dipilih.';
                 if (!this.address || String(this.address).trim() === '') return 'Alamat wajib diisi.';
                 if (Array.isArray(this.shippingOptions) && this.shippingOptions.length > 0) {
-                    if (!this.selectedShippingKey || !this.shippingCourier || !this.shippingService) return 'Wajib pilih ongkir.';
+                    if (!this.selectedShippingKey) return 'Wajib pilih ongkir.';
+                    const parts = String(this.selectedShippingKey || '').split(':');
+                    const c = parts[0] || '';
+                    const svc = parts[1] || '';
+                    const opt = this.shippingOptions.find(s => String(s.courier) === String(c) && String(s.service || '') === String(svc));
+                    const costNum = opt ? (typeof opt.cost === 'number' ? opt.cost : parseFloat(opt.cost || 0)) : 0;
+                    if (!opt || isNaN(costNum) || costNum <= 0) return 'Wajib pilih ongkir.';
                 }
                 return '';
             },

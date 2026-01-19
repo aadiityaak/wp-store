@@ -124,6 +124,7 @@ class CheckoutController
                 'qty' => isset($l['qty']) ? (int) $l['qty'] : 0,
                 'price_at_purchase' => isset($l['price']) ? (float) $l['price'] : 0,
                 'subtotal' => isset($l['subtotal']) ? (float) $l['subtotal'] : 0,
+                'options' => isset($l['options']) && is_array($l['options']) ? $l['options'] : new \stdClass(),
             ];
         }, $lines);
         $shipping_snapshot = [
