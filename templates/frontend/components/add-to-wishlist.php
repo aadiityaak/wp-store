@@ -111,8 +111,8 @@
         :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
         <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
     </div>
-    <div x-show="showLoginModal" x-transition.opacity x-cloak class="wps-modal-backdrop" @click.self="showLoginModal = false" @keydown.escape.window="showLoginModal = false"></div>
-    <div x-show="showLoginModal" x-transition.opacity.x-transition.scale x-cloak class="wps-modal" style="padding:16px;">
+    <div x-show="showLoginModal" x-cloak class="wps-modal-backdrop" @click.self="showLoginModal = false" @keydown.escape.window="showLoginModal = false"></div>
+    <div x-show="showLoginModal" x-cloak class="wps-modal" style="padding:16px;">
         <div class="wps-text-lg wps-font-medium wps-text-gray-900" style="margin-bottom:8px;">Butuh Login</div>
         <div class="wps-text-sm wps-text-gray-700" style="margin-bottom:12px;">Silakan login untuk menambahkan wishlist.</div>
         <div class="wps-flex wps-justify-between wps-items-center">
