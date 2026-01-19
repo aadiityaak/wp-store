@@ -64,7 +64,24 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                     <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total - $shipping_cost, 0, ',', '.')); ?></div>
                                 </div>
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                                    <div class="wps-text-sm wps-text-gray-500">Ongkir (<?php echo esc_html(strtoupper($shipping_courier) . ' ' . $shipping_service); ?>)</div>
+                                    <?php
+                                    $courier_labels = [
+                                        'jne' => 'JNE',
+                                        'sicepat' => 'SiCepat',
+                                        'ide' => 'IDExpress',
+                                        'sap' => 'SAP Express',
+                                        'ninja' => 'Ninja',
+                                        'jnt' => 'J&T Express',
+                                        'tiki' => 'TIKI',
+                                        'wahana' => 'Wahana Express',
+                                        'pos' => 'POS Indonesia',
+                                        'sentral' => 'Sentral Cargo',
+                                        'lion' => 'Lion Parcel',
+                                        'rex' => 'Royal Express Asia',
+                                    ];
+                                    $courier_label = isset($courier_labels[$shipping_courier]) ? $courier_labels[$shipping_courier] : strtoupper((string)$shipping_courier);
+                                    ?>
+                                    <div class="wps-text-sm wps-text-gray-500">Ongkir (<?php echo esc_html($courier_label . ' ' . $shipping_service); ?>)</div>
                                     <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($shipping_cost, 0, ',', '.')); ?></div>
                                 </div>
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2" style="border-top:1px dashed #e5e7eb; padding-top:12px;">
@@ -82,7 +99,25 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                         <div><?php echo esc_html($subdistrict_name); ?>, <?php echo esc_html($city_name); ?>, <?php echo esc_html($province_name); ?> <?php echo esc_html($postal_code); ?></div>
                     </div>
                     <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mt-6">Status</div>
-                    <div class="wps-mt-2 wps-text-sm wps-text-gray-700">Sedang diproses</div>
+                    <?php
+                    $status = get_post_meta($order_id, '_store_order_status', true);
+                    $status = is_string($status) && $status !== '' ? $status : 'pending';
+                    $status_labels = [
+                        'pending' => 'Pending',
+                        'awaiting_payment' => 'Menunggu Pembayaran',
+                        'paid' => 'Sudah Dibayar',
+                        'processing' => 'Sedang Diproses',
+                        'shipped' => 'Dikirim',
+                        'completed' => 'Selesai',
+                        'cancelled' => 'Dibatalkan',
+                    ];
+                    $status_label = isset($status_labels[$status]) ? $status_labels[$status] : ucfirst($status);
+                    $tracking_number = get_post_meta($order_id, '_store_order_tracking_number', true);
+                    ?>
+                    <div class="wps-mt-2 wps-text-sm wps-text-gray-700 wps-bg-primary-100 wps-text-primary-800 wps-p-2 wps-rounded-md wps-font-medium"><?php echo esc_html($status_label); ?></div>
+                    <?php if (!empty($tracking_number)) : ?>
+                        <div class="wps-mt-2 wps-text-sm wps-text-gray-700">No. Resi: <span class="wps-font-medium"><?php echo esc_html($tracking_number); ?></span></div>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endif; ?>

@@ -109,7 +109,7 @@ class OrderMetaBoxes
         }
         $details->add_field([
             'name'    => 'Layanan',
-            'id'      => '_store_order_shipping_service',
+            'id'      => '_store_order_shipping_courier',
             'type'    => 'select',
             'options' => $service_options,
         ]);

@@ -81,7 +81,24 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                                     <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total - $shipping_cost, 0, ',', '.')); ?></div>
                                 </div>
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                                    <div class="wps-text-sm wps-text-gray-500">Ongkir (<?php echo esc_html(strtoupper($shipping_courier) . ' ' . $shipping_service); ?>)</div>
+                                    <?php
+                                    $courier_labels = [
+                                        'jne' => 'JNE',
+                                        'sicepat' => 'SiCepat',
+                                        'ide' => 'IDExpress',
+                                        'sap' => 'SAP Express',
+                                        'ninja' => 'Ninja',
+                                        'jnt' => 'J&T Express',
+                                        'tiki' => 'TIKI',
+                                        'wahana' => 'Wahana Express',
+                                        'pos' => 'POS Indonesia',
+                                        'sentral' => 'Sentral Cargo',
+                                        'lion' => 'Lion Parcel',
+                                        'rex' => 'Royal Express Asia',
+                                    ];
+                                    $courier_label = isset($courier_labels[$shipping_courier]) ? $courier_labels[$shipping_courier] : strtoupper((string)$shipping_courier);
+                                    ?>
+                                    <div class="wps-text-sm wps-text-gray-500">Ongkir (<?php echo esc_html($courier_label . ' ' . $shipping_service); ?>)</div>
                                     <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($shipping_cost, 0, ',', '.')); ?></div>
                                 </div>
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2" style="border-top:1px dashed #e5e7eb; padding-top:12px;">
