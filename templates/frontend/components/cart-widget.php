@@ -78,8 +78,8 @@
         }
     }" x-init="init()" class="wps-rel">
     <button type="button" @click="open = true" class="wps-btn-icon wps-cart-button wps-rel">
-        <span>🛒</span>
-        <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" class="wps-absolute wps-top--6 wps-right--30 wps-bg-blue-500 wps-text-white wps-text-xs rounded-full wps-px-2.5 wps-py-0.5"></span>
+        <span class="wps-text-2xl wps-pr-6">🛒</span>
+        <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" class="wps-absolute wps-top--6 wps-right-0 wps-bg-blue-500 wps-text-white wps-text-xs rounded-full wps-px-2.5 wps-py-0.5"></span>
     </button>
     <div class="wps-offcanvas-backdrop" x-show="open" @click="open = false" x-transition.opacity x-cloak></div>
     <div class="wps-offcanvas" x-show="open" x-transition x-cloak>
@@ -89,7 +89,10 @@
         </div>
         <div class="wps-offcanvas-body">
             <template x-if="cart.length === 0">
-                <div class="wps-text-sm wps-text-gray-500">Keranjang kosong.</div>
+                <div class="wps-text-sm wps-text-gray-500 wps-flex wps-items-center wps-gap-2">
+                    <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16]); ?></span>
+                    <span>Keranjang kosong.</span>
+                </div>
             </template>
             <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
                 <div class="wps-flex wps-items-center wps-gap-2 wps-divider">

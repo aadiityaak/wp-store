@@ -140,6 +140,7 @@ class CustomerProfile
                     <button @click="tab = 'orders'" :class="{ 'active': tab === 'orders' }" class="wps-tab">
                         Pesanan
                     </button>
+                    <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto">Keluar</a>
                 </div>
             </div>
 
