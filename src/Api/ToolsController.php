@@ -97,6 +97,46 @@ class ToolsController
             }
             $created_ids[] = (int) $post_id;
         }
+        $digital_exists = term_exists('digital', 'store_product_cat');
+        $digital_term_id = 0;
+        if ($digital_exists && isset($digital_exists['term_id'])) {
+            $digital_term_id = (int) $digital_exists['term_id'];
+        } elseif (is_int($digital_exists)) {
+            $digital_term_id = $digital_exists;
+        } else {
+            $created_term = wp_insert_term('Produk Digital', 'store_product_cat', ['slug' => 'digital']);
+            if (!is_wp_error($created_term) && isset($created_term['term_id'])) {
+                $digital_term_id = (int) $created_term['term_id'];
+            }
+        }
+        $digital_items = [
+            ['title' => 'E-Book Panduan UMKM', 'content' => 'E-book PDF berisi panduan praktis mengembangkan usaha kecil.', 'price' => 25000],
+            ['title' => 'Template CV Profesional', 'content' => 'Template CV siap pakai dalam format DOCX dan PDF.', 'price' => 15000],
+            ['title' => 'Preset Lightroom Mobile', 'content' => 'Preset foto untuk Lightroom Mobile, cocok untuk feed Instagram.', 'price' => 20000],
+            ['title' => 'Musik Royalty Free Pack', 'content' => 'Paket musik bebas royalti untuk konten video Anda.', 'price' => 45000],
+            ['title' => 'Kelas Video Editing Dasar', 'content' => 'Kursus video editing dasar, akses streaming 30 hari.', 'price' => 99000],
+            ['title' => 'Icon Set UI Minimalis', 'content' => 'Paket icon SVG/PNG untuk UI, lisensi personal.', 'price' => 30000],
+        ];
+        foreach ($digital_items as $di) {
+            $pid = wp_insert_post([
+                'post_title'   => $di['title'],
+                'post_content' => $di['content'],
+                'post_status'  => 'publish',
+                'post_type'    => 'store_product',
+            ]);
+            if (is_wp_error($pid) || !$pid) {
+                continue;
+            }
+            update_post_meta($pid, '_store_price', (float) $di['price']);
+            update_post_meta($pid, '_store_weight_kg', 0);
+            update_post_meta($pid, '_store_is_digital', 1);
+            update_post_meta($pid, '_store_product_type', 'digital');
+            update_post_meta($pid, '_store_digital_file', WP_STORE_URL . 'assets/frontend/file/sample.pdf');
+            if ($digital_term_id > 0) {
+                wp_set_object_terms($pid, [$digital_term_id], 'store_product_cat', false);
+            }
+            $created_ids[] = (int) $pid;
+        }
         do_action('wp_store_tools_products_seeded', $created_ids);
         do_action('wp_store_after_seed_products', $created_ids);
         return new WP_REST_Response([
