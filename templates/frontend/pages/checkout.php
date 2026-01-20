@@ -14,6 +14,14 @@
             loggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
             cart: [],
             total: 0,
+            totalSelected() {
+                if (!Array.isArray(this.cart)) return 0;
+                return this.cart.reduce((sum, i) => {
+                    const sel = i.selected !== false;
+                    const sub = typeof i.subtotal === 'number' ? i.subtotal : parseFloat(i.subtotal || 0);
+                    return sel ? (sum + (isNaN(sub) ? 0 : sub)) : sum;
+                }, 0);
+            },
             paymentMethod: 'transfer_bank',
             name: '',
             email: '',
@@ -92,7 +100,12 @@
                         },
                         body: JSON.stringify({
                             destination_subdistrict: this.selectedSubdistrict,
-                            courier: this.shippingCouriers.join(':')
+                            courier: this.shippingCouriers.join(':'),
+                            items: (Array.isArray(this.cart) ? this.cart.filter(i => i.selected !== false).map(i => ({
+                                id: i.id,
+                                qty: i.qty,
+                                options: i.options || {}
+                            })) : [])
                         })
                     });
                     const data = await res.json();
@@ -126,13 +139,14 @@
                 }
             },
             totalWithShipping() {
-                const t = typeof this.total === 'number' ? this.total : parseFloat(this.total || 0);
+                const t = this.totalSelected();
                 const s = typeof this.shippingCost === 'number' ? this.shippingCost : parseFloat(this.shippingCost || 0);
                 return t + (isNaN(s) ? 0 : s);
             },
             getValidationError() {
                 if (!this.name) return 'Nama wajib diisi.';
                 if (!Array.isArray(this.cart) || this.cart.length === 0) return 'Keranjang kosong.';
+                if (!this.cart.find(i => i.selected !== false)) return 'Pilih setidaknya satu produk.';
                 if (!this.selectedProvince) return 'Provinsi wajib dipilih.';
                 if (!this.selectedCity) return 'Kota/Kabupaten wajib dipilih.';
                 if (!this.selectedSubdistrict) return 'Kecamatan wajib dipilih.';
@@ -261,7 +275,7 @@
                         }
                     });
                     const data = await res.json();
-                    this.cart = data.items || [];
+                    this.cart = (Array.isArray(data.items) ? data.items.map(i => Object.assign({}, i, { selected: true })) : []);
                     this.total = data.total || 0;
                 } catch (e) {
                     this.cart = [];
@@ -312,7 +326,7 @@
                             shipping_service: this.shippingService || '',
                             shipping_cost: this.shippingCost || 0,
                             payment_method: this.paymentMethod || 'transfer_bank',
-                            items: this.cart.map(i => ({
+                            items: this.cart.filter(i => i.selected !== false).map(i => ({
                                 id: i.id,
                                 qty: i.qty,
                                 options: i.options || {}
@@ -326,13 +340,22 @@
                     }
                     this.message = data.message || 'Pesanan berhasil dibuat.';
                     try {
-                        await fetch(wpStoreSettings.restUrl + 'cart', {
-                            method: 'DELETE',
-                            credentials: 'include',
-                            headers: {
-                                'X-WP-Nonce': wpStoreSettings.nonce
-                            }
-                        });
+                        const selected = this.cart.filter(i => i.selected !== false);
+                        for (const i of selected) {
+                            await fetch(wpStoreSettings.restUrl + 'cart', {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                },
+                                body: JSON.stringify({
+                                    id: i.id,
+                                    qty: 0,
+                                    options: i.options || {}
+                                })
+                            });
+                        }
                     } catch (_) {}
                     this.cart = [];
                     this.total = 0;
@@ -487,6 +510,7 @@
                         </template>
                         <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
                             <div class="wps-flex wps-items-center wps-gap-2 wps-divider">
+                                <input type="checkbox" x-model="item.selected" class="wps-checkbox" @change="calculateAllShipping()">
                                 <img :src="item.image ? item.image : '<?php echo esc_url(WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>'" alt="" class="wps-img-40">
                                 <div style="flex: 1;">
                                     <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
@@ -508,7 +532,7 @@
                         <div class="wps-mt-4">
                             <div class="wps-flex wps-justify-between wps-items-center">
                                 <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
-                                <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(total)"></span>
+                                <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(totalSelected())"></span>
                             </div>
                             <template x-if="shippingCost">
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">

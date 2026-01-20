@@ -107,7 +107,9 @@ class RajaOngkirController
                 'message' => 'Pengaturan atau parameter tidak lengkap.'
             ], 400);
         }
-        $weight = apply_filters('wp_store_shipping_weight', $this->get_cart_total_weight_grams(), $params);
+        $items = isset($params['items']) && is_array($params['items']) ? $params['items'] : null;
+        $weight_base = $items ? $this->get_items_total_weight_grams($items) : $this->get_cart_total_weight_grams();
+        $weight = apply_filters('wp_store_shipping_weight', $weight_base, $params);
         $cache_key = apply_filters('wp_store_shipping_cache_key', 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier])), $params);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
@@ -247,6 +249,32 @@ class RajaOngkirController
         set_transient($cache_key, $payload, DAY_IN_SECONDS);
         do_action('wp_store_shipping_calculated', $payload, $params);
         return new WP_REST_Response($payload, 200);
+    }
+
+    private function get_items_total_weight_grams($items)
+    {
+        $total = 0;
+        if (!is_array($items)) {
+            return $this->get_cart_total_weight_grams();
+        }
+        foreach ($items as $row) {
+            $product_id = isset($row['id']) ? (int) $row['id'] : 0;
+            $qty = isset($row['qty']) ? (int) $row['qty'] : 0;
+            if ($product_id <= 0 || $qty <= 0 || get_post_type($product_id) !== 'store_product') {
+                continue;
+            }
+            $wkg = get_post_meta($product_id, '_store_weight_kg', true);
+            $wkg = $wkg !== '' ? (float) $wkg : 0;
+            $grams = (int) round($wkg * 1000);
+            if ($grams < 1) {
+                $grams = 1;
+            }
+            $total += $grams * $qty;
+        }
+        if ($total < 1) {
+            $total = 1;
+        }
+        return $total;
     }
 
     public function get_rajaongkir_provinces(WP_REST_Request $request)
