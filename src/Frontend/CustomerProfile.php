@@ -18,7 +18,7 @@ class CustomerProfile
             $can_register = (bool) get_option('users_can_register');
             $register_url = $can_register ? esc_url(function_exists('wp_registration_url') ? wp_registration_url() : site_url('/wp-login.php?action=register')) : '';
             ob_start();
-            ?>
+?>
             <div class="wps-container" style="max-width: 720px; margin: 40px auto;">
                 <div class="wps-card">
                     <div class="wps-p-6 wps-text-center">
@@ -36,7 +36,7 @@ class CustomerProfile
                     </div>
                 </div>
             </div>
-            <?php
+        <?php
             return ob_get_clean();
         }
 
@@ -113,7 +113,7 @@ class CustomerProfile
             }
         }
         ob_start();
-?>
+        ?>
 
         <script>
             // Ensure wpStoreSettings is available
@@ -129,18 +129,18 @@ class CustomerProfile
             <div class="wps-card wps-p-4" style="margin-bottom: 1rem;">
                 <div class="wps-tabs">
                     <button @click="tab = 'profile'" :class="{ 'active': tab === 'profile' }" class="wps-tab">
-                        Profil Saya
+                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'user', 'size' => 16, 'class' => 'wps-mr-2']); ?>Profil Saya
                     </button>
                     <button @click="tab = 'addresses'" :class="{ 'active': tab === 'addresses' }" class="wps-tab">
-                        Buku Alamat
+                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'settings', 'size' => 16, 'class' => 'wps-mr-2']); ?>Buku Alamat
                     </button>
                     <button @click="tab = 'wishlist'" :class="{ 'active': tab === 'wishlist' }" class="wps-tab">
-                        Wishlist <span class="wps-badge" x-text="wishlistCount" x-show="wishlistCount > 0" style="margin-left:6px;"></span>
+                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Wishlist <span class="wps-badge" x-text="wishlistCount" x-show="wishlistCount > 0" style="margin-left:6px;"></span>
                     </button>
                     <button @click="tab = 'orders'" :class="{ 'active': tab === 'orders' }" class="wps-tab">
-                        Pesanan
+                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Pesanan
                     </button>
-                    <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto">Keluar</a>
+                    <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?>Keluar</a>
                 </div>
             </div>
 
@@ -352,7 +352,7 @@ class CustomerProfile
                     </div>
                 </div>
             </div>
-            
+
             <!-- Orders Tab -->
             <div x-show="tab === 'orders'">
                 <div class="wps-card wps-p-6">
@@ -478,7 +478,11 @@ class CustomerProfile
                         });
                     },
                     formatCurrency(n) {
-                        try { return Number(n || 0).toLocaleString('id-ID'); } catch (e) { return String(n || 0); }
+                        try {
+                            return Number(n || 0).toLocaleString('id-ID');
+                        } catch (e) {
+                            return String(n || 0);
+                        }
                     },
                     statusLabel(s) {
                         const m = {
@@ -506,11 +510,15 @@ class CustomerProfile
                             console.error(err);
                         }
                     },
-                    
+
                     onAvatarSelected(e) {
                         const file = e.target && e.target.files && e.target.files[0] ? e.target.files[0] : null;
                         if (!file) return;
-                        this.uploadAvatar(file).finally(() => { try { e.target.value = ''; } catch (_) {} });
+                        this.uploadAvatar(file).finally(() => {
+                            try {
+                                e.target.value = '';
+                            } catch (_) {}
+                        });
                     },
 
                     async uploadAvatar(file) {
