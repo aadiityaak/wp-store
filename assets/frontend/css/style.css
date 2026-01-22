@@ -598,3 +598,36 @@ button.wps-btn-primary {
 [x-cloak] {
   display: none !important;
 }
+
+@media (max-width: 768px) {
+  .wps-flex.wps-items-start {
+    flex-direction: column;
+  }
+  .wps-flex.wps-gap-2.wps-items-start > .wps-flex.wps-flex-col {
+    flex-direction: row;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .wps-flex.wps-gap-2.wps-items-start
+    > .wps-flex.wps-flex-col
+    img.wps-gallery-thumb {
+    width: 60px;
+    height: 60px;
+    flex: 0 0 auto;
+  }
+  .wps-img-320 {
+    height: 240px;
+  }
+}
+@media (max-width: 480px) {
+  .wps-img-320 {
+    height: 200px;
+  }
+  .wps-flex.wps-gap-2.wps-items-center {
+    flex-wrap: wrap;
+  }
+}

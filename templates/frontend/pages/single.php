@@ -43,8 +43,8 @@
                             -ms-overflow-style: none
                         }
                     </style>
-                    <div style="position:relative;display:block;flex:1;">
-                        <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
+                    <div style="position:relative;display:block;flex:1;overflow:hidden;">
+                        <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320 wps-transition" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
                         <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
                             <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'chevron-left', 'size' => 16]); ?>
                         </button>
@@ -92,12 +92,43 @@
                             }
                         }
                         setActive(0);
+                        var animating = false;
+
+                        function slideTo(newSrc, direction) {
+                            if (!mainImg) return;
+                            if (animating) return;
+                            animating = true;
+                            var out = direction === 'left' ? '-100%' : '100%';
+                            var inn = direction === 'left' ? '100%' : '-100%';
+                            mainImg.style.transform = 'translateX(' + out + ')';
+                            mainImg.style.opacity = '0';
+                            var onOut = function() {
+                                mainImg.removeEventListener('transitionend', onOut);
+                                mainImg.setAttribute('src', newSrc);
+                                mainImg.style.transform = 'translateX(' + inn + ')';
+                                mainImg.style.opacity = '0';
+                                requestAnimationFrame(function() {
+                                    requestAnimationFrame(function() {
+                                        mainImg.style.transform = 'translateX(0)';
+                                        mainImg.style.opacity = '1';
+                                    });
+                                });
+                                mainImg.addEventListener('transitionend', onIn);
+                            };
+                            var onIn = function() {
+                                mainImg.removeEventListener('transitionend', onIn);
+                                animating = false;
+                            };
+                            mainImg.addEventListener('transitionend', onOut);
+                        }
                         thumbs.forEach(function(t) {
                             t.addEventListener('click', function() {
                                 var full = this.getAttribute('data-full');
                                 if (full) {
-                                    mainImg.setAttribute('src', full);
-                                    setActive(parseInt(this.getAttribute('data-idx'), 10));
+                                    var target = parseInt(this.getAttribute('data-idx'), 10);
+                                    var direction = target > idx ? 'right' : 'left';
+                                    setActive(target);
+                                    slideTo(full, direction);
                                 }
                             });
                         });
@@ -106,13 +137,14 @@
 
                         function go(delta) {
                             var n = thumbs.length;
-                            idx = (idx + delta + n) % n;
-                            var el = container.querySelector('img[data-idx="' + idx + '"]');
+                            var next = (idx + delta + n) % n;
+                            var el = container.querySelector('img[data-idx="' + next + '"]');
                             if (el) {
                                 var full = el.getAttribute('data-full');
                                 if (full) {
-                                    mainImg.setAttribute('src', full);
-                                    setActive(idx);
+                                    var direction = delta > 0 ? 'right' : 'left';
+                                    setActive(next);
+                                    slideTo(full, direction);
                                 }
                             }
                         }
