@@ -136,8 +136,8 @@
         <template x-if="!items.length">
             <div class="wps-text-sm wps-text-gray-600 wps-mt-4">Belum ada item di wishlist.</div>
         </template>
-        <div class="wps-mt-4" x-show="items.length">
-            <table style="width: 100%; border-collapse: collapse;">
+        <div class="wps-mt-4 wps-table-responsive" x-show="items.length" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+            <table style="width: 100%; border-collapse: collapse; min-width:560px;">
                 <thead>
                     <tr>
                         <th style="text-align:left; padding: 8px; color:#6b7280; font-size:12px;">Produk</th>

@@ -323,6 +323,13 @@ button.wps-btn-primary {
   gap: 0.5rem;
   border-bottom: 1px solid #e5e7eb;
 }
+.wps-profile-wrapper .wps-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.wps-profile-wrapper .wps-tab {
+  flex: 0 0 auto;
+}
 .wps-tab {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
@@ -551,6 +558,10 @@ button.wps-btn-primary {
   border-collapse: collapse;
   border: 1px solid #e5e7eb;
 }
+.wps-table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .wps-table-head tr {
   background: #f9fafb;
   font-weight: 600;
@@ -611,11 +622,20 @@ tr:not(:last-child) .wps-td {
   .wps-grid.wps-two-col {
     grid-template-columns: 1fr !important;
   }
+  .wps-grid.wps-proof-grid {
+    grid-template-columns: 1fr !important;
+  }
   .wps-profile-wrapper .wps-tabs {
-    flex-wrap: wrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .wps-profile-wrapper .wps-tabs::-webkit-scrollbar {
+    display: none;
   }
   .wps-profile-wrapper .wps-tab {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
   }
   .wps-profile-wrapper .wps-p-6 {
     padding: 1rem;

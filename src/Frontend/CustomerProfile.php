@@ -127,7 +127,7 @@ class CustomerProfile
 
         <div class="wps-profile-wrapper" x-data="storeCustomerProfile()" x-init="init()">
             <div class="wps-card wps-p-4" style="margin-bottom: 1rem;">
-                <div class="wps-tabs">
+                <div id="wps-profile-tabs" class="wps-tabs">
                     <button @click="tab = 'profile'" :class="{ 'active': tab === 'profile' }" class="wps-tab">
                         <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'user', 'size' => 16, 'class' => 'wps-mr-2']); ?>Profil Saya
                     </button>
@@ -142,6 +142,39 @@ class CustomerProfile
                     </button>
                     <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?>Keluar</a>
                 </div>
+                <script>
+                    (function() {
+                        var el = document.getElementById('wps-profile-tabs');
+                        if (!el) return;
+                        var down = false;
+                        var startX = 0;
+                        var startScroll = 0;
+                        el.addEventListener('mousedown', function(e) {
+                            if (e.button !== 0) return;
+                            down = true;
+                            startX = e.pageX;
+                            startScroll = el.scrollLeft;
+                            el.style.cursor = 'grabbing';
+                        });
+                        document.addEventListener('mousemove', function(e) {
+                            if (!down) return;
+                            var dx = e.pageX - startX;
+                            el.scrollLeft = startScroll - dx;
+                            e.preventDefault();
+                        });
+                        document.addEventListener('mouseup', function() {
+                            if (!down) return;
+                            down = false;
+                            el.style.cursor = 'grab';
+                        });
+                        el.addEventListener('mouseleave', function() {
+                            if (!down) return;
+                            down = false;
+                            el.style.cursor = 'grab';
+                        });
+                        el.style.cursor = 'grab';
+                    })();
+                </script>
             </div>
 
             <!-- Notification -->

@@ -61,7 +61,7 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
         </div>
         <?php if ($order_exists) : ?>
             <div class="wps-divider wps-mt-6 wps-mb-4"></div>
-            <div class="wps-grid" style="display:grid; gap: 1rem; grid-template-columns: 1.2fr 0.8fr;">
+            <div class="wps-grid wps-two-col" style="display:grid; gap: 1rem; grid-template-columns: 1.2fr 0.8fr;">
                 <div>
                     <div class="wps-text-lg wps-font-medium wps-text-gray-900">Ringkasan Pesanan</div>
                     <div class="wps-mt-2">
@@ -173,7 +173,7 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                     <?php if (!empty($proofs)) : ?>
                         <div class="wps-mt-3">
                             <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Bukti Transfer</div>
-                            <div class="wps-grid" id="wps-proofs-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
+                            <div class="wps-grid wps-proof-grid" id="wps-proofs-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
                                 <?php foreach ($proofs as $pid) :
                                     $url = wp_get_attachment_url($pid);
                                     $mime = get_post_mime_type($pid);
