@@ -3,7 +3,138 @@
     <div class="wps-flex wps-gap-4 wps-items-start">
         <div style="flex: 1;">
             <?php $image_src = (!empty($image) ? $image : (WP_STORE_URL . 'assets/frontend/img/noimg.webp')); ?>
-            <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
+            <?php
+            $gallery_raw = get_post_meta((int) $id, '_store_gallery_ids', true);
+            $settings_theme = get_option('wp_store_settings', []);
+            $primary_color = isset($settings_theme['theme_primary']) ? sanitize_hex_color($settings_theme['theme_primary']) : '#2563eb';
+            $items = [];
+            $featured_thumb = get_the_post_thumbnail_url((int) $id, 'thumbnail');
+            $featured_thumb = $featured_thumb ? $featured_thumb : $image_src;
+            $items[] = [
+                'full' => $image_src,
+                'thumb' => $featured_thumb
+            ];
+            if (is_array($gallery_raw) && !empty($gallery_raw)) {
+                foreach ($gallery_raw as $k => $v) {
+                    $aid = is_numeric($k) ? (int) $k : 0;
+                    $full = $aid ? (wp_get_attachment_image_url($aid, 'large') ?: (is_string($v) ? $v : '')) : (is_string($v) ? $v : '');
+                    $thumb = $aid ? (wp_get_attachment_image_url($aid, 'thumbnail') ?: $full) : $full;
+                    if ($full) {
+                        $items[] = ['full' => $full, 'thumb' => $thumb];
+                    }
+                }
+            }
+            ?>
+            <?php if (count($items) > 1) : ?>
+                <div class="wps-flex wps-gap-2 wps-items-start">
+                    <div class="wps-flex wps-flex-col wps-gap-2" style="width:64px; max-height:320px; overflow-y:auto;">
+                        <?php foreach ($items as $idx => $gi) : ?>
+                            <img src="<?php echo esc_url($gi['thumb']); ?>" alt="" class="wps-img-60 wps-rounded wps-gallery-thumb" style="border:1px solid #e5e7eb; cursor:pointer;" data-full="<?php echo esc_attr($gi['full']); ?>" data-idx="<?php echo esc_attr($idx); ?>">
+                        <?php endforeach; ?>
+                    </div>
+                    <div style="position:relative;display:block;flex:1;">
+                        <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
+                        <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">‹</button>
+                        <button type="button" class="wps-gallery-next" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">›</button>
+                        <?php
+                        $ptype_single = get_post_meta((int) $id, '_store_product_type', true);
+                        $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
+                        if ($is_digital_single) {
+                            echo '<span class="wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">'
+                                . \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+                                . '<span style="color:#fff;font-size:10px;margin-left:4px;">Digital</span>'
+                                . '</span>';
+                        }
+                        $lbl_single = get_post_meta((int) $id, '_store_label', true);
+                        if (is_string($lbl_single) && $lbl_single !== '') {
+                            $txt = $lbl_single === 'label-best' ? 'Best Seller' : ($lbl_single === 'label-limited' ? 'Limited' : ($lbl_single === 'label-new' ? 'New' : ''));
+                            $bg  = $lbl_single === 'label-best' ? '#f59e0b' : ($lbl_single === 'label-limited' ? '#ef4444' : ($lbl_single === 'label-new' ? '#10b981' : '#374151'));
+                            if ($txt !== '') {
+                                echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
+                                    . \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+                                    . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
+                                    . '</span>';
+                            }
+                        }
+                        ?>
+                    </div>
+                </div>
+                <script>
+                    (function() {
+                        var container = document.currentScript.previousElementSibling;
+                        var mainImg = container.querySelector('#<?php echo 'wps-main-img-' . esc_js($id); ?>');
+                        var thumbs = container.querySelectorAll('img[data-full]');
+                        var idx = 0;
+
+                        function setActive(i) {
+                            idx = i;
+                            thumbs.forEach(function(t) {
+                                t.style.border = '1px solid #e5e7eb';
+                            });
+                            var el = container.querySelector('img[data-idx="' + i + '"]');
+                            if (el) {
+                                el.style.border = '2px solid <?php echo esc_js($primary_color); ?>';
+                            }
+                        }
+                        setActive(0);
+                        thumbs.forEach(function(t) {
+                            t.addEventListener('click', function() {
+                                var full = this.getAttribute('data-full');
+                                if (full) {
+                                    mainImg.setAttribute('src', full);
+                                    setActive(parseInt(this.getAttribute('data-idx'), 10));
+                                }
+                            });
+                        });
+                        var prevBtn = container.querySelector('.wps-gallery-prev');
+                        var nextBtn = container.querySelector('.wps-gallery-next');
+
+                        function go(delta) {
+                            var n = thumbs.length;
+                            idx = (idx + delta + n) % n;
+                            var el = container.querySelector('img[data-idx="' + idx + '"]');
+                            if (el) {
+                                var full = el.getAttribute('data-full');
+                                if (full) {
+                                    mainImg.setAttribute('src', full);
+                                    setActive(idx);
+                                }
+                            }
+                        }
+                        if (prevBtn) prevBtn.addEventListener('click', function() {
+                            go(-1);
+                        });
+                        if (nextBtn) nextBtn.addEventListener('click', function() {
+                            go(1);
+                        });
+                    })();
+                </script>
+            <?php else : ?>
+                <div style="position:relative;display:block;">
+                    <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
+                    <?php
+                    $ptype_single = get_post_meta((int) $id, '_store_product_type', true);
+                    $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
+                    if ($is_digital_single) {
+                        echo '<span class="wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">'
+                            . \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+                            . '<span style="color:#fff;font-size:10px;margin-left:4px;">Digital</span>'
+                            . '</span>';
+                    }
+                    $lbl_single = get_post_meta((int) $id, '_store_label', true);
+                    if (is_string($lbl_single) && $lbl_single !== '') {
+                        $txt = $lbl_single === 'label-best' ? 'Best Seller' : ($lbl_single === 'label-limited' ? 'Limited' : ($lbl_single === 'label-new' ? 'New' : ''));
+                        $bg  = $lbl_single === 'label-best' ? '#f59e0b' : ($lbl_single === 'label-limited' ? '#ef4444' : ($lbl_single === 'label-new' ? '#10b981' : '#374151'));
+                        if ($txt !== '') {
+                            echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
+                                . \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+                                . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
+                                . '</span>';
+                        }
+                    }
+                    ?>
+                </div>
+            <?php endif; ?>
         </div>
         <div style="flex: 1;">
             <div class="wps-text-sm wps-text-gray-900 wps-mb-4">

@@ -21,6 +21,7 @@ class Shortcode
         add_shortcode('wp_store_add_to_wishlist', [$this, 'render_add_to_wishlist']);
         add_shortcode('wp_store_link_profile', [$this, 'render_link_profile']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_filter('the_content', [$this, 'filter_single_content']);
     }
 
     public function enqueue_scripts()
@@ -124,6 +125,30 @@ class Shortcode
                 })(),
             ]
         );
+    }
+
+    public function filter_single_content($content)
+    {
+        if (is_singular('store_product') && in_the_loop() && is_main_query()) {
+            $id = get_the_ID();
+            if (!$id || get_post_type($id) !== 'store_product') {
+                return $content;
+            }
+            $price = get_post_meta($id, '_store_price', true);
+            $stock = get_post_meta($id, '_store_stock', true);
+            $image = get_the_post_thumbnail_url($id, 'large');
+            $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
+            return Template::render('pages/single', [
+                'id' => $id,
+                'title' => get_the_title($id),
+                'image' => $image ? $image : null,
+                'price' => $price !== '' ? (float) $price : null,
+                'stock' => $stock !== '' ? (int) $stock : null,
+                'currency' => $currency,
+                'content' => $content
+            ]);
+        }
+        return $content;
     }
 
     public function render_shop($atts = [])
