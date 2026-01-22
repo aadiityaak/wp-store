@@ -44,7 +44,7 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
                 }
             }
             ?>
-            <div class="wps-grid" style="display:grid; gap: 1rem; grid-template-columns: 1.2fr 0.8fr;">
+            <div class="wps-grid wps-two-col" style="display:grid; gap: 1rem; grid-template-columns: 1.2fr 0.8fr;">
                 <div>
                     <div class="wps-text-lg wps-font-medium wps-text-gray-900">Ringkasan Pesanan</div>
                     <div class="wps-mt-2">
