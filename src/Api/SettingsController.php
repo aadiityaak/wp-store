@@ -89,6 +89,44 @@ class SettingsController
         if (isset($params['recaptcha_site_key'])) $settings['recaptcha_site_key'] = sanitize_text_field($params['recaptcha_site_key']);
         if (isset($params['recaptcha_secret_key'])) $settings['recaptcha_secret_key'] = sanitize_text_field($params['recaptcha_secret_key']);
 
+        // Theme colors
+        if (isset($params['theme_primary'])) {
+            $hex = sanitize_hex_color($params['theme_primary']);
+            if ($hex) $settings['theme_primary'] = $hex;
+        }
+        if (isset($params['theme_primary_hover'])) {
+            $hex = sanitize_hex_color($params['theme_primary_hover']);
+            if ($hex) $settings['theme_primary_hover'] = $hex;
+        }
+        if (isset($params['theme_secondary_text'])) {
+            $hex = sanitize_hex_color($params['theme_secondary_text']);
+            if ($hex) $settings['theme_secondary_text'] = $hex;
+        }
+        if (isset($params['theme_secondary_border'])) {
+            $hex = sanitize_hex_color($params['theme_secondary_border']);
+            if ($hex) $settings['theme_secondary_border'] = $hex;
+        }
+        if (isset($params['theme_callout_bg'])) {
+            $hex = sanitize_hex_color($params['theme_callout_bg']);
+            if ($hex) $settings['theme_callout_bg'] = $hex;
+        }
+        if (isset($params['theme_callout_border'])) {
+            $hex = sanitize_hex_color($params['theme_callout_border']);
+            if ($hex) $settings['theme_callout_border'] = $hex;
+        }
+        if (isset($params['theme_callout_title'])) {
+            $hex = sanitize_hex_color($params['theme_callout_title']);
+            if ($hex) $settings['theme_callout_title'] = $hex;
+        }
+        if (isset($params['theme_danger_text'])) {
+            $hex = sanitize_hex_color($params['theme_danger_text']);
+            if ($hex) $settings['theme_danger_text'] = $hex;
+        }
+        if (isset($params['theme_danger_border'])) {
+            $hex = sanitize_hex_color($params['theme_danger_border']);
+            if ($hex) $settings['theme_danger_border'] = $hex;
+        }
+
         update_option('wp_store_settings', $settings);
 
         return new WP_REST_Response([

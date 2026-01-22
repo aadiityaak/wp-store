@@ -275,7 +275,9 @@
                         }
                     });
                     const data = await res.json();
-                    this.cart = (Array.isArray(data.items) ? data.items.map(i => Object.assign({}, i, { selected: true })) : []);
+                    this.cart = (Array.isArray(data.items) ? data.items.map(i => Object.assign({}, i, {
+                        selected: true
+                    })) : []);
                     this.total = data.total || 0;
                 } catch (e) {
                     this.cart = [];
@@ -392,7 +394,25 @@
 </script>
 <div class="">
     <div x-data="wpStoreCheckout()" x-init="init()">
-        <div class="wps-grid wps-grid-cols-2">
+        <template x-if="cart.length === 0">
+            <div class="wps-card">
+                <div class="wps-p-6 wps-text-center">
+                    <div class="wps-flex wps-justify-center wps-items-center wps-mb-3">
+                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 64]); ?>
+                    </div>
+                    <div class="wps-text-sm wps-text-gray-700 wps-mb-3 wps-mt-3">Keranjang kosong. Silakan kembali berbelanja.</div>
+                    <div class="wps-mt-3">
+                        <?php
+                        $settings = get_option('wp_store_settings', []);
+                        $shop_id = isset($settings['page_shop']) ? absint($settings['page_shop']) : 0;
+                        $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/');
+                        ?>
+                        <a href="<?php echo esc_url($shop_url); ?>" class="wps-btn wps-btn-primary">Belanja</a>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <div class="wps-grid wps-grid-cols-2" x-show="cart.length > 0">
             <div>
                 <div class="wps-card">
                     <div class="wps-p-4">

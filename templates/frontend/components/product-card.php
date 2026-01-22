@@ -9,8 +9,8 @@
 
   .wps-digital-badge:hover .txt {
     opacity: 1;
-    max-width: 80px;
-    margin-left: 6px
+    max-width: 60px;
+    margin-left: 4px
   }
 </style>
 <div class="wps-card wps-card-hover wps-transition">
@@ -21,10 +21,21 @@
       $type = get_post_meta((int) $item['id'], '_store_product_type', true);
       $is_digital = ($type === 'digital') || (bool) get_post_meta((int) $item['id'], '_store_is_digital', true);
       if ($is_digital) {
-        echo '<span class="wps-digital-badge wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:4px 8px;backdrop-filter:saturate(180%) blur(4px);">'
-          . \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-download', 'size' => 14, 'stroke_color' => '#ffffff'])
-          . '<span class="txt" style="color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;">Digital</span>'
+        echo '<span class="wps-digital-badge wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">'
+          . \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+          . '<span class="txt" style="color:#fff;font-size:10px;white-space:nowrap;overflow:hidden;">Digital</span>'
           . '</span>';
+      }
+      $lbl = get_post_meta((int) $item['id'], '_store_label', true);
+      if (is_string($lbl) && $lbl !== '') {
+        $txt = $lbl === 'label-best' ? 'Best Seller' : ($lbl === 'label-limited' ? 'Limited' : ($lbl === 'label-new' ? 'New' : ''));
+        $bg  = $lbl === 'label-best' ? '#f59e0b' : ($lbl === 'label-limited' ? '#ef4444' : ($lbl === 'label-new' ? '#10b981' : '#374151'));
+        if ($txt !== '') {
+          echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
+            . \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+            . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
+            . '</span>';
+        }
       }
       ?>
       <?php echo esc_html($item['title']); ?>

@@ -28,6 +28,9 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             <div @click="switchTab('system')" class="wp-store-tab" :class="{ 'active': activeTab === 'system' }">
                 Sistem
             </div>
+            <div @click="switchTab('style')" class="wp-store-tab" :class="{ 'active': activeTab === 'style' }">
+                Style
+            </div>
             <div @click="switchTab('tools')" class="wp-store-tab" :class="{ 'active': activeTab === 'tools' }">
                 Tool
             </div>
@@ -59,6 +62,64 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         <div>
                             <label class="wp-store-label" for="store_phone">Telepon/WA</label>
                             <input name="store_phone" type="text" id="store_phone" value="<?php echo esc_attr($settings['store_phone'] ?? ''); ?>" class="wp-store-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Style -->
+            <div x-show="activeTab === 'style'" class="wp-store-tab-content" x-cloak>
+                <div class="wp-store-form-grid">
+                    <p class="wp-store-helper">Atur warna tema frontend. Warna yang dipilih akan mengganti warna default pada tombol, tab, dan komponen callout.</p>
+                    <div class="wp-store-grid-3">
+                        <div>
+                            <label class="wp-store-label" for="theme_primary">Primary</label>
+                            <input name="theme_primary" id="theme_primary" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_primary'] ?? '#2563eb'); ?>">
+                            <p class="wp-store-helper">Warna utama untuk tombol dan tab aktif.</p>
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="theme_primary_hover">Primary Hover</label>
+                            <input name="theme_primary_hover" id="theme_primary_hover" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_primary_hover'] ?? '#1d4ed8'); ?>">
+                            <p class="wp-store-helper">Warna saat hover pada tombol utama.</p>
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="theme_secondary_border">Secondary Border</label>
+                            <input name="theme_secondary_border" id="theme_secondary_border" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_secondary_border'] ?? '#d1d5db'); ?>">
+                            <p class="wp-store-helper">Warna border untuk tombol sekunder.</p>
+                        </div>
+                    </div>
+                    <div class="wp-store-grid-3">
+                        <div>
+                            <label class="wp-store-label" for="theme_secondary_text">Secondary Text</label>
+                            <input name="theme_secondary_text" id="theme_secondary_text" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_secondary_text'] ?? '#374151'); ?>">
+                            <p class="wp-store-helper">Warna teks untuk tombol sekunder.</p>
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="theme_callout_bg">Callout Background</label>
+                            <input name="theme_callout_bg" id="theme_callout_bg" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_callout_bg'] ?? '#eff6ff'); ?>">
+                            <p class="wp-store-helper">Warna latar belakang untuk callout.</p>
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="theme_callout_border">Callout Border</label>
+                            <input name="theme_callout_border" id="theme_callout_border" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_callout_border'] ?? '#bfdbfe'); ?>">
+                            <p class="wp-store-helper">Warna border untuk callout.</p>
+                        </div>
+                    </div>
+                    <div class="wp-store-grid-3">
+                        <div>
+                            <label class="wp-store-label" for="theme_callout_title">Callout Title</label>
+                            <input name="theme_callout_title" id="theme_callout_title" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_callout_title'] ?? '#1d4ed8'); ?>">
+                            <p class="wp-store-helper">Warna judul pada callout.</p>
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="theme_danger_text">Danger Text</label>
+                            <input name="theme_danger_text" id="theme_danger_text" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_danger_text'] ?? '#ef4444'); ?>">
+                            <p class="wp-store-helper">Warna teks untuk tombol berbahaya (hapus, dll.).</p>
+                        </div>
+                        <div>
+                            <label class="wp-store-label" for="theme_danger_border">Danger Border</label>
+                            <input name="theme_danger_border" id="theme_danger_border" type="color" class="wp-store-input" value="<?php echo esc_attr($settings['theme_danger_border'] ?? '#fca5a5'); ?>">
+                            <p class="wp-store-helper">Warna border untuk tombol berbahaya.</p>
                         </div>
                     </div>
                 </div>
@@ -567,6 +628,22 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         border-color: #2271b1;
         box-shadow: 0 0 0 1px #2271b1;
         outline: none;
+    }
+    .wp-store-input[type="color"] {
+        padding: 0;
+        width: 120px;
+        height: 36px;
+        border: 1px solid #8c8f94;
+        border-radius: 4px;
+        background: none;
+    }
+    .wp-store-input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+        border-radius: 4px;
+    }
+    .wp-store-input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: 4px;
     }
 
     .wp-store-box-gray {
