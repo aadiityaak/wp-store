@@ -27,15 +27,30 @@
             ?>
             <?php if (count($items) > 1) : ?>
                 <div class="wps-flex wps-gap-2 wps-items-start">
-                    <div class="wps-flex wps-flex-col wps-gap-2" style="width:64px; max-height:320px; overflow-y:auto;">
+                    <div id="wps-thumbs-<?php echo esc_attr($id); ?>" class="wps-flex wps-flex-col wps-gap-2" style="width:64px; max-height:320px; overflow-y:auto; overflow-x:hidden; position:relative;">
                         <?php foreach ($items as $idx => $gi) : ?>
                             <img src="<?php echo esc_url($gi['thumb']); ?>" alt="" class="wps-img-60 wps-rounded wps-gallery-thumb" style="border:1px solid #e5e7eb; cursor:pointer;" data-full="<?php echo esc_attr($gi['full']); ?>" data-idx="<?php echo esc_attr($idx); ?>">
                         <?php endforeach; ?>
                     </div>
+                    <style>
+                        #<?php echo 'wps-thumbs-' . esc_attr($id); ?>::-webkit-scrollbar {
+                            width: 0;
+                            height: 0
+                        }
+
+                        #<?php echo 'wps-thumbs-' . esc_attr($id); ?> {
+                            scrollbar-width: none;
+                            -ms-overflow-style: none
+                        }
+                    </style>
                     <div style="position:relative;display:block;flex:1;">
                         <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
-                        <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">‹</button>
-                        <button type="button" class="wps-gallery-next" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">›</button>
+                        <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
+                            <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'chevron-left', 'size' => 16]); ?>
+                        </button>
+                        <button type="button" class="wps-gallery-next" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
+                            <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'chevron-right', 'size' => 16]); ?>
+                        </button>
                         <?php
                         $ptype_single = get_post_meta((int) $id, '_store_product_type', true);
                         $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
@@ -107,6 +122,143 @@
                         if (nextBtn) nextBtn.addEventListener('click', function() {
                             go(1);
                         });
+                        var thumbsWrap = container.querySelector('#<?php echo 'wps-thumbs-' . esc_js($id); ?>');
+                        if (thumbsWrap) {
+                            var track = document.createElement('div');
+                            track.style.position = 'absolute';
+                            track.style.top = '0';
+                            track.style.right = '0';
+                            track.style.width = '4px';
+                            track.style.height = '100%';
+                            track.style.background = '#e5e7eb';
+                            track.style.borderRadius = '9999px';
+                            track.style.zIndex = '2';
+                            track.style.opacity = '0';
+                            track.style.transition = 'opacity .15s ease';
+                            track.style.pointerEvents = 'none';
+                            var knob = document.createElement('div');
+                            knob.style.position = 'absolute';
+                            knob.style.top = '0';
+                            knob.style.left = '0';
+                            knob.style.width = '100%';
+                            knob.style.background = '<?php echo esc_js($primary_color); ?>';
+                            knob.style.borderRadius = '9999px';
+                            knob.style.cursor = 'grab';
+                            knob.style.opacity = '0';
+                            knob.style.transition = 'opacity .15s ease';
+                            track.appendChild(knob);
+                            thumbsWrap.appendChild(track);
+
+                            function updateScrollbar() {
+                                var viewH = thumbsWrap.clientHeight;
+                                var scrollH = thumbsWrap.scrollHeight;
+                                if (scrollH <= viewH) {
+                                    track.style.display = 'none';
+                                    return;
+                                }
+                                track.style.display = 'block';
+                                var ratio = viewH / scrollH;
+                                var knobH = Math.max(20, Math.floor(viewH * ratio));
+                                knob.style.height = knobH + 'px';
+                                var maxScroll = scrollH - viewH;
+                                var maxKnob = viewH - knobH;
+                                var y = Math.floor((thumbsWrap.scrollTop / maxScroll) * maxKnob);
+                                knob.style.transform = 'translateY(' + y + 'px)';
+                            }
+                            var dragging = false;
+                            var startY = 0;
+                            var startScroll = 0;
+                            knob.addEventListener('mousedown', function(e) {
+                                dragging = true;
+                                startY = e.clientY;
+                                startScroll = thumbsWrap.scrollTop;
+                                knob.style.cursor = 'grabbing';
+                                e.preventDefault();
+                            });
+                            document.addEventListener('mousemove', function(e) {
+                                if (!dragging) return;
+                                var viewH = thumbsWrap.clientHeight;
+                                var scrollH = thumbsWrap.scrollHeight;
+                                var knobH = knob.offsetHeight;
+                                var maxScroll = scrollH - viewH;
+                                var maxKnob = viewH - knobH;
+                                var dy = e.clientY - startY;
+                                var scrollDelta = (dy / maxKnob) * maxScroll;
+                                var nextScroll = Math.max(0, Math.min(maxScroll, startScroll + scrollDelta));
+                                thumbsWrap.scrollTop = nextScroll;
+                                updateScrollbar();
+                            });
+                            document.addEventListener('mouseup', function() {
+                                if (!dragging) return;
+                                dragging = false;
+                                knob.style.cursor = 'grab';
+                            });
+                            thumbsWrap.addEventListener('scroll', updateScrollbar);
+                            window.addEventListener('resize', updateScrollbar);
+                            updateScrollbar();
+                            thumbs.forEach(function(img) {
+                                if (img.complete) {
+                                    updateScrollbar();
+                                } else {
+                                    img.addEventListener('load', updateScrollbar);
+                                }
+                            });
+
+                            var hideTimer = null;
+
+                            function showTrack() {
+                                updateScrollbar();
+                                if (track.style.display === 'none') return;
+                                track.style.opacity = '0.6';
+                                knob.style.opacity = '0.6';
+                                track.style.pointerEvents = 'auto';
+                                if (hideTimer) {
+                                    clearTimeout(hideTimer);
+                                    hideTimer = null;
+                                }
+                            }
+
+                            function scheduleHide() {
+                                if (dragging) return;
+                                if (hideTimer) clearTimeout(hideTimer);
+                                hideTimer = setTimeout(function() {
+                                    track.style.opacity = '0';
+                                    knob.style.opacity = '0';
+                                    track.style.pointerEvents = 'none';
+                                }, 500);
+                            }
+                            thumbsWrap.addEventListener('mouseenter', function() {
+                                showTrack();
+                            });
+                            thumbsWrap.addEventListener('mousemove', function() {
+                                showTrack();
+                                scheduleHide();
+                            });
+                            thumbsWrap.addEventListener('mouseleave', function() {
+                                scheduleHide();
+                            });
+                            container.addEventListener('mouseenter', function() {
+                                showTrack();
+                            });
+                            container.addEventListener('mousemove', function() {
+                                showTrack();
+                                scheduleHide();
+                            });
+                            thumbsWrap.addEventListener('wheel', function() {
+                                showTrack();
+                                scheduleHide();
+                            });
+                            knob.addEventListener('mousedown', function() {
+                                showTrack();
+                                if (hideTimer) {
+                                    clearTimeout(hideTimer);
+                                    hideTimer = null;
+                                }
+                            });
+                            document.addEventListener('mouseup', function() {
+                                scheduleHide();
+                            });
+                        }
                     })();
                 </script>
             <?php else : ?>

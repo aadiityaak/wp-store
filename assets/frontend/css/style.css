@@ -260,6 +260,9 @@ button.wps-btn-primary {
 .wps-flex {
   display: flex;
 }
+.wps-flex-col {
+  flex-direction: column;
+}
 .wps-justify-between {
   justify-content: space-between;
 }
