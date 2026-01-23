@@ -81,6 +81,9 @@
 .wps-pt-0 {
   padding-top: 0 !important;
 }
+.wps-pt-4 {
+  padding-top: 1rem;
+}
 .wps-pb-0 {
   padding-bottom: 0 !important;
 }
@@ -98,6 +101,14 @@
 }
 .wps-mt-6 {
   margin-top: 1.5rem;
+}
+.wps-mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+.wps-my-8 {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 .wps-text-lg {
   font-size: 1.125rem;
@@ -139,6 +150,9 @@
 }
 .wps-mt-2 {
   margin-top: 0.5rem;
+}
+.wps-mt-4 {
+  margin-top: 1rem;
 }
 .wps-form-group {
   margin-bottom: 1rem;

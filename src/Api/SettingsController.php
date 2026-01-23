@@ -127,6 +127,14 @@ class SettingsController
             if ($hex) $settings['theme_danger_border'] = $hex;
         }
 
+        // Layout
+        if (isset($params['container_max_width'])) {
+            $mw = absint($params['container_max_width']);
+            if ($mw > 0) {
+                $settings['container_max_width'] = $mw;
+            }
+        }
+
         update_option('wp_store_settings', $settings);
 
         return new WP_REST_Response([

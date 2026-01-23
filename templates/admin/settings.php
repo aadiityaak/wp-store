@@ -122,6 +122,16 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <p class="wp-store-helper">Warna border untuk tombol berbahaya.</p>
                         </div>
                     </div>
+                    <div class="wp-store-box-gray wp-store-mt-4">
+                        <h3 class="wp-store-subtitle">Layout</h3>
+                        <div class="wp-store-grid-3">
+                            <div>
+                                <label class="wp-store-label" for="container_max_width">Container Max Width (px)</label>
+                                <input name="container_max_width" id="container_max_width" type="number" min="600" step="10" class="wp-store-input" value="<?php echo esc_attr($settings['container_max_width'] ?? 1100); ?>">
+                                <p class="wp-store-helper">Lebar maksimum kontainer utama di frontend.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -629,6 +639,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         box-shadow: 0 0 0 1px #2271b1;
         outline: none;
     }
+
     .wp-store-input[type="color"] {
         padding: 0;
         width: 120px;
@@ -637,10 +648,12 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         border-radius: 4px;
         background: none;
     }
+
     .wp-store-input[type="color"]::-webkit-color-swatch-wrapper {
         padding: 0;
         border-radius: 4px;
     }
+
     .wp-store-input[type="color"]::-webkit-color-swatch {
         border: none;
         border-radius: 4px;

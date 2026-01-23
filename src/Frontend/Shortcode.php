@@ -22,6 +22,7 @@ class Shortcode
         add_shortcode('wp_store_link_profile', [$this, 'render_link_profile']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_filter('the_content', [$this, 'filter_single_content']);
+        add_filter('template_include', [$this, 'override_archive_template']);
     }
 
     public function enqueue_scripts()
@@ -94,6 +95,10 @@ class Shortcode
             if ($danger_border) $css .= "border-color:{$danger_border};";
             if ($danger_text) $css .= "color:{$danger_text};";
             $css .= "}\n";
+        }
+        $container_max = isset($settings['container_max_width']) ? (int) $settings['container_max_width'] : 1100;
+        if ($container_max > 0) {
+            $css .= ".wps-container{max-width:{$container_max}px;margin-left:auto;margin-right:auto;}\n";
         }
         if (!empty($css)) {
             wp_add_inline_style('wp-store-frontend-css', $css);
@@ -466,5 +471,16 @@ class Shortcode
             . '<img src="' . esc_url($avatar_url) . '" alt="Profil" style="width:32px;height:32px;border-radius:9999px;object-fit:cover;border:1px solid #e5e7eb;" />'
             . '</a>';
         return $html;
+    }
+
+    public function override_archive_template($template)
+    {
+        if (is_post_type_archive('store_product')) {
+            $tpl = WP_STORE_PATH . 'templates/frontend/archive-store_product.php';
+            if (file_exists($tpl)) {
+                return $tpl;
+            }
+        }
+        return $template;
     }
 }
