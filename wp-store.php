@@ -102,3 +102,36 @@ register_activation_hook(__FILE__, function () {
 
     flush_rewrite_rules();
 });
+
+function wps_icon($args = [])
+{
+    if (is_string($args)) {
+        $args = ['name' => $args];
+    }
+    if (!is_array($args)) {
+        return '';
+    }
+    $data = [];
+    if (isset($args['name'])) {
+        $data['name'] = sanitize_key($args['name']);
+    }
+    if (isset($args['size'])) {
+        $data['size'] = (int) $args['size'];
+    }
+    if (isset($args['class']) && is_string($args['class'])) {
+        $data['class'] = $args['class'];
+    }
+    if (isset($args['stroke_color']) && is_string($args['stroke_color'])) {
+        $data['stroke_color'] = $args['stroke_color'];
+    } elseif (isset($args['stroke-color']) && is_string($args['stroke-color'])) {
+        $data['stroke_color'] = $args['stroke-color'];
+    } elseif (isset($args['stroke']) && is_string($args['stroke'])) {
+        $data['stroke_color'] = $args['stroke'];
+    }
+    if (isset($args['stroke_width'])) {
+        $data['stroke_width'] = (int) $args['stroke_width'];
+    } elseif (isset($args['stroke-width'])) {
+        $data['stroke_width'] = (int) $args['stroke-width'];
+    }
+    return \WpStore\Frontend\Template::render('components/icons', $data);
+}

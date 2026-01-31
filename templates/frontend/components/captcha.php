@@ -5,7 +5,7 @@ $uid = substr(md5(uniqid('', true)), 0, 8);
     <div class="wps-flex wps-items-center wps-gap-2 wps-mt-2">
         <div id="wps-captcha-image-<?php echo esc_attr($uid); ?>"></div>
         <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm wps-captcha-refresh" id="wps-captcha-refresh-<?php echo esc_attr($uid); ?>">
-            <wps-icon name="arrow-repeat" size="16" class="bi bi-arrow-repeat"/>
+            <?php echo wps_icon(['name' => 'arrow-repeat', 'size' => 16, 'class' => 'bi bi-arrow-repeat']); ?>
         </button>
     </div>
     <div class="wps-flex wps-items-center wps-gap-2 wps-mt-2">

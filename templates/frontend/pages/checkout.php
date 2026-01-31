@@ -456,7 +456,7 @@
             <div class="wps-card">
                 <div class="wps-p-6 wps-text-center">
                     <div class="wps-flex wps-justify-center wps-items-center wps-mb-3">
-                        <wps-icon name="cart" size="64" />
+                        <?php echo wps_icon(['name' => 'cart', 'size' => 64]); ?>
                     </div>
                     <div class="wps-text-sm wps-text-gray-700 wps-mb-3 wps-mt-3">Keranjang kosong. Silakan kembali berbelanja.</div>
                     <div class="wps-mt-3">
@@ -479,8 +479,8 @@
                             <div class="">
                                 <div class="wps-callout-title">Gunakan Data Tersimpan</div>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
-                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><wps-icon name="cloud-arrow-down" size="16" class="wps-mr-2" />Impor Profil</button>
-                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><wps-icon name="sliders2" size="16" class="wps-mr-2" />Kelola</a>
+                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><?php echo wps_icon(['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
+                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><?php echo wps_icon(['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -659,7 +659,7 @@
                             </div>
 
                             <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting" @click="trySubmit()">
-                                <wps-icon name="cart" size="16" class="wps-mr-2" />
+                                <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                 <span x-show="submitting">Memproses...</span>
                                 <span x-show="!submitting">Buat Pesanan</span>
                             </button>

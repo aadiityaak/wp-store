@@ -105,10 +105,10 @@
     }">
     <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?>" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
         <template x-if="loading">
-            <span><wps-icon name="spinner" size="18" class="wps-mr-2"/></span>
+            <span><?php echo wps_icon(['name' => 'spinner', 'size' => 18, 'class' => 'wps-mr-2']); ?></span>
         </template>
         <template x-if="!loading">
-            <span><wps-icon name="cart" size="20" class="wps-icon-20 wps-mr-2"/></span>
+            <span><?php echo wps_icon(['name' => 'cart', 'size' => 20, 'class' => 'wps-icon-20 wps-mr-2']); ?></span>
         </template>
         <?php echo esc_html($label); ?>
     </button>
@@ -142,7 +142,7 @@
                 <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="showModal = false">Batal</button>
                 <button type="button" class="wps-btn wps-btn-primary wps-btn-sm" @click="confirmAdd()" :disabled="loading || !canSubmit()" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
                     <template x-if="loading">
-                        <span><wps-icon name="spinner" size="16" class="wps-mr-2"/></span>
+                        <span><?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
                     </template>
                     <span>Tambah</span>
                 </button>

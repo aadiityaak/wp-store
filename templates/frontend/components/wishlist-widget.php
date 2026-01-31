@@ -162,19 +162,19 @@
                                 <div class="wps-flex wps-gap-2" style="justify-content: flex-end;">
                                     <button class="wps-btn wps-btn-primary wps-btn-sm" @click="addToCart(item)" :disabled="updatingAddKey === getItemKey(item)" :style="(updatingAddKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
                                         <template x-if="updatingAddKey === getItemKey(item)">
-                                            <span><wps-icon name="spinner" size="16" class="wps-mr-2"/></span>
+                                            <span><?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
                                         </template>
                                         <template x-if="updatingAddKey !== getItemKey(item)">
-                                            <span><wps-icon name="cart" size="16" class="wps-mr-2"/></span>
+                                            <span><?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
                                         </template>
                                         <span>+</span>
                                     </button>
                                     <button class="wps-btn wps-btn-secondary wps-btn-sm" @click="remove(item)" :disabled="updatingRemoveKey === getItemKey(item)" :style="(updatingRemoveKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
                                         <template x-if="updatingRemoveKey === getItemKey(item)">
-                                            <span><wps-icon name="spinner" size="16" class="wps-mr-2"/></span>
+                                            <span><?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
                                         </template>
                                         <template x-if="updatingRemoveKey !== getItemKey(item)">
-                                            <span><wps-icon name="trash" size="16" class=""/></span>
+                                            <span><?php echo wps_icon(['name' => 'trash', 'size' => 16, 'class' => '']); ?></span>
                                         </template>
                                     </button>
                                 </div>
