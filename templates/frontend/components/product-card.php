@@ -2,23 +2,23 @@
 <div class="wps-card wps-card-hover wps-transition">
   <div class="wps-p-2">
     <a class="wps-text-sm wps-text-gray-900 wps-mb-4 wps-text-bold wps-d-block wps-rel" href="<?php echo esc_url($item['link']); ?>">
-      <div class="wps-image-wrap">
-        <?php
-        $hover_src = '';
-        $gal = get_post_meta((int) $item['id'], '_store_gallery_ids', true);
-        if (is_array($gal) && !empty($gal)) {
-          $first = array_values($gal)[0];
-          if (is_numeric($first)) {
-            $url = wp_get_attachment_image_url((int) $first, 'medium');
-            if (is_string($url)) $hover_src = $url;
-          } elseif (is_string($first)) {
-            $hover_src = $first;
-          }
+      <?php
+      $hover_src = '';
+      $gal = get_post_meta((int) $item['id'], '_store_gallery_ids', true);
+      if (is_array($gal) && !empty($gal)) {
+        $first = array_values($gal)[0];
+        if (is_numeric($first)) {
+          $url = wp_get_attachment_image_url((int) $first, 'medium');
+          if (is_string($url)) $hover_src = $url;
+        } elseif (is_string($first)) {
+          $hover_src = $first;
         }
-        ?>
-        <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160 img-main" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
+      }
+      ?>
+      <div class="wps-image-wrap wps-mb-2 wps-img-160<?php echo $hover_src ? ' wps-has-hover' : ''; ?>">
+        <img class="wps-w-full wps-rounded wps-mb-4 img-main" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
         <?php if ($hover_src) : ?>
-          <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160 img-hover" src="<?php echo esc_url($hover_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
+          <img class="wps-w-full wps-rounded img-hover" src="<?php echo esc_url($hover_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
         <?php endif; ?>
       </div>
       <?php
