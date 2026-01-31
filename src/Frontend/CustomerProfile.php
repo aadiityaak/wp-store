@@ -23,15 +23,12 @@ class CustomerProfile
                 <div class="wps-card">
                     <div class="wps-p-6 wps-text-center">
                         <h2 class="wps-text-xl wps-font-medium wps-text-gray-900">Masuk untuk Mengelola Profil</h2>
-                        <p class="wps-mt-2 wps-text-sm wps-text-gray-600">Halaman ini khusus untuk pelanggan terdaftar. Silakan masuk untuk melihat dan memperbarui data profil, buku alamat, serta wishlist Anda.</p>
+                        <p class="wps-mt-2 wps-text-sm wps-text-gray-600">Silakan masuk untuk melihat dan memperbarui data profil, buku alamat, serta wishlist Anda.</p>
                         <div class="wps-flex wps-justify-center wps-items-center wps-gap-3 wps-mt-4">
                             <a href="<?php echo $login_url; ?>" class="wps-btn wps-btn-primary">Masuk</a>
                             <?php if ($can_register && $register_url) : ?>
                                 <a href="<?php echo $register_url; ?>" class="wps-btn wps-btn-secondary">Daftar</a>
                             <?php endif; ?>
-                        </div>
-                        <div class="wps-mt-4">
-                            <a href="<?php echo esc_url(site_url('/')); ?>" class="wps-link">Kembali ke Beranda</a>
                         </div>
                     </div>
                 </div>

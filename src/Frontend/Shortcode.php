@@ -454,7 +454,6 @@ class Shortcode
         $settings = get_option('wp_store_settings', []);
         $pid = isset($settings['page_profile']) ? absint($settings['page_profile']) : 0;
         $profile_url = $pid ? get_permalink($pid) : site_url('/profil-saya/');
-        $href = is_user_logged_in() ? $profile_url : wp_login_url($profile_url);
         $avatar_url = '';
         if (is_user_logged_in()) {
             $uid = get_current_user_id();
@@ -465,9 +464,9 @@ class Shortcode
             }
         }
         if (!$avatar_url) {
-            $avatar_url = WP_STORE_URL . 'assets/frontend/img/noimg.webp';
+            $avatar_url = WP_STORE_URL . 'assets/frontend/img/user.png';
         }
-        $html = '<a href="' . esc_url($href) . '" class="wps-link-profile" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">'
+        $html = '<a href="' . esc_url($profile_url) . '" class="wps-link-profile" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">'
             . '<img src="' . esc_url($avatar_url) . '" alt="Profil" style="width:32px;height:32px;border-radius:9999px;object-fit:cover;border:1px solid #e5e7eb;" />'
             . '</a>';
         return $html;

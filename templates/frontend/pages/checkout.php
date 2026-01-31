@@ -11,6 +11,10 @@
         return {
             loading: false,
             submitting: false,
+            allowSubmit: false,
+            warnShow: false,
+            warnMessage: '',
+            _warnTimer: null,
             loggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
             cart: [],
             total: 0,
@@ -84,6 +88,7 @@
             },
             async calculateAllShipping() {
                 if (!this.selectedSubdistrict || !Array.isArray(this.shippingCouriers) || this.shippingCouriers.length === 0) {
+                    this.recomputeAllow();
                     return;
                 }
                 this.shippingOptions = [];
@@ -126,6 +131,7 @@
                     this.shippingService = first.service || '';
                     this.shippingCost = first.cost || 0;
                 }
+                this.recomputeAllow();
             },
             onSelectService() {
                 const parts = String(this.selectedShippingKey || '').split(':');
@@ -162,8 +168,58 @@
                 }
                 return '';
             },
+            getBlockingReasons() {
+                const reasons = [];
+                if (!Array.isArray(this.cart) || this.cart.length === 0) {
+                    return ['Keranjang kosong.'];
+                }
+                if (!this.cart.find(i => i.selected !== false)) {
+                    return ['Tidak ada produk yang dipilih.'];
+                }
+                if (!this.name) reasons.push('Nama wajib diisi.');
+                if (!this.email) reasons.push('Email wajib diisi.');
+                if (!this.phone) reasons.push('Telepon wajib diisi.');
+                if (!this.selectedProvince) reasons.push('Provinsi wajib dipilih.');
+                if (!this.selectedCity) reasons.push('Kota/Kabupaten wajib dipilih.');
+                if (!this.selectedSubdistrict) reasons.push('Kecamatan wajib dipilih.');
+                if (!this.address || String(this.address).trim() === '') reasons.push('Alamat wajib diisi.');
+                if (Array.isArray(this.shippingOptions) && this.shippingOptions.length > 0) {
+                    if (!this.selectedShippingKey) {
+                        reasons.push('Wajib pilih ongkir.');
+                    } else {
+                        const parts = String(this.selectedShippingKey || '').split(':');
+                        const c = parts[0] || '';
+                        const svc = parts[1] || '';
+                        const opt = this.shippingOptions.find(s => String(s.courier) === String(c) && String(s.service || '') === String(svc));
+                        const costNum = opt ? (typeof opt.cost === 'number' ? opt.cost : parseFloat(opt.cost || 0)) : 0;
+                        if (!opt || isNaN(costNum) || costNum <= 0) reasons.push('Ongkir tidak valid.');
+                    }
+                }
+                return reasons;
+            },
             canSubmit() {
                 return this.getValidationError() === '';
+            },
+            recomputeAllow() {
+                this.allowSubmit = this.getBlockingReasons().length === 0;
+            },
+            trySubmit() {
+                if (this.submitting) return;
+                if (!this.allowSubmit) {
+                    const r = this.getBlockingReasons()[0] || 'Tidak dapat melanjutkan';
+                    this.warnMessage = r;
+                    this.warnShow = true;
+                    if (this._warnTimer) {
+                        clearTimeout(this._warnTimer);
+                        this._warnTimer = null;
+                    }
+                    this._warnTimer = setTimeout(() => {
+                        this.warnShow = false;
+                        this._warnTimer = null;
+                    }, 3000);
+                    return;
+                }
+                this.submit();
             },
             async fetchProfile() {
                 try {
@@ -284,6 +340,7 @@
                     this.total = 0;
                 } finally {
                     this.loading = false;
+                    this.recomputeAllow();
                 }
             },
             async importFromProfile() {
@@ -388,12 +445,13 @@
                     this.fetchAddresses();
                 }
                 this.loadProvinces();
+                this.recomputeAllow();
             }
         };
     };
 </script>
 <div class="">
-    <div x-data="wpStoreCheckout()" x-init="init()">
+    <div x-data="wpStoreCheckout()" x-init="init()" x-effect="recomputeAllow()">
         <template x-if="cart.length === 0">
             <div class="wps-card">
                 <div class="wps-p-6 wps-text-center">
@@ -586,11 +644,14 @@
                                     <span class="wps-text-sm wps-text-gray-900">QRIS</span>
                                 </button>
                             </div>
-                            <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || !canSubmit()" @click="submit()">
+
+                            <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting" @click="trySubmit()">
                                 <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                 <span x-show="submitting">Memproses...</span>
                                 <span x-show="!submitting">Buat Pesanan</span>
                             </button>
+                            <div class="wps-text-sm wps-text-red-700 wps-mt-2 p-2 wps-bg-red-100 rounded-md wps-mt-2" style="border-left:4px solid #ef4444;" x-show="warnShow" x-text="warnMessage">
+                            </div>
                             <div class="wps-text-sm wps-text-gray-900 wps-mt-2" x-text="message"></div>
                         </div>
                     </div>

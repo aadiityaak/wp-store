@@ -54,6 +54,9 @@
 .wps-transition {
   transition: all 150ms ease-in-out;
 }
+.wps-text-red-700 {
+  color: #ef4444;
+}
 .wps-text-bold {
   font-weight: 700 !important;
 }
@@ -366,6 +369,9 @@ button.wps-btn-primary {
 /* Badge utilities */
 .wps-bg-blue-500 {
   background-color: #3b82f6;
+}
+.wps-bg-red-100 {
+  background-color: rgb(240, 67, 67, 0.1);
 }
 .wps-text-white {
   color: #ffffff !important;
