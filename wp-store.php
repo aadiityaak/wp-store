@@ -127,11 +127,24 @@ function wps_icon($args = [])
         $data['stroke_color'] = $args['stroke-color'];
     } elseif (isset($args['stroke']) && is_string($args['stroke'])) {
         $data['stroke_color'] = $args['stroke'];
+    } elseif (isset($args['color']) && is_string($args['color'])) {
+        $data['stroke_color'] = $args['color'];
+    } elseif (isset($args['border-color']) && is_string($args['border-color'])) {
+        $data['stroke_color'] = $args['border-color'];
+    } elseif (isset($args['border_color']) && is_string($args['border_color'])) {
+        $data['stroke_color'] = $args['border_color'];
     }
     if (isset($args['stroke_width'])) {
         $data['stroke_width'] = (int) $args['stroke_width'];
     } elseif (isset($args['stroke-width'])) {
         $data['stroke_width'] = (int) $args['stroke-width'];
+    }
+    if (isset($args['fill_color']) && is_string($args['fill_color'])) {
+        $data['fill_color'] = $args['fill_color'];
+    } elseif (isset($args['fill-color']) && is_string($args['fill-color'])) {
+        $data['fill_color'] = $args['fill-color'];
+    } elseif (isset($args['fill']) && is_string($args['fill'])) {
+        $data['fill_color'] = $args['fill'];
     }
     return \WpStore\Frontend\Template::render('components/icons', $data);
 }

@@ -43,7 +43,7 @@
                             -ms-overflow-style: none
                         }
                     </style>
-                    <div style="position:relative;display:block;flex:1;overflow:hidden;">
+                    <div class="wps-position-relative wps-w-full" style="display:block;flex:1;overflow:hidden;">
                         <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320 wps-transition" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
                         <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
                             <?php echo wps_icon(['name' => 'chevron-left', 'size' => 16]); ?>

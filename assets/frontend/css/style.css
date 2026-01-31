@@ -223,6 +223,17 @@ button.wps-btn-primary {
   opacity: 0.5;
   cursor: not-allowed;
 }
+.wps-btn-dark,
+button.wps-btn-dark {
+  background-color: #1f2937;
+  color: #ffffff !important;
+}
+.wps-btn-dark * {
+  color: #ffffff !important;
+}
+.wps-btn-dark:hover {
+  background-color: #111827;
+}
 .wps-btn-secondary {
   background-color: white;
   border-color: #d1d5db;
@@ -230,6 +241,9 @@ button.wps-btn-primary {
 }
 .wps-btn-secondary:hover {
   background-color: #f9fafb;
+}
+.wps-position-relative {
+  position: relative;
 }
 .wps-callout {
   background-color: #eff6ff;
@@ -291,6 +305,9 @@ button.wps-btn-primary {
 }
 .wps-items-start {
   align-items: flex-start;
+}
+.wps-justify-end {
+  justify-content: flex-end;
 }
 .wps-gap-2 {
   gap: 0.5rem;

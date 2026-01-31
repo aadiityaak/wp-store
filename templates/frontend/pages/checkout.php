@@ -503,9 +503,8 @@
                                 <template x-for="addr in addresses" :key="addr.id">
                                     <button type="button"
                                         @click="selectedAddressId = addr.id; useAddressById()"
-                                        :style="String(selectedAddressId) === String(addr.id) ? 'background:#1f2937;border-color:#1f2937;color:#fff;' : 'background:#fff;border-color:#d1d5db;color:#1f2937;'"
-                                        class="wps-btn wps-btn-sm wps-btn-primary"
-                                        style="border:1px solid #d1d5db;border-radius:9999px;padding:6px 10px;">
+                                        class="wps-btn wps-btn-sm"
+                                        :class="String(selectedAddressId) === String(addr.id) ? 'wps-btn-dark' : 'wps-btn-primary'">
                                         <?php echo wps_icon(['name' => 'map-pin', 'size' => 16, 'class' => 'wps-mr-2', 'border-color' => '#fff']); ?>
                                         <span
                                             :style="String(selectedAddressId) === String(addr.id) ? 'color:#fff;' : 'color:#1f2937;'"
@@ -654,11 +653,13 @@
                                 </button>
                             </div>
 
-                            <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting" @click="trySubmit()">
-                                <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
-                                <span x-show="submitting">Memproses...</span>
-                                <span x-show="!submitting">Buat Pesanan</span>
-                            </button>
+                            <div class="wps-mt-4 wps-flex wps-justify-end">
+                                <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting" @click="trySubmit()">
+                                    <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                    <span x-show="submitting">Memproses...</span>
+                                    <span x-show="!submitting">Buat Pesanan</span>
+                                </button>
+                            </div>
                             <div class="wps-text-sm wps-text-red-700 wps-mt-2 p-2 wps-bg-red-100 rounded-md wps-mt-2" style="border-left:4px solid #ef4444;" x-show="warnShow" x-text="warnMessage">
                             </div>
                             <div class="wps-text-sm wps-text-gray-900 wps-mt-2" x-text="message"></div>

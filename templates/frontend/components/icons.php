@@ -12,6 +12,13 @@ if (isset($stroke_color) && is_string($stroke_color)) {
         $stroke = $hex;
     }
 }
+$fill = null;
+if (isset($fill_color) && is_string($fill_color)) {
+    $hex = sanitize_hex_color($fill_color);
+    if ($hex) {
+        $fill = $hex;
+    }
+}
 if ($name === 'cart') {
     echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>';
 } elseif ($name === 'credit-card' || $name === 'creditcard') {
