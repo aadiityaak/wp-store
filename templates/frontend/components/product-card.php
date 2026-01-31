@@ -1,42 +1,45 @@
 <?php $image_src = (!empty($item['image']) ? $item['image'] : (WP_STORE_URL . 'assets/frontend/img/noimg.webp')); ?>
-<style>
-  .wps-digital-badge .txt {
-    opacity: 0;
-    max-width: 0;
-    margin-left: 0;
-    transition: max-width .15s ease, opacity .15s ease
-  }
-
-  .wps-digital-badge:hover .txt {
-    opacity: 1;
-    max-width: 60px;
-    margin-left: 4px
-  }
-</style>
 <div class="wps-card wps-card-hover wps-transition">
   <div class="wps-p-2">
-    <a class="wps-text-sm wps-text-gray-900 wps-mb-4 wps-text-bold" href="<?php echo esc_url($item['link']); ?>" style="position:relative;display:block;">
-      <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
+    <a class="wps-text-sm wps-text-gray-900 wps-mb-4 wps-text-bold wps-d-block wps-rel" href="<?php echo esc_url($item['link']); ?>">
+      <div class="wps-image-wrap">
+        <?php
+        $hover_src = '';
+        $gal = get_post_meta((int) $item['id'], '_store_gallery_ids', true);
+        if (is_array($gal) && !empty($gal)) {
+          $first = array_values($gal)[0];
+          if (is_numeric($first)) {
+            $url = wp_get_attachment_image_url((int) $first, 'medium');
+            if (is_string($url)) $hover_src = $url;
+          } elseif (is_string($first)) {
+            $hover_src = $first;
+          }
+        }
+        ?>
+        <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160 img-main" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
+        <?php if ($hover_src) : ?>
+          <img class="wps-w-full wps-rounded wps-mb-4 wps-img-160 img-hover" src="<?php echo esc_url($hover_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
+        <?php endif; ?>
+      </div>
       <?php
       $type = get_post_meta((int) $item['id'], '_store_product_type', true);
       $is_digital = ($type === 'digital') || (bool) get_post_meta((int) $item['id'], '_store_is_digital', true);
       if ($is_digital) {
       ?>
-        <span class="wps-digital-badge wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">
+        <span class="wps-digital-badge wps-text-xs wps-text-white">
           <?php echo wps_icon(["name" => "cloud-download", "size" => 12, "stroke_color" => "#ffffff"]); ?>
-          <span class="txt" style="color:#fff;font-size:10px;white-space:nowrap;overflow:hidden;">Digital</span>
+          <span class="txt wps-text-white wps-text-xs">Digital</span>
         </span>
         <?php
       }
       $lbl = get_post_meta((int) $item['id'], '_store_label', true);
       if (is_string($lbl) && $lbl !== '') {
         $txt = $lbl === 'label-best' ? 'Best Seller' : ($lbl === 'label-limited' ? 'Limited' : ($lbl === 'label-new' ? 'New' : ''));
-        $bg  = $lbl === 'label-best' ? '#f59e0b' : ($lbl === 'label-limited' ? '#ef4444' : ($lbl === 'label-new' ? '#10b981' : '#374151'));
         if ($txt !== '') {
         ?>
-          <span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">
+          <span class="wps-label-badge <?php echo esc_attr($lbl); ?> wps-text-xs">
             <?php echo wps_icon(["name" => "heart", "size" => 10, "stroke_color" => "#ffffff"]); ?>
-            <span style="color:#fff;font-size:10px;margin-left:4px;"><?php echo esc_html($txt); ?></span>
+            <span class="txt wps-text-white wps-text-xs"><?php echo esc_html($txt); ?></span>
           </span>
       <?php
         }

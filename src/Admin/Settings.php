@@ -42,6 +42,12 @@ class Settings
             }
             wp_enqueue_script('alpinejs');
             wp_enqueue_media();
+            wp_enqueue_style(
+                'wp-store-admin',
+                WP_STORE_URL . 'assets/admin/css/admin.css',
+                [],
+                WP_STORE_VERSION
+            );
         }
     }
 

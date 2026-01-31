@@ -7,6 +7,7 @@ class AdminMenu
     public function register()
     {
         add_action('admin_menu', [$this, 'add_main_menu'], 5);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
     }
 
     public function add_main_menu()
@@ -162,155 +163,6 @@ class AdminMenu
                 </div>
             </div>
         </div>
-        <style>
-            .wp-store-dashboard {
-                max-width: 1100px;
-            }
-
-            .wp-store-dashboard-title {
-                font-size: 24px;
-                font-weight: 600;
-                margin: 20px 0;
-            }
-
-            .wp-store-dashboard-grid {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 16px;
-            }
-
-            @media (max-width: 960px) {
-                .wp-store-dashboard-grid {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-            }
-
-            @media (max-width: 640px) {
-                .wp-store-dashboard-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .wp-store-card {
-                background: #fff;
-                border: 1px solid #c3c4c7;
-                border-radius: 6px;
-                padding: 16px;
-            }
-
-            .wp-store-card-title {
-                font-size: 13px;
-                color: #646970;
-            }
-
-            .wp-store-card-value {
-                font-size: 24px;
-                font-weight: 700;
-                color: #1d2327;
-                margin-top: 6px;
-            }
-
-            .wp-store-card-desc {
-                font-size: 12px;
-                color: #7a7f86;
-                margin-top: 4px;
-            }
-
-            .wp-store-dashboard-sections {
-                margin-top: 24px;
-                display: grid;
-                grid-template-columns: 1.5fr 1fr;
-                gap: 16px;
-            }
-
-            @media (max-width: 960px) {
-                .wp-store-dashboard-sections {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .wp-store-box {
-                background: #fff;
-                border: 1px solid #c3c4c7;
-                border-radius: 6px;
-            }
-
-            .wp-store-box-header {
-                padding: 12px 16px;
-                border-bottom: 1px solid #e5e7eb;
-                font-weight: 600;
-                color: #1d2327;
-            }
-
-            .wp-store-status-grid {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 10px;
-                padding: 16px;
-            }
-
-            @media (max-width: 640px) {
-                .wp-store-status-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .wp-store-status-item {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                background: #f6f7f7;
-                border: 1px solid #dcdcde;
-                border-radius: 6px;
-                padding: 10px 12px;
-            }
-
-            .wp-store-badge {
-                display: inline-block;
-                padding: 2px 10px;
-                border-radius: 9999px;
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 1.4;
-                border: 1px solid transparent;
-            }
-
-            .wp-store-badge-yellow {
-                background: #fef3c7;
-                color: #92400e;
-                border-color: #fde68a;
-            }
-
-            .wp-store-badge-green {
-                background: #dcfce7;
-                color: #065f46;
-                border-color: #86efac;
-            }
-
-            .wp-store-badge-blue {
-                background: #dbeafe;
-                color: #1e40af;
-                border-color: #93c5fd;
-            }
-
-            .wp-store-badge-indigo {
-                background: #e0e7ff;
-                color: #3730a3;
-                border-color: #a5b4fc;
-            }
-
-            .wp-store-badge-teal {
-                background: #ccfbf1;
-                color: #115e59;
-                border-color: #99f6e4;
-            }
-
-            .wp-store-badge-red {
-                background: #fee2e2;
-                color: #991b1b;
-                border-color: #fca5a5;
-            }
-        </style>
         <script>
             (function() {
                 var labels = <?php echo wp_json_encode(array_map(function ($d) {
@@ -361,5 +213,18 @@ class AdminMenu
             })();
         </script>
 <?php
+    }
+
+    public function enqueue_styles()
+    {
+        $screen = get_current_screen();
+        if ($screen && strpos($screen->id, 'wp-store') !== false) {
+            wp_enqueue_style(
+                'wp-store-admin',
+                WP_STORE_URL . 'assets/admin/css/admin.css',
+                [],
+                WP_STORE_VERSION
+            );
+        }
     }
 }

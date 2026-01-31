@@ -136,8 +136,8 @@
   color: #6b7280;
 }
 .wps-text-sm {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
 }
 .wps-mb-0 {
   margin-bottom: 0 !important;
@@ -394,8 +394,8 @@ button.wps-btn-dark {
   color: #ffffff !important;
 }
 .wps-text-xs {
-  font-size: 0.75rem;
-  line-height: 1rem;
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
 }
 .wps-text-xxs {
   font-size: 0.7rem;
@@ -556,10 +556,116 @@ button.wps-btn-dark {
   height: 320px;
   object-fit: cover;
 }
+.wps-thumbs {
+  width: 64px;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+.wps-thumbs::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.wps-thumbs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+@media (max-width: 640px) {
+  .wps-flex.wps-gap-2.wps-items-start {
+    flex-direction: column;
+  }
+  .wps-flex.wps-gap-2.wps-items-start > .wps-position-relative.wps-w-full {
+    order: 1;
+  }
+  .wps-flex.wps-gap-2.wps-items-start > .wps-thumbs {
+    order: 2;
+    width: 100%;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 .wps-img-160 {
   width: 100%;
   height: 160px;
   object-fit: cover;
+}
+/* Product card hover image */
+.wps-card-hover .wps-image-wrap {
+  position: relative;
+}
+.wps-card-hover .wps-image-wrap .img-main {
+  transition: opacity 0.2s ease;
+}
+.wps-card-hover .wps-image-wrap .img-hover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.wps-card-hover:hover .wps-image-wrap .img-main {
+  opacity: 0;
+}
+.wps-card-hover:hover .wps-image-wrap .img-hover {
+  opacity: 1;
+}
+/* Digital badge */
+.wps-digital-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  background: #111827cc;
+  color: #fff;
+  border-radius: 9999px;
+  padding: 2px 6px;
+  backdrop-filter: saturate(180%) blur(4px);
+}
+.wps-digital-badge .txt {
+  opacity: 0;
+  max-width: 0;
+  margin-left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  transition:
+    max-width 0.15s ease,
+    opacity 0.15s ease;
+}
+.wps-digital-badge:hover .txt {
+  opacity: 1;
+  max-width: 60px;
+  margin-left: 4px;
+}
+/* Label badge */
+.wps-label-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  color: #fff;
+  border-radius: 9999px;
+  padding: 2px 6px;
+}
+.wps-label-badge .txt {
+  color: #fff;
+  font-size: 10px;
+  margin-left: 4px;
+}
+.wps-label-badge.label-best {
+  background: #f59e0b;
+}
+.wps-label-badge.label-limited {
+  background: #ef4444;
+}
+.wps-label-badge.label-new {
+  background: #10b981;
 }
 .wps-mb-2 {
   margin-bottom: 0.5rem;
@@ -626,6 +732,9 @@ tr:not(:last-child) .wps-td {
 .wps-bg-primary-100 {
   background-color: #eff6ff;
 }
+.wps-text-white {
+  color: #fff;
+}
 .wps-text-primary-800 {
   color: #1d4ed8;
 }
@@ -687,7 +796,7 @@ tr:not(:last-child) .wps-td {
     flex-direction: column;
     align-items: flex-start;
   }
-  .wps-flex.wps-gap-2.wps-items-start > .wps-flex.wps-flex-col {
+  .wps-flex.wps-items-start > .wps-flex.wps-flex-col {
     flex-direction: row;
     width: 100% !important;
     max-width: 100% !important;
@@ -696,12 +805,23 @@ tr:not(:last-child) .wps-td {
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
   }
-  .wps-flex.wps-gap-2.wps-items-start
-    > .wps-flex.wps-flex-col
-    img.wps-gallery-thumb {
+  .wps-flex.wps-items-start > .wps-flex.wps-flex-col img.wps-gallery-thumb {
     width: 60px;
     height: 60px;
     flex: 0 0 auto;
+  }
+  .wps-flex.wps-items-start > .wps-thumbs {
+    order: 2;
+    width: 100% !important;
+    max-height: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    display: flex !important;
+    flex-direction: row !important;
+  }
+  .wps-flex.wps-items-start > .wps-position-relative.wps-w-full {
+    order: 1;
   }
   .wps-img-320 {
     height: 240px;

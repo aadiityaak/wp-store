@@ -1,7 +1,7 @@
 <div class="wps-p-4">
     <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-4"><?php echo esc_html($title); ?></div>
     <div class="wps-flex wps-gap-4 wps-items-start">
-        <div style="flex: 1;">
+        <div class="wps-w-full" style="flex: 1;">
             <?php $image_src = (!empty($image) ? $image : (WP_STORE_URL . 'assets/frontend/img/noimg.webp')); ?>
             <?php
             $gallery_raw = get_post_meta((int) $id, '_store_gallery_ids', true);
@@ -27,22 +27,11 @@
             ?>
             <?php if (count($items) > 1) : ?>
                 <div class="wps-flex wps-gap-2 wps-items-start">
-                    <div id="wps-thumbs-<?php echo esc_attr($id); ?>" class="wps-flex wps-flex-col wps-gap-2" style="width:64px; max-height:320px; overflow-y:auto; overflow-x:hidden; position:relative;">
+                    <div id="wps-thumbs-<?php echo esc_attr($id); ?>" class="wps-flex wps-flex-col wps-gap-2 wps-thumbs">
                         <?php foreach ($items as $idx => $gi) : ?>
                             <img src="<?php echo esc_url($gi['thumb']); ?>" alt="" class="wps-img-60 wps-rounded wps-gallery-thumb" style="border:1px solid #e5e7eb; cursor:pointer;" data-full="<?php echo esc_attr($gi['full']); ?>" data-idx="<?php echo esc_attr($idx); ?>">
                         <?php endforeach; ?>
                     </div>
-                    <style>
-                        #<?php echo 'wps-thumbs-' . esc_attr($id); ?>::-webkit-scrollbar {
-                            width: 0;
-                            height: 0
-                        }
-
-                        #<?php echo 'wps-thumbs-' . esc_attr($id); ?> {
-                            scrollbar-width: none;
-                            -ms-overflow-style: none
-                        }
-                    </style>
                     <div class="wps-position-relative wps-w-full" style="display:block;flex:1;overflow:hidden;">
                         <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320 wps-transition" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
                         <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
@@ -55,19 +44,18 @@
                         $ptype_single = get_post_meta((int) $id, '_store_product_type', true);
                         $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
                         if ($is_digital_single) {
-                            echo '<span class="wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">'
+                            echo '<span class="wps-digital-badge wps-text-xs wps-text-white">'
                                 . wps_icon(['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
-                                . '<span style="color:#fff;font-size:10px;margin-left:4px;">Digital</span>'
+                                . '<span class="txt wps-text-white wps-text-xs">Digital</span>'
                                 . '</span>';
                         }
                         $lbl_single = get_post_meta((int) $id, '_store_label', true);
                         if (is_string($lbl_single) && $lbl_single !== '') {
                             $txt = $lbl_single === 'label-best' ? 'Best Seller' : ($lbl_single === 'label-limited' ? 'Limited' : ($lbl_single === 'label-new' ? 'New' : ''));
-                            $bg  = $lbl_single === 'label-best' ? '#f59e0b' : ($lbl_single === 'label-limited' ? '#ef4444' : ($lbl_single === 'label-new' ? '#10b981' : '#374151'));
                             if ($txt !== '') {
-                                echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
+                                echo '<span class="wps-label-badge ' . esc_attr($lbl_single) . ' wps-text-xs">'
                                     . wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
-                                    . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
+                                    . '<span class="txt wps-text-white wps-text-xs">' . esc_html($txt) . '</span>'
                                     . '</span>';
                             }
                         }
