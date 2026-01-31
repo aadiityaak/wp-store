@@ -66,7 +66,7 @@
                             $bg  = $lbl_single === 'label-best' ? '#f59e0b' : ($lbl_single === 'label-limited' ? '#ef4444' : ($lbl_single === 'label-new' ? '#10b981' : '#374151'));
                             if ($txt !== '') {
                                 echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
-                                    . \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+                                    . '<wps-icon name="heart" size="10" stroke_color="#ffffff"/>'
                                     . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
                                     . '</span>';
                             }

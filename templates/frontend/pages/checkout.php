@@ -456,7 +456,7 @@
             <div class="wps-card">
                 <div class="wps-p-6 wps-text-center">
                     <div class="wps-flex wps-justify-center wps-items-center wps-mb-3">
-                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 64]); ?>
+                        <wps-icon name="cart" size="64" />
                     </div>
                     <div class="wps-text-sm wps-text-gray-700 wps-mb-3 wps-mt-3">Keranjang kosong. Silakan kembali berbelanja.</div>
                     <div class="wps-mt-3">
@@ -479,8 +479,8 @@
                             <div class="">
                                 <div class="wps-callout-title">Gunakan Data Tersimpan</div>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
-                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
-                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
+                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><wps-icon name="cloud-arrow-down" size="16" class="wps-mr-2" />Impor Profil</button>
+                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><wps-icon name="sliders2" size="16" class="wps-mr-2" />Kelola</a>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -498,12 +498,25 @@
                         </div>
                         <div class="wps-form-group" x-show="addresses && addresses.length">
                             <label class="wps-label wps-text-bold">Alamat Tersimpan</label>
-                            <select class="wps-select" x-model="selectedAddressId" @change="useAddressById()">
-                                <option value="">-- Pilih alamat --</option>
+                            <div class="wps-flex wps-flex-wrap" style="gap:8px;">
                                 <template x-for="addr in addresses" :key="addr.id">
-                                    <option :value="addr.id" x-text="(addr.label ? addr.label + ' - ' : '') + (addr.city_name || '')"></option>
+                                    <button type="button"
+                                        @click="selectedAddressId = addr.id; useAddressById()"
+                                        :style="String(selectedAddressId) === String(addr.id) ? 'background:#1f2937;border-color:#1f2937;' : 'background:#fff;border-color:#d1d5db;'"
+                                        class="wps-btn wps-btn-sm"
+                                        style="border:1px solid #d1d5db;border-radius:9999px;padding:6px 10px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            :style="String(selectedAddressId) === String(addr.id) ? 'color:#fff;margin-right:6px;' : 'color:#1f2937;margin-right:6px;'"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 21s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"></path>
+                                            <circle cx="12" cy="9" r="2.5"></circle>
+                                        </svg>
+                                        <span
+                                            :style="String(selectedAddressId) === String(addr.id) ? 'color:#fff;' : 'color:#1f2937;'"
+                                            x-text="(addr.label ? addr.label + ' - ' : '') + (addr.city_name || '')"></span>
+                                    </button>
                                 </template>
-                            </select>
+                            </div>
                         </div>
                         <div class="wps-form-group">
                             <label class="wps-label">Provinsi</label>
@@ -646,7 +659,7 @@
                             </div>
 
                             <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting" @click="trySubmit()">
-                                <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                <wps-icon name="cart" size="16" class="wps-mr-2" />
                                 <span x-show="submitting">Memproses...</span>
                                 <span x-show="!submitting">Buat Pesanan</span>
                             </button>

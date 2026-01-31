@@ -126,18 +126,18 @@ class CustomerProfile
             <div class="wps-card wps-p-4" style="margin-bottom: 1rem;">
                 <div id="wps-profile-tabs" class="wps-tabs">
                     <button @click="tab = 'profile'" :class="{ 'active': tab === 'profile' }" class="wps-tab">
-                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'user', 'size' => 16, 'class' => 'wps-mr-2']); ?>Profil Saya
+                        <wps-icon name="user" size="16" class="wps-mr-2" />Profil Saya
                     </button>
                     <button @click="tab = 'addresses'" :class="{ 'active': tab === 'addresses' }" class="wps-tab">
-                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'settings', 'size' => 16, 'class' => 'wps-mr-2']); ?>Buku Alamat
+                        <wps-icon name="settings" size="16" class="wps-mr-2" />Buku Alamat
                     </button>
                     <button @click="tab = 'wishlist'" :class="{ 'active': tab === 'wishlist' }" class="wps-tab">
-                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Wishlist <span class="wps-badge" x-text="wishlistCount" x-show="wishlistCount > 0" style="margin-left:6px;"></span>
+                        <wps-icon name="heart" size="16" class="wps-mr-2" />Wishlist <span class="wps-badge" x-text="wishlistCount" x-show="wishlistCount > 0" style="margin-left:6px;"></span>
                     </button>
                     <button @click="tab = 'orders'" :class="{ 'active': tab === 'orders' }" class="wps-tab">
-                        <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Pesanan
+                        <wps-icon name="cart" size="16" class="wps-mr-2" />Pesanan
                     </button>
-                    <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?>Keluar</a>
+                    <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto"><wps-icon name="close" size="16" class="wps-mr-2" />Keluar</a>
                 </div>
                 <script>
                     (function() {
@@ -219,7 +219,7 @@ class CustomerProfile
                             <div class="wps-flex" style="justify-content: flex-end; margin-top: 1rem;">
                                 <button type="submit" class="wps-btn wps-btn-primary" :disabled="loading">
                                     <template x-if="loading">
-                                        <span class="wps-mr-2"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                        <span class="wps-mr-2"><wps-icon name="spinner" size="16" class="wps-mr-2" /></span>
                                     </template>
                                     <template x-if="!loading">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="wps-mr-2" viewBox="0 0 16 16">
@@ -271,11 +271,11 @@ class CustomerProfile
                                         </div>
                                         <div class="wps-flex wps-space-x-2">
                                             <button @click="editAddress(addr)" class="wps-btn wps-btn-secondary wps-text-sm" style="padding: 0.25rem 0.5rem;">
-                                                <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                                <span><wps-icon name="sliders2" size="16" class="wps-mr-2" /></span>
                                                 <span>Edit</span>
                                             </button>
                                             <button @click="deleteAddress(addr.id)" class="wps-btn wps-btn-danger wps-text-sm" style="padding: 0.25rem 0.5rem;">
-                                                <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'trash', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                                <span><wps-icon name="trash" size="16" class="wps-mr-2" /></span>
                                                 <span>Hapus</span>
                                             </button>
                                         </div>
@@ -353,7 +353,7 @@ class CustomerProfile
                                     <button type="button" @click="cancelEdit()" class="wps-btn wps-btn-secondary">Batal</button>
                                     <button type="submit" class="wps-btn wps-btn-primary" :disabled="loading">
                                         <template x-if="loading">
-                                            <span class="wps-mr-2"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
+                                            <span class="wps-mr-2"><wps-icon name="spinner" size="16" class="wps-mr-2" /></span>
                                         </template>
                                         <template x-if="!loading">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="wps-mr-2" viewBox="0 0 16 16">
@@ -960,6 +960,7 @@ class CustomerProfile
             });
         </script>
 <?php
-        return ob_get_clean();
+        $html = ob_get_clean();
+        return \WpStore\Frontend\Template::processComponents($html);
     }
 }

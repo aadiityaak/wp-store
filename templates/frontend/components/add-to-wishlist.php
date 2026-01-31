@@ -92,17 +92,17 @@
         :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
         <template x-if="loading">
             <span>
-                <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 18, 'class' => 'wps-mr-0']); ?>
+                <wps-icon name="spinner" size="18" class="wps-mr-0" />
             </span>
         </template>
         <template x-if="!loading && inWishlist">
             <span>
-                <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 18, 'stroke_color' => '#f472b6', 'class' => 'wps-mr-0']); ?>
+                <wps-icon name="heart" size="18" stroke_color="#f472b6" class="wps-mr-0" />
             </span>
         </template>
         <template x-if="!loading && !inWishlist">
             <span>
-                <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 18, 'class' => 'wps-mr-0']); ?>
+                <wps-icon name="heart" size="18" class="wps-mr-0" />
             </span>
         </template>
         <span x-show="!iconOnly" class="wps-pl-1"><?php echo esc_html($label_add); ?></span>

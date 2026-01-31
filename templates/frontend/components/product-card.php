@@ -22,7 +22,7 @@
       $is_digital = ($type === 'digital') || (bool) get_post_meta((int) $item['id'], '_store_is_digital', true);
       if ($is_digital) {
         echo '<span class="wps-digital-badge wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">'
-          . \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+          . '<wps-icon name="cloud-download" size="12" stroke_color="#ffffff"/>'
           . '<span class="txt" style="color:#fff;font-size:10px;white-space:nowrap;overflow:hidden;">Digital</span>'
           . '</span>';
       }
@@ -32,7 +32,7 @@
         $bg  = $lbl === 'label-best' ? '#f59e0b' : ($lbl === 'label-limited' ? '#ef4444' : ($lbl === 'label-new' ? '#10b981' : '#374151'));
         if ($txt !== '') {
           echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
-            . \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+            . '<wps-icon name="heart" size="10" stroke_color="#ffffff"/>'
             . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
             . '</span>';
         }

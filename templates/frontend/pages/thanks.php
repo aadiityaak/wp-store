@@ -176,7 +176,7 @@ $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
         <?php endif; ?>
         <div class="wps-text-center wps-mt-6">
             <a class="wps-btn wps-btn-primary" href="<?php echo esc_url($shop_url); ?>">
-                <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 18, 'class' => 'wps-mr-2']); ?>
+                <wps-icon name="cart" size="18" class="wps-mr-2"/>
                 Kembali Belanja
             </a>
         </div>

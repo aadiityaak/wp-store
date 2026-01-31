@@ -90,7 +90,7 @@
         <div class="wps-offcanvas-body">
             <template x-if="cart.length === 0">
                 <div class="wps-text-sm wps-text-gray-500 wps-flex wps-items-center wps-gap-2">
-                    <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'cart', 'size' => 16]); ?></span>
+                    <span><wps-icon name="cart" size="16"/></span>
                     <span>Keranjang kosong.</span>
                 </div>
             </template>
@@ -117,10 +117,10 @@
                             <button type="button" @click="increment(item)" class="wps-btn wps-btn-secondary wps-btn-sm" style="padding: 2px 8px; font-size: 12px; line-height: 1; min-width: 24px; height: 22px;">+</button>
                             <button type="button" @click="remove(item)" :disabled="loading && updatingKey === getItemKey(item)" class="wps-btn wps-btn-danger wps-btn-sm wps-ml-auto" :style="(loading && updatingKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
                                 <template x-if="loading && updatingKey === getItemKey(item)">
-                                    <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'spinner', 'size' => 14]); ?></span>
+                                    <span><wps-icon name="spinner" size="14"/></span>
                                 </template>
                                 <template x-if="!loading || updatingKey !== getItemKey(item)">
-                                    <span><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'close', 'size' => 14]); ?></span>
+                                    <span><wps-icon name="close" size="14"/></span>
                                 </template>
                             </button>
                         </div>
@@ -134,7 +134,7 @@
                 <div class="wps-total-amount" x-text="formatPrice(total)"></div>
             </div>
             <?php if (!empty($checkout_url)) : ?>
-                <a href="<?php echo esc_url($checkout_url); ?>" class="wps-btn wps-btn-primary wps-btn-sm wps-checkout-btn" x-show="cart.length > 0"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'credit-card', 'size' => 16, 'class' => 'wps-mr-2']); ?>Checkout</a>
+                <a href="<?php echo esc_url($checkout_url); ?>" class="wps-btn wps-btn-primary wps-btn-sm wps-checkout-btn" x-show="cart.length > 0"><wps-icon name="credit-card" size="16" class="wps-mr-2"/>Checkout</a>
             <?php endif; ?>
         </div>
     </div>
