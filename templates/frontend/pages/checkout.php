@@ -472,16 +472,13 @@
         </template>
         <div class="wps-grid wps-grid-cols-2" x-show="cart.length > 0">
             <div>
-                <div class="wps-card">
+                <div class="wps-card wps-mb-4">
                     <div class="wps-p-4">
                         <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Informasi Pemesan</div>
                         <?php if (is_user_logged_in()) : ?>
-                            <div class="">
-                                <div class="wps-callout-title">Gunakan Data Tersimpan</div>
-                                <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
-                                    <button type="button" class="wps-btn wps-btn-primary" @click="importFromProfile()"><?php echo wps_icon(['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
-                                    <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-secondary"><?php echo wps_icon(['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
-                                </div>
+                            <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
+                                <button type="button" class="wps-btn wps-btn-sm wps-btn-primary" @click="importFromProfile()"><?php echo wps_icon(['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
+                                <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-sm wps-btn-secondary"><?php echo wps_icon(['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
                             </div>
                         <?php endif; ?>
                         <div class="wps-form-group">
@@ -496,21 +493,20 @@
                             <label class="wps-label">Telepon/WA</label>
                             <input class="wps-input" type="text" x-model="phone" placeholder="08xxxxxxxxxx">
                         </div>
+                    </div>
+                </div>
+                <div class="wps-card">
+                    <div class="wps-p-4">
+                        <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Alamat Penerima</div>
                         <div class="wps-form-group" x-show="addresses && addresses.length">
-                            <label class="wps-label wps-text-bold">Alamat Tersimpan</label>
                             <div class="wps-flex wps-flex-wrap" style="gap:8px;">
                                 <template x-for="addr in addresses" :key="addr.id">
                                     <button type="button"
                                         @click="selectedAddressId = addr.id; useAddressById()"
-                                        :style="String(selectedAddressId) === String(addr.id) ? 'background:#1f2937;border-color:#1f2937;' : 'background:#fff;border-color:#d1d5db;'"
-                                        class="wps-btn wps-btn-sm"
+                                        :style="String(selectedAddressId) === String(addr.id) ? 'background:#1f2937;border-color:#1f2937;color:#fff;' : 'background:#fff;border-color:#d1d5db;color:#1f2937;'"
+                                        class="wps-btn wps-btn-sm wps-btn-primary"
                                         style="border:1px solid #d1d5db;border-radius:9999px;padding:6px 10px;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            :style="String(selectedAddressId) === String(addr.id) ? 'color:#fff;margin-right:6px;' : 'color:#1f2937;margin-right:6px;'"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 21s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"></path>
-                                            <circle cx="12" cy="9" r="2.5"></circle>
-                                        </svg>
+                                        <?php echo wps_icon(['name' => 'map-pin', 'size' => 16, 'class' => 'wps-mr-2', 'border-color' => '#fff']); ?>
                                         <span
                                             :style="String(selectedAddressId) === String(addr.id) ? 'color:#fff;' : 'color:#1f2937;'"
                                             x-text="(addr.label ? addr.label + ' - ' : '') + (addr.city_name || '')"></span>

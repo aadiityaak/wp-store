@@ -960,7 +960,6 @@ class CustomerProfile
             });
         </script>
 <?php
-        $html = ob_get_clean();
-        return \WpStore\Frontend\Template::processComponents($html);
+        return ob_get_clean();
     }
 }

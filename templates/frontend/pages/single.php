@@ -46,17 +46,17 @@
                     <div style="position:relative;display:block;flex:1;overflow:hidden;">
                         <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320 wps-transition" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
                         <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
-                            <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'chevron-left', 'size' => 16]); ?>
+                            <?php echo wps_icon(['name' => 'chevron-left', 'size' => 16]); ?>
                         </button>
                         <button type="button" class="wps-gallery-next" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
-                            <?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'chevron-right', 'size' => 16]); ?>
+                            <?php echo wps_icon(['name' => 'chevron-right', 'size' => 16]); ?>
                         </button>
                         <?php
                         $ptype_single = get_post_meta((int) $id, '_store_product_type', true);
                         $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
                         if ($is_digital_single) {
                             echo '<span class="wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">'
-                                . \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+                                . wps_icon(['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
                                 . '<span style="color:#fff;font-size:10px;margin-left:4px;">Digital</span>'
                                 . '</span>';
                         }
@@ -66,7 +66,7 @@
                             $bg  = $lbl_single === 'label-best' ? '#f59e0b' : ($lbl_single === 'label-limited' ? '#ef4444' : ($lbl_single === 'label-new' ? '#10b981' : '#374151'));
                             if ($txt !== '') {
                                 echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
-                                    . '<?php echo wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff']); ?>'
+                                    . wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
                                     . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
                                     . '</span>';
                             }
@@ -301,7 +301,7 @@
                     $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
                     if ($is_digital_single) {
                         echo '<span class="wps-text-xs wps-text-white" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;background:#111827cc;color:#fff;border-radius:9999px;padding:2px 6px;backdrop-filter:saturate(180%) blur(4px);">'
-                            . \WpStore\Frontend\Template::render('components/icons', ['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+                            . wps_icon(['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
                             . '<span style="color:#fff;font-size:10px;margin-left:4px;">Digital</span>'
                             . '</span>';
                     }
@@ -311,7 +311,7 @@
                         $bg  = $lbl_single === 'label-best' ? '#f59e0b' : ($lbl_single === 'label-limited' ? '#ef4444' : ($lbl_single === 'label-new' ? '#10b981' : '#374151'));
                         if ($txt !== '') {
                             echo '<span class="wps-text-xs" style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;background:' . esc_attr($bg) . ';color:#fff;border-radius:9999px;padding:2px 6px;">'
-                                . \WpStore\Frontend\Template::render('components/icons', ['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+                                . wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
                                 . '<span style="color:#fff;font-size:10px;margin-left:4px;">' . esc_html($txt) . '</span>'
                                 . '</span>';
                         }
@@ -408,10 +408,10 @@
                 $mail_url = 'mailto:?subject=' . rawurlencode($share_title) . '&body=' . rawurlencode($share_link);
                 ?>
                 <div class="wps-flex wps-gap-2 wps-items-center">
-                    <a href="<?php echo esc_url($wa_url); ?>" target="_blank" rel="noopener" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'whatsapp', 'size' => 18]); ?></a>
-                    <a href="<?php echo esc_url($x_url); ?>" target="_blank" rel="noopener" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'x', 'size' => 18]); ?></a>
-                    <a href="<?php echo esc_url($fb_url); ?>" target="_blank" rel="noopener" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'facebook', 'size' => 18]); ?></a>
-                    <a href="<?php echo esc_url($mail_url); ?>" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo \WpStore\Frontend\Template::render('components/icons', ['name' => 'email', 'size' => 18]); ?></a>
+                    <a href="<?php echo esc_url($wa_url); ?>" target="_blank" rel="noopener" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo wps_icon(['name' => 'whatsapp', 'size' => 18]); ?></a>
+                    <a href="<?php echo esc_url($x_url); ?>" target="_blank" rel="noopener" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo wps_icon(['name' => 'x', 'size' => 18]); ?></a>
+                    <a href="<?php echo esc_url($fb_url); ?>" target="_blank" rel="noopener" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo wps_icon(['name' => 'facebook', 'size' => 18]); ?></a>
+                    <a href="<?php echo esc_url($mail_url); ?>" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo wps_icon(['name' => 'email', 'size' => 18]); ?></a>
                 </div>
             </div>
             <div class="wps-text-sm wps-text-gray-500">
