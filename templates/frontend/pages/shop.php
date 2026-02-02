@@ -7,15 +7,28 @@
         </div>
         <?php if (isset($pages) && (int) $pages > 1) : ?>
             <div class="wps-flex wps-items-center wps-gap-2 wps-mt-4" style="justify-content: center;">
-                <?php $base = get_permalink(); ?>
-                <?php if ((int) $page > 1) : ?>
-                    <a href="<?php echo esc_url(add_query_arg('shop_page', (int) $page - 1, $base)); ?>" class="wps-btn wps-btn-secondary wps-btn-sm">Sebelumnya</a>
+                <?php
+                $is_archive = is_post_type_archive('store_product');
+                if ($is_archive) {
+                    $prev_link = (int) $page > 1 ? get_pagenum_link((int) $page - 1) : '';
+                    $next_link = (int) $page < (int) $pages ? get_pagenum_link((int) $page + 1) : '';
+                } else {
+                    $base = get_permalink();
+                    $prev_link = (int) $page > 1 ? add_query_arg('shop_page', (int) $page - 1, $base) : '';
+                    $next_link = (int) $page < (int) $pages ? add_query_arg('shop_page', (int) $page + 1, $base) : '';
+                }
+                ?>
+                <?php if ($prev_link) : ?>
+                    <a href="<?php echo esc_url($prev_link); ?>" class="wps-btn wps-btn-secondary wps-btn-sm">Sebelumnya</a>
                 <?php endif; ?>
                 <?php for ($i = 1; $i <= (int) $pages; $i++) : ?>
-                    <a href="<?php echo esc_url(add_query_arg('shop_page', $i, $base)); ?>" class="wps-btn <?php echo ($i === (int) $page) ? 'wps-btn-primary' : 'wps-btn-secondary'; ?> wps-btn-sm"><?php echo esc_html($i); ?></a>
+                    <?php
+                    $page_link = $is_archive ? get_pagenum_link($i) : add_query_arg('shop_page', $i, get_permalink());
+                    ?>
+                    <a href="<?php echo esc_url($page_link); ?>" class="wps-btn <?php echo ($i === (int) $page) ? 'wps-btn-primary' : 'wps-btn-secondary'; ?> wps-btn-sm"><?php echo esc_html($i); ?></a>
                 <?php endfor; ?>
-                <?php if ((int) $page < (int) $pages) : ?>
-                    <a href="<?php echo esc_url(add_query_arg('shop_page', (int) $page + 1, $base)); ?>" class="wps-btn wps-btn-secondary wps-btn-sm">Berikutnya</a>
+                <?php if ($next_link) : ?>
+                    <a href="<?php echo esc_url($next_link); ?>" class="wps-btn wps-btn-secondary wps-btn-sm">Berikutnya</a>
                 <?php endif; ?>
             </div>
         <?php endif; ?>

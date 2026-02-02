@@ -23,6 +23,7 @@ class Shortcode
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
+        add_action('pre_get_posts', [$this, 'adjust_archive_query']);
     }
 
     public function enqueue_scripts()
@@ -481,5 +482,16 @@ class Shortcode
             }
         }
         return $template;
+    }
+
+    public function adjust_archive_query($query)
+    {
+        if (is_admin()) return;
+        if (!$query->is_main_query()) return;
+        if ($query->is_post_type_archive('store_product')) {
+            $query->set('posts_per_page', 12);
+            $query->set('post_status', 'publish');
+            $query->set('ignore_sticky_posts', true);
+        }
     }
 }

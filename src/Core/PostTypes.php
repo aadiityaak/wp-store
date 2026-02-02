@@ -12,6 +12,11 @@ class PostTypes
 
     public function register_product_type()
     {
+        $archive_slug = 'produk';
+        $produk_page = function_exists('get_page_by_path') ? get_page_by_path($archive_slug) : null;
+        if ($produk_page && is_a($produk_page, '\WP_Post')) {
+            $archive_slug = 'produk-list';
+        }
         $labels_cat = [
             'name' => 'Kategori Produk',
             'singular_name' => 'Kategori Produk',
@@ -64,9 +69,9 @@ class PostTypes
             'show_ui' => true,
             'show_in_menu' => 'wp-store',
             'query_var' => true,
-            'rewrite' => ['slug' => 'produk'],
+            'rewrite' => ['slug' => $archive_slug],
             'capability_type' => 'post',
-            'has_archive' => true,
+            'has_archive' => $archive_slug,
             'hierarchical' => false,
             'menu_position' => 7,
             'menu_icon' => 'dashicons-cart',

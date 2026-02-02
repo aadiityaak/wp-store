@@ -15,8 +15,9 @@ $subdistrict_name = $order_exists ? get_post_meta($order_id, '_store_order_subdi
 $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_code', true) : '';
 $payment_method = $order_exists ? get_post_meta($order_id, '_store_order_payment_method', true) : '';
 $settings = get_option('wp_store_settings', []);
+$shop_archive = function_exists('get_post_type_archive_link') ? get_post_type_archive_link('store_product') : '';
 $shop_id = isset($settings['page_shop']) ? absint($settings['page_shop']) : 0;
-$shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
+$shop_url = $shop_archive ?: ($shop_id ? get_permalink($shop_id) : site_url('/shop/'));
 ?>
 <div class="wps-container">
     <div class="wps-card wps-p-6">
