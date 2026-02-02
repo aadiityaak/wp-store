@@ -8,7 +8,7 @@
         <?php if (isset($pages) && (int) $pages > 1) : ?>
             <div class="wps-flex wps-items-center wps-gap-2 wps-mt-4" style="justify-content: center;">
                 <?php
-                $is_archive = is_post_type_archive('store_product');
+                $is_archive = (is_post_type_archive('store_product') || (get_query_var('post_type') === 'store_product' && !is_singular()));
                 if ($is_archive) {
                     $prev_link = (int) $page > 1 ? get_pagenum_link((int) $page - 1) : '';
                     $next_link = (int) $page < (int) $pages ? get_pagenum_link((int) $page + 1) : '';

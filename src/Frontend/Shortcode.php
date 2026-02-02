@@ -24,6 +24,7 @@ class Shortcode
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
+        add_action('template_redirect', [$this, 'redirect_page_conflict']);
     }
 
     public function enqueue_scripts()
@@ -475,7 +476,7 @@ class Shortcode
 
     public function override_archive_template($template)
     {
-        if (is_post_type_archive('store_product')) {
+        if (is_post_type_archive('store_product') || (get_query_var('post_type') === 'store_product' && !is_singular())) {
             $tpl = WP_STORE_PATH . 'templates/frontend/archive-store_product.php';
             if (file_exists($tpl)) {
                 return $tpl;
@@ -488,10 +489,47 @@ class Shortcode
     {
         if (is_admin()) return;
         if (!$query->is_main_query()) return;
-        if ($query->is_post_type_archive('store_product')) {
-            $query->set('posts_per_page', 12);
+        if ($query->is_post_type_archive('store_product') || ($query->get('post_type') === 'store_product' && !$query->is_singular())) {
             $query->set('post_status', 'publish');
             $query->set('ignore_sticky_posts', true);
+        }
+    }
+
+    public function redirect_page_conflict()
+    {
+        if (is_admin()) return;
+        if (is_page()) {
+            $page = get_queried_object();
+            if ($page && isset($page->post_name) && $page->post_name === 'produk') {
+                $n = (int) get_query_var('paged');
+                if ($n <= 0) {
+                    $n = (int) get_query_var('page');
+                }
+                $base = add_query_arg('post_type', 'store_product', home_url('/'));
+                $target = $base;
+                if ($base && $n > 1) {
+                    $target = add_query_arg('paged', $n, $base);
+                }
+                if ($target) {
+                    wp_redirect($target, 301);
+                    exit;
+                }
+            }
+        }
+        if (is_404()) {
+            $uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
+            if (strpos($uri, '/produk/') === 0) {
+                $n = 0;
+                if (preg_match('#/page/(\d+)/#', $uri, $m)) {
+                    $n = (int) ($m[1] ?? 0);
+                }
+                $base = add_query_arg('post_type', 'store_product', home_url('/'));
+                if ($base) {
+                    $target = $n > 1 ? add_query_arg('paged', $n, $base) : $base;
+                    wp_redirect($target, 301);
+                    exit;
+                }
+            }
         }
     }
 }
