@@ -505,12 +505,19 @@ class Shortcode
                 if ($n <= 0) {
                     $n = (int) get_query_var('page');
                 }
-                $base = add_query_arg('post_type', 'store_product', home_url('/'));
+                $base = get_post_type_archive_link('store_product');
+                $produk_page = function_exists('get_page_by_path') ? get_page_by_path('produk') : null;
+                if ($produk_page && is_a($produk_page, '\WP_Post') && $base) {
+                    if (rtrim($base, '/') === rtrim(home_url('/produk/'), '/')) {
+                        $base = home_url('/produk-list/');
+                    }
+                }
                 $target = $base;
                 if ($base && $n > 1) {
-                    $target = add_query_arg('paged', $n, $base);
+                    $target = trailingslashit($base) . 'page/' . $n . '/';
                 }
-                if ($target) {
+                $current = home_url(isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/');
+                if ($target && rtrim($target, '/') !== rtrim($current, '/')) {
                     wp_redirect($target, 301);
                     exit;
                 }
@@ -523,11 +530,20 @@ class Shortcode
                 if (preg_match('#/page/(\d+)/#', $uri, $m)) {
                     $n = (int) ($m[1] ?? 0);
                 }
-                $base = add_query_arg('post_type', 'store_product', home_url('/'));
+                $base = get_post_type_archive_link('store_product');
+                $produk_page = function_exists('get_page_by_path') ? get_page_by_path('produk') : null;
+                if ($produk_page && is_a($produk_page, '\WP_Post') && $base) {
+                    if (rtrim($base, '/') === rtrim(home_url('/produk/'), '/')) {
+                        $base = home_url('/produk-list/');
+                    }
+                }
                 if ($base) {
-                    $target = $n > 1 ? add_query_arg('paged', $n, $base) : $base;
-                    wp_redirect($target, 301);
-                    exit;
+                    $target = $n > 1 ? trailingslashit($base) . 'page/' . $n . '/' : $base;
+                    $current = home_url($uri);
+                    if (rtrim($target, '/') !== rtrim($current, '/')) {
+                        wp_redirect($target, 301);
+                        exit;
+                    }
                 }
             }
         }

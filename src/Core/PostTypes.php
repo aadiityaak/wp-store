@@ -80,6 +80,8 @@ class PostTypes
         ];
 
         register_post_type('store_product', $args);
+        add_rewrite_rule('^' . $archive_slug . '/?$', 'index.php?post_type=store_product', 'top');
+        add_rewrite_rule('^' . $archive_slug . '/page/([0-9]+)/?$', 'index.php?post_type=store_product&paged=$matches[1]', 'top');
     }
 
     public function register_order_type()
