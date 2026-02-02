@@ -212,8 +212,7 @@ class SettingsController
 
     private function get_rajaongkir_base_url()
     {
-        $base_url = 'https://rajaongkir.komerce.id/api/v1';
-        return $base_url;
+        return \WpStore\Api\RajaOngkirController::get_rajaongkir_base_url();
     }
 
     private function get_cart_total_weight_grams()

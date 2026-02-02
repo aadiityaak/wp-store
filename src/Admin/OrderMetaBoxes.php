@@ -9,6 +9,7 @@ class OrderMetaBoxes
         add_action('cmb2_admin_init', [$this, 'register_metaboxes']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
         add_action('add_meta_boxes', [$this, 'add_proofs_box']);
+        add_action('add_meta_boxes', [$this, 'add_summary_box']);
     }
 
     public function enqueue_styles()
@@ -185,6 +186,123 @@ class OrderMetaBoxes
             }
             echo '</div>';
         }
+        echo '</div>';
+    }
+
+    public function add_summary_box()
+    {
+        add_meta_box(
+            'wp_store_order_summary',
+            'Ringkasan Order',
+            [$this, 'render_summary_box'],
+            'store_order',
+            'normal',
+            'high'
+        );
+    }
+
+    public function render_summary_box($post)
+    {
+        $order_id = isset($post->ID) ? (int) $post->ID : 0;
+        if ($order_id <= 0) {
+            echo '<p>Tidak ada data.</p>';
+            return;
+        }
+        $title = get_the_title($order_id);
+        $customer_name = $title;
+        if (strpos($title, ' - ') !== false) {
+            $parts = explode(' - ', $title);
+            $customer_name = $parts[0];
+        }
+        $email = (string) get_post_meta($order_id, '_store_order_email', true);
+        $phone = (string) get_post_meta($order_id, '_store_order_phone', true);
+        $address = (string) get_post_meta($order_id, '_store_order_address', true);
+        $province = (string) get_post_meta($order_id, '_store_order_province_name', true);
+        $city = (string) get_post_meta($order_id, '_store_order_city_name', true);
+        $subdistrict = (string) get_post_meta($order_id, '_store_order_subdistrict_name', true);
+        $postal = (string) get_post_meta($order_id, '_store_order_postal_code', true);
+        $courier = (string) get_post_meta($order_id, '_store_order_shipping_courier', true);
+        $service = (string) get_post_meta($order_id, '_store_order_shipping_service', true);
+        $shipping_cost = (float) get_post_meta($order_id, '_store_order_shipping_cost', true);
+        $grand_total = (float) get_post_meta($order_id, '_store_order_total', true);
+        $payment_method = (string) get_post_meta($order_id, '_store_order_payment_method', true);
+        $payment_url = (string) get_post_meta($order_id, '_store_order_payment_url', true);
+        $items = get_post_meta($order_id, '_store_order_items', true);
+        $items = is_array($items) ? $items : [];
+        $product_total = 0;
+        foreach ($items as $row) {
+            $product_total += isset($row['subtotal']) ? (float) $row['subtotal'] : 0;
+        }
+        echo '<div class="wps-card" style="border:1px solid #e5e7eb; border-radius:6px; padding:12px;">';
+        echo '<h2 style="margin:0 0 10px; font-size:16px;">Pelanggan</h2>';
+        echo '<table class="widefat striped" style="margin-bottom:12px;"><tbody>';
+        echo '<tr><td style="width:200px;">Nama</td><td>' . esc_html($customer_name) . '</td></tr>';
+        echo '<tr><td>Email</td><td>' . esc_html($email) . '</td></tr>';
+        echo '<tr><td>Telepon</td><td>' . esc_html($phone) . '</td></tr>';
+        echo '</tbody></table>';
+        echo '<h2 style="margin:20px 0 10px; font-size:16px;">Alamat Pengiriman</h2>';
+        echo '<table class="widefat striped" style="margin-bottom:12px;"><tbody>';
+        echo '<tr><td style="width:200px;">Alamat</td><td>' . nl2br(esc_html($address)) . '</td></tr>';
+        echo '<tr><td>Provinsi</td><td>' . esc_html($province) . '</td></tr>';
+        echo '<tr><td>Kota/Kabupaten</td><td>' . esc_html($city) . '</td></tr>';
+        echo '<tr><td>Kecamatan</td><td>' . esc_html($subdistrict) . '</td></tr>';
+        echo '<tr><td>Kode Pos</td><td>' . esc_html($postal) . '</td></tr>';
+        echo '</tbody></table>';
+        echo '<h2 style="margin:20px 0 10px; font-size:16px;">Pengiriman</h2>';
+        echo '<table class="widefat striped" style="margin-bottom:12px;"><tbody>';
+        echo '<tr><td style="width:200px;">Kurir</td><td>' . esc_html($courier) . '</td></tr>';
+        echo '<tr><td>Layanan</td><td>' . esc_html($service) . '</td></tr>';
+        echo '<tr><td>Biaya Ongkir</td><td>Rp ' . esc_html(number_format_i18n($shipping_cost, 0)) . '</td></tr>';
+        echo '</tbody></table>';
+        echo '<h2 style="margin:20px 0 10px; font-size:16px;">Pembayaran</h2>';
+        echo '<table class="widefat striped" style="margin-bottom:12px;"><tbody>';
+        echo '<tr><td style="width:200px;">Metode</td><td>' . esc_html($payment_method ?: 'transfer_bank') . '</td></tr>';
+        if ($payment_url) {
+            echo '<tr><td>Link Pembayaran</td><td><a href="' . esc_url($payment_url) . '" target="_blank" rel="noopener">Buka</a></td></tr>';
+        }
+        echo '</tbody></table>';
+        echo '<h2 style="margin:20px 0 10px; font-size:16px;">Item Pesanan</h2>';
+        echo '<table class="widefat striped" style="margin-bottom:12px;"><thead>';
+        echo '<tr>';
+        echo '<th style="width:40%;">Produk</th>';
+        echo '<th style="width:20%;">Opsi</th>';
+        echo '<th style="width:10%;">Qty</th>';
+        echo '<th style="width:15%;">Harga</th>';
+        echo '<th style="width:15%;">Subtotal</th>';
+        echo '</tr>';
+        echo '</thead><tbody>';
+        if (empty($items)) {
+            echo '<tr><td colspan="5">Tidak ada item.</td></tr>';
+        } else {
+            foreach ($items as $row) {
+                $pid = isset($row['product_id']) ? (int) $row['product_id'] : 0;
+                $qty = isset($row['qty']) ? (int) $row['qty'] : 0;
+                $price = isset($row['price']) ? (float) $row['price'] : 0;
+                $subtotal = isset($row['subtotal']) ? (float) $row['subtotal'] : 0;
+                $opts = isset($row['options']) && is_array($row['options']) ? $row['options'] : [];
+                $pname = $pid > 0 ? get_the_title($pid) : '';
+                $plink = $pid > 0 ? get_edit_post_link($pid) : '';
+                $opt_texts = [];
+                foreach ($opts as $k => $v) {
+                    $opt_texts[] = esc_html($k) . ': ' . esc_html($v);
+                }
+                $opt_html = implode(', ', $opt_texts);
+                echo '<tr>';
+                echo '<td>' . ($plink ? '<a href="' . esc_url($plink) . '">' . esc_html($pname) . '</a>' : esc_html($pname)) . '</td>';
+                echo '<td>' . ($opt_html !== '' ? $opt_html : '-') . '</td>';
+                echo '<td>' . esc_html($qty) . '</td>';
+                echo '<td>Rp ' . esc_html(number_format_i18n($price, 0)) . '</td>';
+                echo '<td>Rp ' . esc_html(number_format_i18n($subtotal, 0)) . '</td>';
+                echo '</tr>';
+            }
+        }
+        echo '</tbody></table>';
+        echo '<h2 style="margin:20px 0 10px; font-size:16px;">Ringkasan Total</h2>';
+        echo '<table class="widefat striped"><tbody>';
+        echo '<tr><td style="width:200px;">Total Produk</td><td>Rp ' . esc_html(number_format_i18n($product_total, 0)) . '</td></tr>';
+        echo '<tr><td>Biaya Ongkir</td><td>Rp ' . esc_html(number_format_i18n($shipping_cost, 0)) . '</td></tr>';
+        echo '<tr><td><strong>Grand Total</strong></td><td><strong>Rp ' . esc_html(number_format_i18n($grand_total, 0)) . '</strong></td></tr>';
+        echo '</tbody></table>';
         echo '</div>';
     }
 }

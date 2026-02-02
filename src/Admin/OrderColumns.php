@@ -24,6 +24,7 @@ class OrderColumns
                 $new['order_payment'] = 'Metode Pembayaran';
                 $new['order_total'] = 'Harga';
                 $new['order_proofs'] = 'Bukti Transfer';
+                $new['order_shipping'] = 'Kurir';
                 $new['order_tracking'] = 'Tracking';
                 $new['order_status'] = 'Status';
             }
@@ -98,6 +99,16 @@ class OrderColumns
             }
             if ($count > 1) {
                 echo '<span style="margin-left:6px; font-size:11px; color:#6b7280;">+' . esc_html($count - 1) . '</span>';
+            }
+            return;
+        }
+        if ($column === 'order_shipping') {
+            $shipping = get_post_meta($post_id, '_store_order_shipping_method', true);
+            $label = ($shipping === 'jne') ? 'JNE' : 'POS Indonesia';
+            echo esc_html($label);
+            $tracking = get_post_meta($post_id, '_store_order_tracking_number', true);
+            if ($tracking) {
+                echo '<br><small style="font-size:11px; color:#6b7280;">Resi: ' . esc_html($tracking) . '</small>';
             }
             return;
         }

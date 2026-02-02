@@ -42,7 +42,7 @@ class RajaOngkirController
         ]);
     }
 
-    private function get_rajaongkir_base_url()
+    public static function get_rajaongkir_base_url()
     {
         $base_url = 'https://rajaongkir.komerce.id/api/v1';
         return $base_url;
@@ -115,7 +115,7 @@ class RajaOngkirController
         if ($cached !== false) {
             return new WP_REST_Response($cached, 200);
         }
-        $url = $this->get_rajaongkir_base_url() . '/calculate/domestic-cost';
+        $url = self::get_rajaongkir_base_url() . '/calculate/domestic-cost';
         $body = [
             'origin' => $origin_subdistrict,
             'destination' => $destination_subdistrict,
@@ -299,7 +299,7 @@ class RajaOngkirController
             ], 200);
         }
 
-        $url = $this->get_rajaongkir_base_url() . '/destination/province';
+        $url = self::get_rajaongkir_base_url() . '/destination/province';
 
         $response = wp_remote_get($url, [
             'headers' => ['key' => $api_key]
@@ -376,7 +376,7 @@ class RajaOngkirController
             ], 200);
         }
 
-        $url = $this->get_rajaongkir_base_url() . "/destination/city/{$province}";
+        $url = self::get_rajaongkir_base_url() . "/destination/city/{$province}";
 
         $response = wp_remote_get($url, [
             'headers' => ['key' => $api_key]
@@ -456,7 +456,7 @@ class RajaOngkirController
             ], 200);
         }
 
-        $url = $this->get_rajaongkir_base_url() . "/destination/district/{$city}";
+        $url = self::get_rajaongkir_base_url() . "/destination/district/{$city}";
 
         $response = wp_remote_get($url, [
             'headers' => ['key' => $api_key]

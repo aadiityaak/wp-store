@@ -169,6 +169,83 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                     <div class="wps-mt-2 wps-text-sm wps-text-gray-700 wps-bg-primary-100 wps-text-primary-800 wps-p-2 wps-rounded-md wps-font-medium"><?php echo esc_html($status_label); ?></div>
                     <?php if (!empty($tracking_number)) : ?>
                         <div class="wps-mt-2 wps-text-sm wps-text-gray-700">No. Resi: <span class="wps-font-medium"><?php echo esc_html($tracking_number); ?></span></div>
+                        <?php
+                        $api_key = isset($settings['rajaongkir_api_key']) ? (string) $settings['rajaongkir_api_key'] : '';
+                        $courier_code = is_string($shipping_courier) ? strtolower($shipping_courier) : '';
+                        if ($api_key !== '' && $courier_code !== '') {
+                            $ckey = 'wp_store_track_' . md5($tracking_number . '|' . $courier_code);
+                            $cached = get_transient($ckey);
+                            if (!is_string($cached)) $cached = '';
+                            $raw = $cached;
+                            if ($raw === '') {
+                                $base = \WpStore\Api\RajaOngkirController::get_rajaongkir_base_url() . '/track/waybill';
+                                $url = add_query_arg(['awb' => $tracking_number, 'courier' => $courier_code], $base);
+                                $res = wp_remote_get($url, [
+                                    'headers' => ['key' => $api_key],
+                                    'timeout' => 12,
+                                ]);
+                                echo '<pre>' . print_r($res, true) . '</pre>';
+                                if (!is_wp_error($res)) {
+                                    $code = wp_remote_retrieve_response_code($res);
+                                    if ($code === 200) {
+                                        $raw = wp_remote_retrieve_body($res);
+                                    }
+                                }
+                                if ($raw !== '') {
+                                    set_transient($ckey, $raw, 3600);
+                                }
+                            }
+                            echo '<div class="wps-mt-4">';
+                            echo '<div class="wps-text-sm wps-text-gray-900 wps-font-medium">Tracking Pengiriman</div>';
+                            $json = $raw !== '' ? json_decode($raw, true) : null;
+                            $events = [];
+                            if (is_array($json)) {
+                                if (isset($json['result']['manifest']) && is_array($json['result']['manifest'])) {
+                                    $events = $json['result']['manifest'];
+                                } elseif (isset($json['manifest']) && is_array($json['manifest'])) {
+                                    $events = $json['manifest'];
+                                } elseif (isset($json['history']) && is_array($json['history'])) {
+                                    $events = $json['history'];
+                                } elseif (isset($json['events']) && is_array($json['events'])) {
+                                    $events = $json['events'];
+                                }
+                            }
+                            if (!empty($events)) {
+                                echo '<div class="wps-mt-2" style="display:grid;grid-template-columns:1fr;gap:8px;">';
+                                foreach ($events as $ev) {
+                                    $d = '';
+                                    $t = '';
+                                    $desc = '';
+                                    $city = '';
+                                    if (isset($ev['manifest_date'])) $d = (string) $ev['manifest_date'];
+                                    if (isset($ev['manifest_time'])) $t = (string) $ev['manifest_time'];
+                                    if (isset($ev['manifest_description'])) $desc = (string) $ev['manifest_description'];
+                                    if (isset($ev['city_name'])) $city = (string) $ev['city_name'];
+                                    if ($d === '' && isset($ev['date'])) $d = (string) $ev['date'];
+                                    if ($t === '' && isset($ev['time'])) $t = (string) $ev['time'];
+                                    if ($desc === '' && isset($ev['description'])) $desc = (string) $ev['description'];
+                                    if ($city === '' && isset($ev['city'])) $city = (string) $ev['city'];
+                                    $dt = trim($d . ' ' . $t);
+                                    echo '<div class="wps-card wps-p-3">';
+                                    echo '<div class="wps-text-xs wps-text-gray-500">' . esc_html($dt !== '' ? $dt : '') . '</div>';
+                                    echo '<div class="wps-text-sm wps-text-gray-900">' . esc_html($desc !== '' ? $desc : '') . '</div>';
+                                    if ($city !== '') {
+                                        echo '<div class="wps-text-xs wps-text-gray-700">' . esc_html($city) . '</div>';
+                                    }
+                                    echo '</div>';
+                                }
+                                echo '</div>';
+                            } else {
+                                echo '<div class="wps-text-sm wps-text-gray-600 wps-mt-2">Tracking AWB tidak tersedia.</div>';
+                            }
+                            echo '</div>';
+                        } else {
+                            echo '<div class="wps-mt-4">';
+                            echo '<div class="wps-text-sm wps-text-gray-900 wps-font-medium">Tracking Pengiriman</div>';
+                            echo '<div class="wps-text-sm wps-text-gray-600 wps-mt-2">Tracking AWB tidak tersedia.</div>';
+                            echo '</div>';
+                        }
+                        ?>
                     <?php endif; ?>
                     <?php if (!empty($proofs)) : ?>
                         <div class="wps-mt-3">
