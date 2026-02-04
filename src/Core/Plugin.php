@@ -44,6 +44,12 @@ class Plugin
 
         $order_actions = new \WpStore\Admin\OrderActions();
         $order_actions->register();
+
+        $coupon_meta = new \WpStore\Admin\CouponMetaBoxes();
+        $coupon_meta->register();
+
+        $coupon_columns = new \WpStore\Admin\CouponColumns();
+        $coupon_columns->register();
     }
 
     private function load_api()
@@ -74,6 +80,9 @@ class Plugin
 
         $captcha = new \WpStore\Api\CaptchaController();
         add_action('rest_api_init', [$captcha, 'register_routes']);
+
+        $coupons = new \WpStore\Api\CouponController();
+        add_action('rest_api_init', [$coupons, 'register_routes']);
     }
 
     private function load_frontend()

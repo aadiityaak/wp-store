@@ -44,6 +44,10 @@ class CheckoutController
 
         $lines = [];
         $total = 0;
+        $coupon_code = isset($data['coupon_code']) ? sanitize_text_field($data['coupon_code']) : '';
+        $discount_amount = 0;
+        $discount_type = '';
+        $discount_value = 0;
 
         foreach ($items as $item) {
             $product_id = isset($item['id']) ? (int) $item['id'] : 0;
@@ -74,6 +78,31 @@ class CheckoutController
             return new WP_REST_Response(['message' => 'Keranjang kosong'], 400);
         }
 
+        if ($coupon_code !== '') {
+            $coupon = $this->find_coupon_by_code($coupon_code);
+            if ($coupon) {
+                $type = get_post_meta($coupon->ID, '_store_coupon_type', true) ?: 'percent';
+                $value_raw = get_post_meta($coupon->ID, '_store_coupon_value', true);
+                $value = is_numeric($value_raw) ? floatval($value_raw) : 0;
+                $expires_at_raw = (string) get_post_meta($coupon->ID, '_store_coupon_expires_at', true);
+                $expires_ts = $expires_at_raw ? strtotime($expires_at_raw) : 0;
+                $now_ts = current_time('timestamp');
+                if (!($expires_ts > 0 && $expires_ts <= $now_ts)) {
+                    if ($type === 'percent') {
+                        $pct = max(0, min(100, $value));
+                        $discount_amount = round(($total * $pct) / 100);
+                        $discount_type = 'percent';
+                        $discount_value = $pct;
+                    } else {
+                        $discount_amount = max(0, $value);
+                        $discount_type = 'nominal';
+                        $discount_value = $discount_amount;
+                    }
+                    $discount_amount = min($discount_amount, $total);
+                }
+            }
+        }
+
         $order_post = apply_filters('wp_store_order_post_args', [
             'post_type' => 'store_order',
             'post_status' => 'publish',
@@ -91,9 +120,15 @@ class CheckoutController
         $shipping_courier = isset($data['shipping_courier']) ? sanitize_text_field($data['shipping_courier']) : '';
         $shipping_service = isset($data['shipping_service']) ? sanitize_text_field($data['shipping_service']) : '';
         $shipping_cost = isset($data['shipping_cost']) ? floatval($data['shipping_cost']) : 0;
-        $order_total = $total + max(0, $shipping_cost);
+        $order_total = max(0, $total - $discount_amount) + max(0, $shipping_cost);
         update_post_meta($order_id, '_store_order_total', $order_total);
         update_post_meta($order_id, '_store_order_items', $lines);
+        if ($discount_amount > 0 && $coupon_code !== '') {
+            update_post_meta($order_id, '_store_order_coupon_code', $coupon_code);
+            update_post_meta($order_id, '_store_order_discount_type', $discount_type);
+            update_post_meta($order_id, '_store_order_discount_value', $discount_value);
+            update_post_meta($order_id, '_store_order_discount_amount', $discount_amount);
+        }
         $payment_method = isset($data['payment_method']) ? sanitize_key($data['payment_method']) : 'transfer_bank';
         if (!in_array($payment_method, ['transfer_bank', 'qris'], true)) {
             $payment_method = 'transfer_bank';
@@ -161,6 +196,12 @@ class CheckoutController
             'cost' => $shipping_cost,
             'items' => $snapshot_items,
             'total_products' => $total,
+            'discount' => [
+                'code' => $coupon_code,
+                'type' => $discount_type,
+                'value' => $discount_value,
+                'amount' => $discount_amount,
+            ],
             'grand_total' => $order_total,
             'destination' => [
                 'province_id' => $province_id,
@@ -248,5 +289,29 @@ class CheckoutController
             }
         }
         return $base;
+    }
+
+    private function find_coupon_by_code($code)
+    {
+        $q = new \WP_Query([
+            'post_type' => 'store_coupon',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'meta_query' => [
+                [
+                    'key' => '_store_coupon_code',
+                    'value' => $code,
+                    'compare' => '=',
+                ],
+            ],
+            'fields' => 'all',
+        ]);
+        if ($q->have_posts()) {
+            $q->the_post();
+            $post = get_post();
+            wp_reset_postdata();
+            return $post;
+        }
+        return null;
     }
 }

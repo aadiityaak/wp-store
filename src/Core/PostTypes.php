@@ -8,6 +8,7 @@ class PostTypes
     {
         add_action('init', [$this, 'register_product_type']);
         add_action('init', [$this, 'register_order_type']);
+        add_action('init', [$this, 'register_coupon_type']);
     }
 
     public function register_product_type()
@@ -121,5 +122,44 @@ class PostTypes
         ];
 
         register_post_type('store_order', $args);
+    }
+
+    public function register_coupon_type()
+    {
+        $labels = [
+            'name' => 'Kupon',
+            'singular_name' => 'Kupon',
+            'menu_name' => 'Kupon',
+            'name_admin_bar' => 'Kupon',
+            'add_new' => 'Tambah Baru',
+            'add_new_item' => 'Tambah Kupon Baru',
+            'new_item' => 'Kupon Baru',
+            'edit_item' => 'Edit Kupon',
+            'view_item' => 'Lihat Kupon',
+            'all_items' => 'Semua Kupon',
+            'search_items' => 'Cari Kupon',
+            'parent_item_colon' => 'Induk Kupon:',
+            'not_found' => 'Tidak ditemukan kupon.',
+            'not_found_in_trash' => 'Tidak ditemukan di tempat sampah.',
+        ];
+
+        $args = [
+            'labels' => $labels,
+            'public' => false,
+            'publicly_queryable' => false,
+            'show_ui' => true,
+            'show_in_menu' => 'wp-store',
+            'query_var' => false,
+            'rewrite' => false,
+            'capability_type' => 'post',
+            'has_archive' => false,
+            'hierarchical' => false,
+            'menu_position' => 9,
+            'menu_icon' => 'dashicons-tickets-alt',
+            'supports' => ['title'],
+            'show_in_rest' => false,
+        ];
+
+        register_post_type('store_coupon', $args);
     }
 }

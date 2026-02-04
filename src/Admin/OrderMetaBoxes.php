@@ -233,6 +233,10 @@ class OrderMetaBoxes
         foreach ($items as $row) {
             $product_total += isset($row['subtotal']) ? (float) $row['subtotal'] : 0;
         }
+        $coupon_code_applied = (string) get_post_meta($order_id, '_store_order_coupon_code', true);
+        $discount_amount = (float) get_post_meta($order_id, '_store_order_discount_amount', true);
+        $discount_type = (string) get_post_meta($order_id, '_store_order_discount_type', true);
+        $discount_value = (float) get_post_meta($order_id, '_store_order_discount_value', true);
         echo '<div class="wps-card" style="border:1px solid #e5e7eb; border-radius:6px; padding:12px;">';
         echo '<h2 style="margin:0 0 10px; font-size:16px;">Pelanggan</h2>';
         echo '<table class="widefat striped" style="margin-bottom:12px;"><tbody>';
@@ -300,6 +304,16 @@ class OrderMetaBoxes
         echo '<h2 style="margin:20px 0 10px; font-size:16px;">Ringkasan Total</h2>';
         echo '<table class="widefat striped"><tbody>';
         echo '<tr><td style="width:200px;">Total Produk</td><td>Rp ' . esc_html(number_format_i18n($product_total, 0)) . '</td></tr>';
+        if ($discount_amount > 0) {
+            $label = 'Diskon Kupon';
+            if ($discount_type === 'percent' && $discount_value > 0) {
+                $label = 'Diskon Kupon (' . esc_html(number_format_i18n($discount_value, 0)) . '%)';
+            }
+            if ($coupon_code_applied !== '') {
+                $label .= ' [' . esc_html($coupon_code_applied) . ']';
+            }
+            echo '<tr><td>' . $label . '</td><td>- Rp ' . esc_html(number_format_i18n($discount_amount, 0)) . '</td></tr>';
+        }
         echo '<tr><td>Biaya Ongkir</td><td>Rp ' . esc_html(number_format_i18n($shipping_cost, 0)) . '</td></tr>';
         echo '<tr><td><strong>Grand Total</strong></td><td><strong>Rp ' . esc_html(number_format_i18n($grand_total, 0)) . '</strong></td></tr>';
         echo '</tbody></table>';

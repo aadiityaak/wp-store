@@ -71,6 +71,9 @@
             shippingCost: 0,
             shippingOptions: [],
             selectedShippingKey: '',
+            couponCode: '',
+            discountAmount: 0,
+            discountLabel: '',
             formatPrice(value) {
                 const v = typeof value === 'number' ? value : parseFloat(value || 0);
                 if (this.currency === 'USD') {
@@ -147,7 +150,8 @@
             totalWithShipping() {
                 const t = this.totalSelected();
                 const s = typeof this.shippingCost === 'number' ? this.shippingCost : parseFloat(this.shippingCost || 0);
-                return t + (isNaN(s) ? 0 : s);
+                const d = typeof this.discountAmount === 'number' ? this.discountAmount : parseFloat(this.discountAmount || 0);
+                return Math.max(0, t - (isNaN(d) ? 0 : d)) + (isNaN(s) ? 0 : s);
             },
             getValidationError() {
                 if (!this.name) return 'Nama wajib diisi.';
@@ -343,6 +347,49 @@
                     this.recomputeAllow();
                 }
             },
+            async applyCoupon() {
+                const code = String(this.couponCode || '').trim();
+                if (code === '') {
+                    this.discountAmount = 0;
+                    this.discountLabel = '';
+                    return;
+                }
+                try {
+                    const res = await fetch(wpStoreSettings.restUrl + 'coupons/validate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        },
+                        body: JSON.stringify({
+                            code,
+                            items: this.cart.filter(i => i.selected !== false).map(i => ({
+                                id: i.id,
+                                qty: i.qty,
+                                options: i.options || {}
+                            }))
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data && data.success) {
+                        this.discountAmount = data.discount || 0;
+                        if (data.type === 'percent') {
+                            this.discountLabel = `Diskon Kupon (${data.value || 0}%)`;
+                        } else {
+                            this.discountLabel = 'Diskon Kupon';
+                        }
+                        this.showToast('Kupon berhasil diterapkan.', 'success');
+                    } else {
+                        this.discountAmount = 0;
+                        this.discountLabel = '';
+                        this.showToast(data && data.message ? data.message : 'Kupon tidak valid.', 'error');
+                    }
+                } catch (e) {
+                    this.discountAmount = 0;
+                    this.discountLabel = '';
+                    this.showToast('Gagal memproses kupon.', 'error');
+                }
+            },
             async importFromProfile() {
                 await this.fetchProfile();
                 if (!this.profile || !this.profile.email) {
@@ -385,6 +432,7 @@
                             shipping_service: this.shippingService || '',
                             shipping_cost: this.shippingCost || 0,
                             payment_method: this.paymentMethod || 'transfer_bank',
+                            coupon_code: this.couponCode || '',
                             items: this.cart.filter(i => i.selected !== false).map(i => ({
                                 id: i.id,
                                 qty: i.qty,
@@ -621,6 +669,16 @@
                                 <span class="wps-text-sm wps-text-gray-500">Total Produk</span>
                                 <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(totalSelected())"></span>
                             </div>
+                            <div class="wps-flex wps-items-center wps-gap-2 wps-mt-2">
+                                <input class="wps-input wps-flex-1" type="text" x-model="couponCode" placeholder="Masukkan kode kupon">
+                                <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="applyCoupon()">Terapkan</button>
+                            </div>
+                            <template x-if="discountAmount">
+                                <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                    <span class="wps-text-sm wps-text-gray-500" x-text="discountLabel || 'Diskon Kupon'"></span>
+                                    <span class="wps-text-sm wps-text-green-700" x-text="'- ' + formatPrice(discountAmount)"></span>
+                                </div>
+                            </template>
                             <template x-if="shippingCost">
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
                                     <span class="wps-text-sm wps-text-gray-500">
