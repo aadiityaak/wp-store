@@ -62,16 +62,7 @@
                     . '<span class="txt wps-text-white wps-text-xs">Digital</span>'
                     . '</span>';
                 }
-                $lbl = get_post_meta((int) $id, '_store_label', true);
-                if (is_string($lbl) && $lbl !== '') {
-                  $txt = $lbl === 'label-best' ? 'Best Seller' : ($lbl === 'label-limited' ? 'Limited' : ($lbl === 'label-new' ? 'New' : ''));
-                  if ($txt !== '') {
-                    echo '<span class="wps-label-badge ' . esc_attr($lbl) . '">'
-                      . wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
-                      . '<span class="txt wps-text-white wps-text-xs">' . esc_html($txt) . '</span>'
-                      . '</span>';
-                  }
-                }
+                echo wps_label_badge_html((int) $id);
                 ?>
               </div>
             </div>
