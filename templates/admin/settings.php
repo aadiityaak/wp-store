@@ -325,6 +325,18 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     </div>
 
                     <div>
+                        <label class="wp-store-label" for="page_catalog">Halaman Katalog</label>
+                        <?php
+                        wp_dropdown_pages([
+                            'name' => 'page_catalog',
+                            'selected' => $settings['page_catalog'] ?? 0,
+                            'show_option_none' => '-- Pilih Halaman --',
+                            'class' => 'wp-store-input'
+                        ]);
+                        ?>
+                    </div>
+
+                    <div>
                         <label class="wp-store-label" for="page_shipping_check">Halaman Cek Ongkir</label>
                         <?php
                         wp_dropdown_pages([

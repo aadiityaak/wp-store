@@ -32,6 +32,14 @@ class ProductController
                 ],
             ],
         ]);
+
+        register_rest_route('wp-store/v1', '/catalog/pdf', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'download_catalog_pdf'],
+                'permission_callback' => '__return_true',
+            ],
+        ]);
     }
 
     public function get_products(WP_REST_Request $request)
@@ -86,6 +94,55 @@ class ProductController
         return new WP_REST_Response($response, 200);
     }
 
+    public function download_catalog_pdf(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $args = [
+            'post_type' => 'store_product',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'orderby' => 'title',
+            'order' => 'ASC',
+        ];
+        $query = new \WP_Query($args);
+        $items = [];
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $id = get_the_ID();
+                $price = get_post_meta($id, '_store_price', true);
+                $image = get_the_post_thumbnail_url($id, 'medium');
+                $items[] = [
+                    'id' => $id,
+                    'title' => get_the_title(),
+                    'link' => get_permalink(),
+                    'image' => $image ? $image : null,
+                    'price' => $price !== '' ? (float) $price : null,
+                ];
+            }
+            wp_reset_postdata();
+        }
+        $html = \WpStore\Frontend\Template::render('pages/catalog-pdf', [
+            'items' => $items,
+            'currency' => $currency
+        ]);
+        if (!class_exists('\Dompdf\Dompdf')) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Dompdf belum tersedia.'
+            ], 500);
+        }
+        $dompdf = new \Dompdf\Dompdf(['isRemoteEnabled' => true]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $pdf = $dompdf->output();
+        $resp = new WP_REST_Response($pdf, 200);
+        $resp->header('Content-Type', 'application/pdf');
+        $resp->header('Content-Disposition', 'attachment; filename="katalog.pdf"');
+        return $resp;
+    }
     public function get_product(WP_REST_Request $request)
     {
         $id = (int) $request['id'];
@@ -114,4 +171,3 @@ class ProductController
         ];
     }
 }
-

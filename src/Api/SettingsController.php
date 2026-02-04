@@ -77,6 +77,7 @@ class SettingsController
         }
 
         if (isset($params['page_shop'])) $settings['page_shop'] = absint($params['page_shop']);
+        if (isset($params['page_catalog'])) $settings['page_catalog'] = absint($params['page_catalog']);
         if (isset($params['page_shipping_check'])) $settings['page_shipping_check'] = absint($params['page_shipping_check']);
         if (isset($params['page_profile'])) $settings['page_profile'] = absint($params['page_profile']);
         if (isset($params['page_cart'])) $settings['page_cart'] = absint($params['page_cart']);
@@ -152,6 +153,10 @@ class SettingsController
             'page_shop' => [
                 'title' => 'Toko',
                 'content' => '[wp_store_shop]'
+            ],
+            'page_catalog' => [
+                'title' => 'Katalog',
+                'content' => '[wp_store_catalog]'
             ],
             'page_shipping_check' => [
                 'title' => 'Cek Ongkir',

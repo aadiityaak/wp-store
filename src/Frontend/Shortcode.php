@@ -25,6 +25,7 @@ class Shortcode
         add_shortcode('wp_store_link_profile', [$this, 'render_link_profile']);
         add_shortcode('wp_store_products_carousel', [$this, 'render_products_carousel']);
         add_shortcode('wp_store_shipping_checker', [$this, 'render_shipping_checker']);
+        add_shortcode('wp_store_catalog', [$this, 'render_catalog']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
@@ -168,6 +169,43 @@ class Shortcode
             'origin_subdistrict' => $origin_subdistrict,
             'active_couriers' => $active_couriers,
             'nonce' => $nonce
+        ]);
+    }
+
+    public function render_catalog($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        wp_enqueue_script('wp-store-frontend');
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $args = [
+            'post_type' => 'store_product',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'orderby' => 'title',
+            'order' => 'ASC',
+        ];
+        $query = new \WP_Query($args);
+        $items = [];
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $id = get_the_ID();
+                $price = get_post_meta($id, '_store_price', true);
+                $image = get_the_post_thumbnail_url($id, 'medium');
+                $items[] = [
+                    'id' => $id,
+                    'title' => get_the_title(),
+                    'link' => get_permalink(),
+                    'image' => $image ? $image : null,
+                    'price' => $price !== '' ? (float) $price : null,
+                ];
+            }
+            wp_reset_postdata();
+        }
+        return Template::render('pages/catalog', [
+            'items' => $items,
+            'currency' => $currency
         ]);
     }
 
