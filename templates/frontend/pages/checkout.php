@@ -645,7 +645,7 @@
                         </template>
                         <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
                             <div class="wps-flex wps-items-center wps-gap-2 wps-divider">
-                                <input type="checkbox" x-model="item.selected" class="wps-checkbox" @change="calculateAllShipping()">
+                                <input type="checkbox" x-model="item.selected" class="wps-checkbox" @change="calculateAllShipping(); if (couponCode) applyCoupon();">
                                 <img :src="item.image ? item.image : '<?php echo esc_url(WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>'" alt="" class="wps-img-40">
                                 <div style="flex: 1;">
                                     <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
@@ -693,7 +693,7 @@
                                 </div>
                             </template>
                             <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
-                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium">Grand Total</span>
+                                <span class="wps-text-sm wps-text-gray-900 wps-font-medium">Total Tagihan</span>
                                 <span class="wps-text-sm wps-text-gray-900 wps-font-medium" x-text="formatPrice(totalWithShipping())"></span>
                             </div>
                         </div>

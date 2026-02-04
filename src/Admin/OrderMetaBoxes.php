@@ -128,7 +128,7 @@ class OrderMetaBoxes
         ]);
 
         $details->add_field([
-            'name'       => 'Grand Total',
+            'name'       => 'Total Tagihan',
             'id'         => '_store_order_total',
             'type'       => 'text',
             'attributes' => [
@@ -315,7 +315,7 @@ class OrderMetaBoxes
             echo '<tr><td>' . $label . '</td><td>- Rp ' . esc_html(number_format_i18n($discount_amount, 0)) . '</td></tr>';
         }
         echo '<tr><td>Biaya Ongkir</td><td>Rp ' . esc_html(number_format_i18n($shipping_cost, 0)) . '</td></tr>';
-        echo '<tr><td><strong>Grand Total</strong></td><td><strong>Rp ' . esc_html(number_format_i18n($grand_total, 0)) . '</strong></td></tr>';
+        echo '<tr><td><strong>Total Tagihan</strong></td><td><strong>Rp ' . esc_html(number_format_i18n($grand_total, 0)) . '</strong></td></tr>';
         echo '</tbody></table>';
         echo '</div>';
     }

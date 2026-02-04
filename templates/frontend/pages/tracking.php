@@ -93,10 +93,43 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                 </tbody>
                             </table>
                             <div class="wps-mt-4 wps-p-4 wps-summary-box">
+                                <?php
+                                $product_total = 0;
+                                foreach ($items as $it) {
+                                    $product_total += isset($it['subtotal']) ? (float) $it['subtotal'] : 0;
+                                }
+                                $coupon_code_applied = (string) get_post_meta($order_id, '_store_order_coupon_code', true);
+                                $discount_amount = (float) get_post_meta($order_id, '_store_order_discount_amount', true);
+                                $discount_type = (string) get_post_meta($order_id, '_store_order_discount_type', true);
+                                $discount_value = (float) get_post_meta($order_id, '_store_order_discount_value', true);
+                                if ($discount_amount <= 0) {
+                                    $calc = ($product_total + $shipping_cost) - $total;
+                                    if ($calc > 0) {
+                                        $discount_amount = $calc;
+                                    }
+                                }
+                                ?>
                                 <div class="wps-flex wps-justify-between wps-items-center">
                                     <div class="wps-text-sm wps-text-gray-500">Total Produk</div>
-                                    <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total - $shipping_cost, 0, ',', '.')); ?></div>
+                                    <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($product_total, 0, ',', '.')); ?></div>
                                 </div>
+                                <?php if ($discount_amount > 0) : ?>
+                                    <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+                                        <div class="wps-text-sm wps-text-gray-500">
+                                            <?php
+                                            $label = 'Diskon Kupon';
+                                            if ($discount_type === 'percent' && $discount_value > 0) {
+                                                $label = 'Diskon Kupon (' . number_format_i18n($discount_value, 0) . '%)';
+                                            }
+                                            if ($coupon_code_applied !== '') {
+                                                $label .= ' [' . esc_html($coupon_code_applied) . ']';
+                                            }
+                                            echo esc_html($label);
+                                            ?>
+                                        </div>
+                                        <div class="wps-text-sm wps-text-green-700">-<?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($discount_amount, 0, ',', '.')); ?></div>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
                                     <?php
                                     $courier_labels = [
@@ -119,7 +152,7 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                                     <div class="wps-text-sm wps-text-gray-900"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($shipping_cost, 0, ',', '.')); ?></div>
                                 </div>
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2" style="border-top:1px dashed #e5e7eb; padding-top:12px;">
-                                    <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Grand Total</div>
+                                    <div class="wps-text-sm wps-text-gray-900 wps-font-medium">Total Tagihan</div>
                                     <div class="wps-text-sm wps-text-gray-900 wps-font-medium"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($total, 0, ',', '.')); ?></div>
                                 </div>
                             </div>

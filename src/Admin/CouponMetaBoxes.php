@@ -19,7 +19,16 @@ class CouponMetaBoxes
                 function formatDefaultTitle(){
                     var d = new Date();
                     var pad = function(n){ return (n<10?'0':'') + n; };
-                    return 'Kupon ' + d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+                    return (
+                        '#' +
+                        String(d.getFullYear()).slice(-2) +
+                        pad(d.getMonth() + 1) +
+                        pad(d.getDate()) +
+                        pad(d.getHours()) +
+                        pad(d.getMinutes()) +
+                        pad(d.getSeconds())
+                    );
+
                 }
                 function applyIfEmpty(){
                     var title = document.getElementById('title');
