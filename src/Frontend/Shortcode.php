@@ -9,6 +9,7 @@ class Shortcode
         add_shortcode('wp_store_shop', [$this, 'render_shop']);
         add_shortcode('wp_store_single', [$this, 'render_single']);
         add_shortcode('wp_store_related', [$this, 'render_related']);
+        add_shortcode('wp_store_thumbnail', [$this, 'render_thumbnail']);
         add_shortcode('wp_store_price', [$this, 'render_price']);
         add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
@@ -207,6 +208,39 @@ class Shortcode
             'items' => $items,
             'currency' => $currency
         ]);
+    }
+
+    public function render_thumbnail($atts = [])
+    {
+        $atts = shortcode_atts([
+            'id' => 0,
+            'width' => 300,
+            'height' => 300,
+            'crop' => 'false',
+            'upscale' => 'true',
+            'alt' => ''
+        ], $atts);
+        $id = (int) $atts['id'];
+        if ($id <= 0) {
+            $loop_id = get_the_ID();
+            if ($loop_id && is_numeric($loop_id)) {
+                $id = (int) $loop_id;
+            }
+        }
+        if ($id <= 0 || get_post_type($id) !== 'store_product') {
+            return '';
+        }
+        $w = max(1, (int) $atts['width']);
+        $h = max(1, (int) $atts['height']);
+        $size = [$w, $h];
+        $src = get_the_post_thumbnail_url($id, $size);
+        if (!$src) {
+            $src = WP_STORE_URL . 'assets/frontend/img/noimg.webp';
+        }
+        $alt = is_string($atts['alt']) && $atts['alt'] !== '' ? $atts['alt'] : get_the_title($id);
+        $crop = in_array(strtolower((string) $atts['crop']), ['1', 'true', 'yes'], true);
+        $style = 'width:' . (int) $w . 'px; height:' . (int) $h . 'px; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
+        return '<img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded">';
     }
 
     public function render_price($atts)
