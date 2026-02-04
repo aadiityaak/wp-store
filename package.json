@@ -6,10 +6,11 @@
   "scripts": {
     "build:vendor": "esbuild assets/frontend/js/vendor.js --bundle --format=iife --outfile=assets/frontend/js/vendor.bundle.js",
     "watch:vendor": "esbuild assets/frontend/js/vendor.js --bundle --format=iife --outfile=assets/frontend/js/vendor.bundle.js --watch",
-    "build": "npm run build:vendor"
+    "build": "npm run build:vendor && node scripts/zip.js"
   },
   "devDependencies": {
-    "esbuild": "^0.19.0"
+    "esbuild": "^0.19.0",
+    "archiver": "^5.3.1"
   },
   "dependencies": {
     "flickity": "^2.3.0"
