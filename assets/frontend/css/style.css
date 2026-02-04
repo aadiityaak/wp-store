@@ -48,9 +48,7 @@
   border: 1px solid #e5e7eb;
   overflow: hidden;
 }
-.wps-card-hover:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
+
 .wps-transition {
   transition: all 150ms ease-in-out;
 }
@@ -762,6 +760,52 @@ tr:not(:last-child) .wps-td {
 /* Prevent Alpine flash before initialization */
 [x-cloak] {
   display: none !important;
+}
+
+/* Flickity navigation: kecil dan clean untuk carousel produk */
+.wps-products-carousel .flickity-prev-next-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+}
+.wps-products-carousel .flickity-prev-next-button:hover {
+  background: #ffffff;
+}
+.wps-products-carousel .flickity-prev-next-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.wps-products-carousel .flickity-prev-next-button.previous {
+  left: 6px;
+}
+.wps-products-carousel .flickity-prev-next-button.next {
+  right: 6px;
+}
+.wps-products-carousel .flickity-button-icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.wps-products-carousel .flickity-page-dots {
+  bottom: 6px;
+}
+.wps-products-carousel .flickity-page-dots .dot {
+  width: 6px;
+  height: 6px;
+  opacity: 0.5;
+  background: #6b7280;
+  margin: 0 3px;
+}
+.wps-products-carousel .flickity-page-dots .dot.is-selected {
+  opacity: 1;
+  background: #111827;
 }
 
 @media (max-width: 768px) {

@@ -239,10 +239,19 @@ class Shortcode
         $atts = shortcode_atts([
             'label' => '',
             'per_page' => 10,
-            'per_row' => 4,
+            'per_row' => 1,
             'img_width' => 200,
-            'img_height' => 200,
-            'crop' => 'true'
+            'img_height' => 300,
+            'crop' => 'true',
+            'autoplay' => 0,
+            'pause_on_hover' => 'true',
+            'wrap_around' => 'true',
+            'page_dots' => 'false',
+            'prev_next_buttons' => 'true',
+            'lazy_load' => 0,
+            'cell_align' => 'center',
+            'draggable' => 'true',
+            'contain' => 'true'
         ], $atts);
         wp_enqueue_style('wp-store-flickity');
         $per_page = (int) $atts['per_page'];
@@ -281,7 +290,18 @@ class Shortcode
             'label' => (string) $atts['label'],
             'img_width' => max(1, (int) $atts['img_width']),
             'img_height' => max(1, (int) $atts['img_height']),
-            'crop' => in_array(strtolower((string) $atts['crop']), ['1', 'true', 'yes'], true)
+            'crop' => in_array(strtolower((string) $atts['crop']), ['1', 'true', 'yes'], true),
+            'opts' => [
+                'autoplay' => max(0, (int) $atts['autoplay']),
+                'pause_on_hover' => in_array(strtolower((string) $atts['pause_on_hover']), ['1', 'true', 'yes'], true),
+                'wrap_around' => in_array(strtolower((string) $atts['wrap_around']), ['1', 'true', 'yes'], true),
+                'page_dots' => in_array(strtolower((string) $atts['page_dots']), ['1', 'true', 'yes'], true),
+                'prev_next_buttons' => in_array(strtolower((string) $atts['prev_next_buttons']), ['1', 'true', 'yes'], true),
+                'lazy_load' => max(0, (int) $atts['lazy_load']),
+                'cell_align' => sanitize_key($atts['cell_align']),
+                'draggable' => in_array(strtolower((string) $atts['draggable']), ['1', 'true', 'yes'], true),
+                'contain' => in_array(strtolower((string) $atts['contain']), ['1', 'true', 'yes'], true),
+            ]
         ]);
         wp_enqueue_script('wp-store-frontend');
         return $html;
@@ -311,7 +331,8 @@ class Shortcode
         }
         $alt = is_string($atts['alt']) && $atts['alt'] !== '' ? $atts['alt'] : get_the_title($id);
         $crop = in_array(strtolower((string) $atts['crop']), ['1', 'true', 'yes'], true);
-        $style = 'width:' . (int) $w . 'px; height:' . (int) $h . 'px; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
+        $style = 'width:100%; height:100%; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
+        $wrap_style = 'width:100%; max-width:' . (int) $w . 'px; aspect-ratio:' . (int) $w . ' / ' . (int) $h . '; overflow:hidden;';
         $hoverMode = sanitize_key($atts['hover']);
         if ($hoverMode === 'change') {
             $hover_src = '';
@@ -327,7 +348,7 @@ class Shortcode
             }
             $wrap_class = 'wps-card-hover';
             $image_wrap_class = 'wps-image-wrap' . ($hover_src ? ' wps-has-hover' : '');
-            $html = '<div class="' . esc_attr($wrap_class) . '"><div class="' . esc_attr($image_wrap_class) . '" style="width:' . (int) $w . 'px; height:' . (int) $h . 'px;">';
+            $html = '<div class="' . esc_attr($wrap_class) . '"><div class="' . esc_attr($image_wrap_class) . '" style="' . esc_attr($wrap_style) . '">';
             $html .= '<img class="wps-rounded img-main" src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '">';
             if ($hover_src) {
                 $html .= '<img class="wps-rounded img-hover" src="' . esc_url($hover_src) . '" alt="' . esc_attr($alt) . '">';
@@ -335,7 +356,7 @@ class Shortcode
             $html .= '</div></div>';
             return $html;
         }
-        return '<img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded">';
+        return '<div class="wps-image-wrap" style="' . esc_attr($wrap_style) . '"><img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded"></div>';
     }
 
     public function render_price($atts)

@@ -8,45 +8,51 @@
   if ($h <= 0) $h = 200;
   $crop = isset($crop) ? (bool) $crop : true;
   $size = [$w, $h];
-  $item_basis = 'calc(100% / ' . $per_row . ')';
-  $style_img = 'width:' . (int) $w . 'px; height:' . (int) $h . 'px; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
+  $style_img = 'width:100%; height:100%; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
+  $aspect_ratio = (int) $w . ' / ' . (int) $h;
+  $opt = isset($opts) && is_array($opts) ? $opts : [];
+  $cell_align = sanitize_key($opt['cell_align'] ?? 'center');
+  $contain = !empty($opt['contain']);
+  $wrap = !empty($opt['wrap_around']);
+  $dots = !empty($opt['page_dots']);
+  $buttons = !empty($opt['prev_next_buttons']);
+  $lazy = isset($opt['lazy_load']) ? (int) $opt['lazy_load'] : 0;
+  $autoplay = isset($opt['autoplay']) ? (int) $opt['autoplay'] : 0;
+  $pause_hover = !empty($opt['pause_on_hover']);
+  $draggable = !empty($opt['draggable']);
+  $group_cells = $per_row > 1 ? (int) $per_row : 0;
   ?>
-<div x-data="{ init(){ if (window.Flickity) { var opts = { cellAlign: 'left', contain: true, pageDots: false, prevNextButtons: true, wrapAround: true }; new Flickity($refs.track, opts);} } }" x-init="init()">
+  <div class="wps-products-carousel"
+    data-wps-carousel="1"
+    data-cell-align="<?php echo esc_attr($cell_align); ?>"
+    data-contain="<?php echo $contain ? 'true' : 'false'; ?>"
+    data-wrap-around="<?php echo $wrap ? 'true' : 'false'; ?>"
+    data-page-dots="<?php echo $dots ? 'true' : 'false'; ?>"
+    data-prev-next-buttons="<?php echo $buttons ? 'true' : 'false'; ?>"
+    data-lazy-load="<?php echo (int) $lazy; ?>"
+    data-autoplay="<?php echo (int) $autoplay; ?>"
+    data-pause-on-hover="<?php echo $pause_hover ? 'true' : 'false'; ?>"
+    data-draggable="<?php echo $draggable ? 'true' : 'false'; ?>"
+    data-group-cells="<?php echo (int) $group_cells; ?>">
+    <?php if (isset($label) && is_string($label) && $label !== '') : ?>
       <div class="wps-text-sm wps-text-gray-900 wps-mb-3"><?php echo esc_html($label); ?></div>
     <?php endif; ?>
-    <div class="wps-flex wps-items-center wps-gap-2">
-      <?php if (!$use_flickity): ?>
-    <div x-ref="track" class="wps-flex wps-gap-2">
+    <div>
+      <div class="main-carousel" style="width:100%;">
+        <?php foreach ($items as $item) : ?>
           <?php
           $id = (int) ($item['id'] ?? 0);
           $link = (string) ($item['link'] ?? '');
           $src = $id ? get_the_post_thumbnail_url($id, $size) : '';
           if (!$src) {
-          if (!$src) {
             $src = WP_STORE_URL . 'assets/frontend/img/noimg.webp';
           }
           $alt = $id ? get_the_title($id) : 'Produk';
-          $hover_src = '';
-          if ($id > 0) {
-            $gal = get_post_meta($id, '_store_gallery_ids', true);
-            if (is_array($gal) && !empty($gal)) {
-              $first = array_values($gal)[0];
-              if (is_numeric($first)) {
-                $url = wp_get_attachment_image_url((int) $first, $size);
-                if (is_string($url)) $hover_src = $url;
-              } elseif (is_string($first)) {
-                $hover_src = $first;
-              }
-            }
-          }
           ?>
-          <a href="<?php echo esc_url($link); ?>" style="flex:0 0 <?php echo esc_attr($item_basis); ?>;">
+          <a href="<?php echo esc_url($link); ?>" class="carousel-cell" style="width:100%; margin-right:8px; display:block;">
             <div class="wps-card-hover">
-              <div class="wps-image-wrap<?php echo $hover_src ? ' wps-has-hover' : ''; ?>" style="width:<?php echo (int) $w; ?>px; height:<?php echo (int) $h; ?>px;">
-                <img class="wps-rounded img-main" src="<?php echo esc_url($src); ?>" alt="<?php echo esc_attr($alt); ?>" style="<?php echo esc_attr($style_img); ?>">
-                <?php if ($hover_src) : ?>
-                  <img class="wps-rounded img-hover" src="<?php echo esc_url($hover_src); ?>" alt="<?php echo esc_attr($alt); ?>">
-                <?php endif; ?>
+              <div class="wps-image-wrap" style="width:100%; aspect-ratio: <?php echo esc_attr($aspect_ratio); ?>;">
+                <img class="wps-rounded" src="<?php echo esc_url($src); ?>" alt="<?php echo esc_attr($alt); ?>" style="<?php echo esc_attr($style_img); ?>">
               </div>
             </div>
           </a>

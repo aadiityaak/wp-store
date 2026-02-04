@@ -230,4 +230,35 @@
       Alpine.data("wpStore", wpStoreFactory);
     });
   }
+  const initCarousels = () => {
+    if (!window.Flickity) return;
+    const nodes = document.querySelectorAll('[data-wps-carousel]');
+    nodes.forEach((node) => {
+      const track = node.querySelector('.main-carousel');
+      if (!track || track.__flickity) return;
+      const d = node.dataset;
+      const groupCellsVal = parseInt(d.groupCells || '0', 10);
+      const lazyVal = parseInt(d.lazyLoad || '0', 10);
+      const autoPlayVal = parseInt(d.autoplay || '0', 10);
+      const opts = {
+        cellAlign: d.cellAlign || 'center',
+        contain: d.contain === 'false' ? false : true,
+        wrapAround: d.wrapAround === 'true',
+        pageDots: d.pageDots === 'false' ? false : true,
+        prevNextButtons: d.prevNextButtons === 'false' ? false : true,
+        groupCells: groupCellsVal > 1 ? groupCellsVal : false,
+        lazyLoad: lazyVal > 0 ? lazyVal : false,
+        autoPlay: autoPlayVal > 0 ? autoPlayVal : false,
+        pauseAutoPlayOnHover: d.pauseOnHover === 'false' ? false : true,
+        draggable: d.draggable === 'false' ? false : true
+      };
+      track.__flickity = new window.Flickity(track, opts);
+    });
+  };
+  if (document.readyState !== 'loading') {
+    initCarousels();
+  } else {
+    document.addEventListener('DOMContentLoaded', initCarousels);
+  }
+  document.addEventListener('wp-store:ready', initCarousels);
 })();
