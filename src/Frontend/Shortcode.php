@@ -26,6 +26,7 @@ class Shortcode
         add_shortcode('wp_store_products_carousel', [$this, 'render_products_carousel']);
         add_shortcode('wp_store_shipping_checker', [$this, 'render_shipping_checker']);
         add_shortcode('wp_store_catalog', [$this, 'render_catalog']);
+        add_shortcode('wp_store_filters', [$this, 'render_filters']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
@@ -101,12 +102,100 @@ class Shortcode
             $paged = 1;
         }
 
+        $sort = isset($_GET['sort']) ? sanitize_key($_GET['sort']) : '';
+        $min_price = isset($_GET['min_price']) ? floatval($_GET['min_price']) : null;
+        $max_price = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
+        $cats = [];
+        if (isset($_GET['cats'])) {
+            $raw = is_array($_GET['cats']) ? $_GET['cats'] : [$_GET['cats']];
+            foreach ($raw as $c) {
+                $id = absint($c);
+                if ($id > 0) $cats[] = $id;
+            }
+        }
+        $labels = [];
+        if (isset($_GET['labels'])) {
+            $raw = is_array($_GET['labels']) ? $_GET['labels'] : [$_GET['labels']];
+            foreach ($raw as $l) {
+                $key = sanitize_key($l);
+                if (in_array($key, ['best', 'limited', 'new'], true)) {
+                    $labels[] = $key;
+                }
+            }
+        }
+
         $args = [
             'post_type' => 'store_product',
             'posts_per_page' => $per_page,
             'paged' => $paged,
             'post_status' => 'publish',
         ];
+
+        $meta_query = [];
+        if ($min_price !== null && $min_price >= 0) {
+            $meta_query[] = [
+                'key' => '_store_price',
+                'value' => $min_price,
+                'type' => 'NUMERIC',
+                'compare' => '>='
+            ];
+        }
+        if ($max_price !== null && $max_price >= 0) {
+            $meta_query[] = [
+                'key' => '_store_price',
+                'value' => $max_price,
+                'type' => 'NUMERIC',
+                'compare' => '<='
+            ];
+        }
+        if (!empty($labels)) {
+            $map = [
+                'best' => 'label-best',
+                'limited' => 'label-limited',
+                'new' => 'label-new',
+            ];
+            $or = ['relation' => 'OR'];
+            foreach ($labels as $lk) {
+                $val = isset($map[$lk]) ? $map[$lk] : '';
+                if ($val !== '') {
+                    $or[] = [
+                        'key' => '_store_label',
+                        'value' => $val,
+                        'compare' => '='
+                    ];
+                }
+            }
+            if (count($or) > 1) {
+                $meta_query[] = $or;
+            }
+        }
+        if (!empty($meta_query)) {
+            $args['meta_query'] = ['relation' => 'AND'] + $meta_query;
+        }
+        if (!empty($cats)) {
+            $args['tax_query'] = [
+                [
+                    'taxonomy' => 'store_product_cat',
+                    'field' => 'term_id',
+                    'terms' => $cats
+                ]
+            ];
+        }
+        if ($sort === 'az') {
+            $args['orderby'] = 'title';
+            $args['order'] = 'ASC';
+        } elseif ($sort === 'za') {
+            $args['orderby'] = 'title';
+            $args['order'] = 'DESC';
+        } elseif ($sort === 'cheap') {
+            $args['meta_key'] = '_store_price';
+            $args['orderby'] = 'meta_value_num';
+            $args['order'] = 'ASC';
+        } elseif ($sort === 'expensive') {
+            $args['meta_key'] = '_store_price';
+            $args['orderby'] = 'meta_value_num';
+            $args['order'] = 'DESC';
+        }
 
         $query = new \WP_Query($args);
         $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
@@ -286,6 +375,57 @@ class Shortcode
         return Template::render('pages/related', [
             'items' => $items,
             'currency' => $currency
+        ]);
+    }
+
+    public function render_filters($atts = [])
+    {
+        $atts = shortcode_atts([
+            'show_labels' => '1',
+        ], $atts);
+        $show_labels = in_array((string)$atts['show_labels'], ['1', 'true', 'yes'], true);
+        $terms = get_terms([
+            'taxonomy' => 'store_product_cat',
+            'hide_empty' => false,
+        ]);
+        $categories = [];
+        if (!is_wp_error($terms) && is_array($terms)) {
+            foreach ($terms as $t) {
+                $categories[] = [
+                    'id' => (int) $t->term_id,
+                    'name' => (string) $t->name,
+                ];
+            }
+        }
+        $current = [
+            'sort' => isset($_GET['sort']) ? sanitize_key($_GET['sort']) : '',
+            'min_price' => isset($_GET['min_price']) ? (float) $_GET['min_price'] : '',
+            'max_price' => isset($_GET['max_price']) ? (float) $_GET['max_price'] : '',
+            'cats' => [],
+            'labels' => [],
+        ];
+        if (isset($_GET['cats'])) {
+            $raw = is_array($_GET['cats']) ? $_GET['cats'] : [$_GET['cats']];
+            foreach ($raw as $c) {
+                $id = absint($c);
+                if ($id > 0) $current['cats'][] = $id;
+            }
+        }
+        if (isset($_GET['labels'])) {
+            $raw = is_array($_GET['labels']) ? $_GET['labels'] : [$_GET['labels']];
+            foreach ($raw as $l) {
+                $key = sanitize_key($l);
+                if (in_array($key, ['best', 'limited', 'new'], true)) {
+                    $current['labels'][] = $key;
+                }
+            }
+        }
+        $reset_url = home_url(parse_url(isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH));
+        return Template::render('components/filters', [
+            'categories' => $categories,
+            'current' => $current,
+            'show_labels' => $show_labels,
+            'reset_url' => $reset_url,
         ]);
     }
 
@@ -688,6 +828,92 @@ class Shortcode
         if ($query->is_post_type_archive('store_product') || ($query->get('post_type') === 'store_product' && !$query->is_singular())) {
             $query->set('post_status', 'publish');
             $query->set('ignore_sticky_posts', true);
+            $sort = isset($_GET['sort']) ? sanitize_key($_GET['sort']) : '';
+            $min_price = isset($_GET['min_price']) ? floatval($_GET['min_price']) : null;
+            $max_price = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
+            $cats = [];
+            if (isset($_GET['cats'])) {
+                $raw = is_array($_GET['cats']) ? $_GET['cats'] : [$_GET['cats']];
+                foreach ($raw as $c) {
+                    $id = absint($c);
+                    if ($id > 0) $cats[] = $id;
+                }
+            }
+            $labels = [];
+            if (isset($_GET['labels'])) {
+                $raw = is_array($_GET['labels']) ? $_GET['labels'] : [$_GET['labels']];
+                foreach ($raw as $l) {
+                    $key = sanitize_key($l);
+                    if (in_array($key, ['best', 'limited', 'new'], true)) {
+                        $labels[] = $key;
+                    }
+                }
+            }
+            $meta_query = [];
+            if ($min_price !== null && $min_price >= 0) {
+                $meta_query[] = [
+                    'key' => '_store_price',
+                    'value' => $min_price,
+                    'type' => 'NUMERIC',
+                    'compare' => '>='
+                ];
+            }
+            if ($max_price !== null && $max_price >= 0) {
+                $meta_query[] = [
+                    'key' => '_store_price',
+                    'value' => $max_price,
+                    'type' => 'NUMERIC',
+                    'compare' => '<='
+                ];
+            }
+            if (!empty($labels)) {
+                $map = [
+                    'best' => 'label-best',
+                    'limited' => 'label-limited',
+                    'new' => 'label-new',
+                ];
+                $or = ['relation' => 'OR'];
+                foreach ($labels as $lk) {
+                    $val = isset($map[$lk]) ? $map[$lk] : '';
+                    if ($val !== '') {
+                        $or[] = [
+                            'key' => '_store_label',
+                            'value' => $val,
+                            'compare' => '='
+                        ];
+                    }
+                }
+                if (count($or) > 1) {
+                    $meta_query[] = $or;
+                }
+            }
+            if (!empty($meta_query)) {
+                $query->set('meta_query', ['relation' => 'AND'] + $meta_query);
+            }
+            if (!empty($cats)) {
+                $query->set('tax_query', [
+                    [
+                        'taxonomy' => 'store_product_cat',
+                        'field' => 'term_id',
+                        'terms' => $cats
+                    ]
+                ]);
+            }
+            if ($sort === 'az') {
+                $query->set('orderby', 'title');
+                $query->set('order', 'ASC');
+            } elseif ($sort === 'za') {
+                $query->set('orderby', 'title');
+                $query->set('order', 'DESC');
+            } elseif ($sort === 'cheap') {
+                $query->set('meta_key', '_store_price');
+                $query->set('orderby', 'meta_value_num');
+                $query->set('order', 'ASC');
+            } elseif ($sort === 'expensive') {
+                $query->set('meta_key', '_store_price');
+                $query->set('orderby', 'meta_value_num');
+                $query->set('order', 'DESC');
+            }
         }
     }
 

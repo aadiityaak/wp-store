@@ -10,8 +10,8 @@
                 <?php
                 $is_archive = (is_post_type_archive('store_product') || (get_query_var('post_type') === 'store_product' && !is_singular()));
                 if ($is_archive) {
-                    $prev_link = (int) $page > 1 ? get_pagenum_link((int) $page - 1) : '';
-                    $next_link = (int) $page < (int) $pages ? get_pagenum_link((int) $page + 1) : '';
+                    $prev_link = (int) $page > 1 ? add_query_arg($_GET, get_pagenum_link((int) $page - 1)) : '';
+                    $next_link = (int) $page < (int) $pages ? add_query_arg($_GET, get_pagenum_link((int) $page + 1)) : '';
                 } else {
                     $base = get_permalink();
                     $prev_link = (int) $page > 1 ? add_query_arg('shop_page', (int) $page - 1, $base) : '';
@@ -23,7 +23,7 @@
                 <?php endif; ?>
                 <?php for ($i = 1; $i <= (int) $pages; $i++) : ?>
                     <?php
-                    $page_link = $is_archive ? get_pagenum_link($i) : add_query_arg('shop_page', $i, get_permalink());
+                    $page_link = $is_archive ? add_query_arg($_GET, get_pagenum_link($i)) : add_query_arg('shop_page', $i, get_permalink());
                     ?>
                     <a href="<?php echo esc_url($page_link); ?>" class="wps-btn <?php echo ($i === (int) $page) ? 'wps-btn-primary' : 'wps-btn-secondary'; ?> wps-btn-sm"><?php echo esc_html($i); ?></a>
                 <?php endfor; ?>
