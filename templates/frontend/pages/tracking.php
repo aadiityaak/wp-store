@@ -17,22 +17,21 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
 <div class="wps-container">
     <div class="wps-card wps-p-6">
         <div class="wps-text-center">
-            <div class="wps-text-2xl wps-font-semibold wps-text-gray-900">Tracking Pesanan</div>
+            <div class="wps-text-2xl wps-font-semibold wps-text-gray-900 wps-mb-2">Tracking Pesanan</div>
             <?php if ($order_exists) : ?>
                 <div class="wps-mt-1 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span></div>
             <?php else : ?>
-                <div class="wps-text-sm wps-text-gray-600 wps-mt-1">Masukkan parameter <span class="wps-font-medium">order</span> di URL untuk melihat status.</div>
+                <div class="wps-text-sm wps-text-gray-600 wps-mt-1 wps-mb-2">Masukkan parameter <span class="wps-font-medium">order</span> di URL untuk melihat status.</div>
                 <?php
                 $settings = get_option('wp_store_settings', []);
                 $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
                 $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
                 ?>
                 <div class="wps-mt-4" style="max-width:420px; margin:0 auto;">
-                    <form id="wps-find-order" class="wps-flex wps-items-center wps-gap-2">
+                    <form id="wps-find-order" class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
                         <input type="number" min="1" step="1" id="wps-order-id" class="wps-input" placeholder="Masukkan Nomor Order (contoh: 651)">
                         <button type="submit" class="wps-btn wps-btn-primary">Lacak</button>
                     </form>
-                    <div id="wps-find-msg" class="wps-text-xs wps-text-gray-500 wps-mt-1">Format benar: <?php echo esc_html($tracking_url); ?>?order=ID</div>
                 </div>
                 <script>
                     (function() {

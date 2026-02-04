@@ -24,6 +24,7 @@ class Shortcode
         add_shortcode('wp_store_add_to_wishlist', [$this, 'render_add_to_wishlist']);
         add_shortcode('wp_store_link_profile', [$this, 'render_link_profile']);
         add_shortcode('wp_store_products_carousel', [$this, 'render_products_carousel']);
+        add_shortcode('wp_store_shipping_checker', [$this, 'render_shipping_checker']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
@@ -146,6 +147,23 @@ class Shortcode
         $active_couriers = $settings['shipping_couriers'] ?? ['jne', 'sicepat', 'ide'];
         $nonce = wp_create_nonce('wp_rest');
         return Template::render('pages/checkout', [
+            'currency' => $currency,
+            'origin_subdistrict' => $origin_subdistrict,
+            'active_couriers' => $active_couriers,
+            'nonce' => $nonce
+        ]);
+    }
+
+    public function render_shipping_checker($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        wp_enqueue_script('wp-store-frontend');
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $origin_subdistrict = isset($settings['shipping_origin_subdistrict']) ? (string) $settings['shipping_origin_subdistrict'] : '';
+        $active_couriers = $settings['shipping_couriers'] ?? ['jne', 'sicepat', 'ide'];
+        $nonce = wp_create_nonce('wp_rest');
+        return Template::render('pages/shipping-checker', [
             'currency' => $currency,
             'origin_subdistrict' => $origin_subdistrict,
             'active_couriers' => $active_couriers,

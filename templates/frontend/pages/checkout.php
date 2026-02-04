@@ -463,7 +463,8 @@
                         <?php
                         $settings = get_option('wp_store_settings', []);
                         $shop_id = isset($settings['page_shop']) ? absint($settings['page_shop']) : 0;
-                        $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/');
+                        $shop_archive = function_exists('get_post_type_archive_link') ? get_post_type_archive_link('store_product') : '';
+                        $shop_url = $shop_id ? get_permalink($shop_id) : ($shop_archive ?: site_url('/'));
                         ?>
                         <a href="<?php echo esc_url($shop_url); ?>" class="wps-btn wps-btn-primary">Belanja</a>
                     </div>

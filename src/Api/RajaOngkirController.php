@@ -108,7 +108,9 @@ class RajaOngkirController
             ], 400);
         }
         $items = isset($params['items']) && is_array($params['items']) ? $params['items'] : null;
-        $weight_base = $items ? $this->get_items_total_weight_grams($items) : $this->get_cart_total_weight_grams();
+        $manual_weight = isset($params['manual_weight_grams']) ? (int) $params['manual_weight_grams'] : 0;
+        if ($manual_weight < 0) $manual_weight = 0;
+        $weight_base = $manual_weight > 0 ? $manual_weight : ($items ? $this->get_items_total_weight_grams($items) : $this->get_cart_total_weight_grams());
         $weight = apply_filters('wp_store_shipping_weight', $weight_base, $params);
         $cache_key = apply_filters('wp_store_shipping_cache_key', 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier])), $params);
         $cached = get_transient($cache_key);
