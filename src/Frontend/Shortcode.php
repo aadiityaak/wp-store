@@ -9,6 +9,7 @@ class Shortcode
         add_shortcode('wp_store_shop', [$this, 'render_shop']);
         add_shortcode('wp_store_single', [$this, 'render_single']);
         add_shortcode('wp_store_related', [$this, 'render_related']);
+        add_shortcode('wp_store_price', [$this, 'render_price']);
         add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
         add_shortcode('wp_store_checkout', [$this, 'render_checkout']);
@@ -20,119 +21,13 @@ class Shortcode
         add_shortcode('wp_store_wishlist', [$this, 'render_wishlist']);
         add_shortcode('wp_store_add_to_wishlist', [$this, 'render_add_to_wishlist']);
         add_shortcode('wp_store_link_profile', [$this, 'render_link_profile']);
-        add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
         add_action('template_redirect', [$this, 'redirect_page_conflict']);
     }
 
-    public function enqueue_scripts()
-    {
-        wp_register_script(
-            'alpinejs',
-            'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js',
-            [],
-            null,
-            true
-        );
-        wp_add_inline_script('alpinejs', 'window.deferLoadingAlpineJs = true;', 'before');
 
-        wp_register_script(
-            'wp-store-frontend',
-            WP_STORE_URL . 'assets/frontend/js/store.js',
-            ['alpinejs'],
-            WP_STORE_VERSION,
-            true
-        );
-
-        wp_register_style(
-            'wp-store-frontend-css',
-            WP_STORE_URL . 'assets/frontend/css/style.css',
-            [],
-            WP_STORE_VERSION
-        );
-
-        wp_enqueue_style('wp-store-frontend-css');
-        $settings = get_option('wp_store_settings', []);
-        $css = '';
-        $primary = isset($settings['theme_primary']) ? sanitize_hex_color($settings['theme_primary']) : '';
-        $primary_hover = isset($settings['theme_primary_hover']) ? sanitize_hex_color($settings['theme_primary_hover']) : '';
-        $secondary_text = isset($settings['theme_secondary_text']) ? sanitize_hex_color($settings['theme_secondary_text']) : '';
-        $secondary_border = isset($settings['theme_secondary_border']) ? sanitize_hex_color($settings['theme_secondary_border']) : '';
-        $callout_bg = isset($settings['theme_callout_bg']) ? sanitize_hex_color($settings['theme_callout_bg']) : '';
-        $callout_border = isset($settings['theme_callout_border']) ? sanitize_hex_color($settings['theme_callout_border']) : '';
-        $callout_title = isset($settings['theme_callout_title']) ? sanitize_hex_color($settings['theme_callout_title']) : '';
-        $danger_text = isset($settings['theme_danger_text']) ? sanitize_hex_color($settings['theme_danger_text']) : '';
-        $danger_border = isset($settings['theme_danger_border']) ? sanitize_hex_color($settings['theme_danger_border']) : '';
-
-        if ($primary) {
-            $css .= ".wps-btn-primary,button.wps-btn-primary{background-color:{$primary};}\n";
-            $css .= ".wps-tab.active{color:{$primary};border-bottom-color:{$primary};}\n";
-            $css .= ".wps-callout-title{color:{$primary};}\n";
-        }
-        if ($primary_hover) {
-            $css .= ".wps-btn-primary:hover{background-color:{$primary_hover};}\n";
-        }
-        if ($secondary_text || $secondary_border) {
-            $css .= ".wps-btn-secondary{";
-            if ($secondary_border) $css .= "border-color:{$secondary_border};";
-            if ($secondary_text) $css .= "color:{$secondary_text};";
-            $css .= "}\n";
-            if ($secondary_border) {
-                $css .= ".wps-btn-secondary:hover{border-color:{$secondary_border};}\n";
-            }
-        }
-        if ($callout_bg || $callout_border) {
-            $css .= ".wps-callout{";
-            if ($callout_bg) $css .= "background-color:{$callout_bg};";
-            if ($callout_border) $css .= "border-color:{$callout_border};";
-            $css .= "}\n";
-        }
-        if ($callout_title) {
-            $css .= ".wps-callout-title{color:{$callout_title};}\n";
-        }
-        if ($danger_text || $danger_border) {
-            $css .= ".wps-btn-danger{";
-            if ($danger_border) $css .= "border-color:{$danger_border};";
-            if ($danger_text) $css .= "color:{$danger_text};";
-            $css .= "}\n";
-        }
-        $container_max = isset($settings['container_max_width']) ? (int) $settings['container_max_width'] : 1100;
-        if ($container_max > 0) {
-            $css .= ".wps-container{max-width:{$container_max}px;margin-left:auto;margin-right:auto;}\n";
-        }
-        if (!empty($css)) {
-            wp_add_inline_style('wp-store-frontend-css', $css);
-        }
-
-        wp_localize_script(
-            'wp-store-frontend',
-            'wpStoreSettings',
-            [
-                'restUrl' => esc_url_raw(rest_url('wp-store/v1/')),
-                'nonce' => wp_create_nonce('wp_rest'),
-                'thanksUrl' => (function () {
-                    $settings = get_option('wp_store_settings', []);
-                    $pid = isset($settings['page_thanks']) ? absint($settings['page_thanks']) : 0;
-                    if ($pid) {
-                        $url = get_permalink($pid);
-                        if ($url) return esc_url_raw($url);
-                    }
-                    return esc_url_raw(site_url('/thanks/'));
-                })(),
-                'trackingUrl' => (function () {
-                    $settings = get_option('wp_store_settings', []);
-                    $pid = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
-                    if ($pid) {
-                        $url = get_permalink($pid);
-                        if ($url) return esc_url_raw($url);
-                    }
-                    return esc_url_raw(site_url('/tracking-order/'));
-                })(),
-            ]
-        );
-    }
 
     public function filter_single_content($content)
     {
@@ -314,10 +209,70 @@ class Shortcode
         ]);
     }
 
+    public function render_price($atts)
+    {
+        $atts = shortcode_atts([
+            'id' => get_the_ID(),
+            'countdown' => false
+        ], $atts);
+
+        $id = (int) $atts['id'];
+        if ($id <= 0) {
+            $loop_id = get_the_ID();
+            if ($loop_id && is_numeric($loop_id)) {
+                $id = (int) $loop_id;
+            }
+        }
+        if ($id <= 0 || get_post_type($id) !== 'store_product') {
+            return '';
+        }
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $price = get_post_meta($id, '_store_price', true);
+        $sale = get_post_meta($id, '_store_sale_price', true);
+        $price = $price !== '' ? (float) $price : null;
+        $sale = $sale !== '' ? (float) $sale : null;
+        $countdownAttr = $atts['countdown'];
+        $wantCountdown = false;
+        if (is_bool($countdownAttr)) {
+            $wantCountdown = $countdownAttr;
+        } else {
+            $wantCountdown = in_array(strtolower((string) $countdownAttr), ['1', 'true', 'yes'], true);
+        }
+        $untilRaw = (string) get_post_meta($id, '_store_flashsale_until', true);
+        $untilTs = $untilRaw ? strtotime($untilRaw) : 0;
+        $nowTs = current_time('timestamp');
+        $saleActive = $sale !== null && $sale > 0 && (($price !== null && $sale < $price) || $price === null) && ($untilTs === 0 || $untilTs > $nowTs);
+        $html = '<div class="wps-price">';
+        if ($saleActive) {
+            $html .= '<div class="wps-flex wps-items-baseline wps-gap-2">';
+            $html .= '<span class="wps-text-lg wps-text-gray-900 wps-font-medium">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($sale, 0, ',', '.')) . '</span>';
+            if ($price !== null && $price > 0) {
+                $html .= '<span class="wps-text-sm wps-text-gray-500" style="text-decoration: line-through;">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')) . '</span>';
+            }
+            $html .= '</div>';
+        } else {
+            if ($price !== null) {
+                $html .= '<div class="wps-text-lg wps-text-gray-900 wps-font-medium">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')) . '</div>';
+            } else {
+                $html .= '<div class="wps-text-sm wps-text-gray-500">Harga belum diatur.</div>';
+            }
+        }
+        if ($wantCountdown && $untilTs > $nowTs) {
+            wp_enqueue_script('alpinejs');
+            $endJs = esc_js($untilRaw);
+            $html .= '<div class="wps-text-xs wps-text-gray-700 wps-mt-1" x-data="{ end: new Date(\'' . $endJs . '\'), d:0,h:0,m:0,s:0, tick(){ const diff = Math.max(0, this.end - new Date()); this.d = Math.floor(diff/86400000); this.h = Math.floor((diff%86400000)/3600000); this.m = Math.floor((diff%3600000)/60000); this.s = Math.floor((diff%60000)/1000); }, init(){ this.tick(); setInterval(()=>this.tick(), 1000); } }" x-init="init">';
+            $html .= '<span>Berakhir dalam </span><span x-text="d"></span><span> hari </span><span x-text="h"></span><span> jam </span><span x-text="m"></span><span> menit </span><span x-text="s"></span><span> detik</span>';
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+        return $html;
+    }
+
     public function render_single($atts = [])
     {
         $atts = shortcode_atts([
-            'id' => 0,
+            'id' => get_the_ID(),
         ], $atts);
         $id = (int) $atts['id'];
         if ($id <= 0) {
@@ -351,7 +306,7 @@ class Shortcode
     {
         wp_enqueue_script('alpinejs');
         $atts = shortcode_atts([
-            'id' => 0,
+            'id' => get_the_ID(),
             'label' => '+',
             'size' => ''
         ], $atts);

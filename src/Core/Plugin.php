@@ -65,19 +65,22 @@ class Plugin
 
         $settings = new \WpStore\Api\SettingsController();
         add_action('rest_api_init', [$settings, 'register_routes']);
-        
+
         $raja = new \WpStore\Api\RajaOngkirController();
         add_action('rest_api_init', [$raja, 'register_routes']);
-        
+
         $tools = new \WpStore\Api\ToolsController();
         add_action('rest_api_init', [$tools, 'register_routes']);
-        
+
         $captcha = new \WpStore\Api\CaptchaController();
         add_action('rest_api_init', [$captcha, 'register_routes']);
     }
 
     private function load_frontend()
     {
+        $assets = new \WpStore\Frontend\Assets();
+        $assets->register();
+
         $shortcode = new \WpStore\Frontend\Shortcode();
         $shortcode->register();
 

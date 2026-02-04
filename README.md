@@ -66,6 +66,40 @@ WP Store adalah plugin WordPress untuk membuat toko sederhana dengan fitur Produ
   - Endpoint yang digunakan: destination/province, destination/city/{province}, destination/district/{city}, calculate/domestic-cost.
   - Header: `key: <API_KEY>`, body `application/x-www-form-urlencoded`.
 
+- Shortcodes
+  - `wp_store_shop`  
+    - Menampilkan katalog produk.  
+    - Opsi: `per_page` (default 12, max 50).  
+    - Contoh: `[wp_store_shop per_page="12"]`
+  - `wp_store_single`  
+    - Menampilkan komponen single produk pada halaman produk CPT.  
+    - Dipakai pada template single store_product.
+  - `wp_store_related`  
+    - Menampilkan produk terkait berdasarkan kategori produk.  
+    - Opsi: `id` (ID produk sumber, opsional; fallback ke post saat ini), `per_page` (default 4, max 12).  
+    - Contoh: `[wp_store_related id="123" per_page="4"]`
+  - `wp_store_add_to_cart`  
+    - Tombol/komponen tambah ke keranjang untuk sebuah produk.  
+    - Opsi: `id` (ID produk).
+    - Contoh: `[wp_store_add_to_cart id="123"]`
+  - `wp_store_cart`  
+    - Widget keranjang ringkas untuk ditaruh di halaman/area bebas.
+  - `wp_store_checkout` / `store_checkout`  
+    - Halaman Checkout. Pastikan halaman ini dipetakan di Pengaturan → Halaman.
+  - `wp_store_thanks` / `store_thanks`  
+    - Halaman “Terima Kasih” setelah checkout.  
+    - Mendukung parameter URL `order` untuk menampilkan ringkasan pesanan.
+  - `wp_store_tracking` / `store_tracking`  
+    - Halaman Tracking Pesanan.  
+    - Parameter URL: `order=<ID>` untuk menampilkan status pesanan dan tracking AWB jika tersedia.
+  - `wp_store_wishlist`  
+    - Widget wishlist untuk menampilkan daftar favorit user/guest.
+  - `wp_store_add_to_wishlist`  
+    - Tombol tambah ke wishlist pada kartu/halaman produk.
+  - `wp_store_link_profile`  
+    - Tautan ke halaman profil pengguna (menampilkan avatar).
+    - URL halaman profil dikonfigurasi di Pengaturan → Halaman.
+
 - Berat & Cache
   - Berat total dihitung dari meta `_store_weight_kg` per produk dan dikonversi ke gram.
   - Cache wilayah dan ongkir menggunakan `transient` dengan masa simpan ± 24 jam.
@@ -125,4 +159,3 @@ add_filter('wp_store_before_upload_proof', function ($file, $order_id) {
     return $file;
 }, 10, 2);
 ```
-
