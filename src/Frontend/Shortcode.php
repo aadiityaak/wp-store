@@ -27,6 +27,7 @@ class Shortcode
         add_shortcode('wp_store_shipping_checker', [$this, 'render_shipping_checker']);
         add_shortcode('wp_store_catalog', [$this, 'render_catalog']);
         add_shortcode('wp_store_filters', [$this, 'render_filters']);
+        add_shortcode('wp_store_shop_with_filters', [$this, 'render_shop_with_filters']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
@@ -427,6 +428,20 @@ class Shortcode
             'show_labels' => $show_labels,
             'reset_url' => $reset_url,
         ]);
+    }
+
+    public function render_shop_with_filters($atts = [])
+    {
+        $atts = shortcode_atts([
+            'per_page' => 12,
+        ], $atts);
+        $filters = $this->render_filters(['show_labels' => '1']);
+        $shop = $this->render_shop(['per_page' => $atts['per_page']]);
+        $html = '<div class="wps-grid wps-grid-cols-3 wps-gap-4">'
+            . '<div>' . $filters . '</div>'
+            . '<div class="wps-col-span-2">' . $shop . '</div>'
+            . '</div>';
+        return $html;
     }
 
     public function render_products_carousel($atts = [])

@@ -27,22 +27,7 @@ $total = (int) ($wp_query ? $wp_query->found_posts : 0);
 ?>
 <div class="wps-container wps-mx-auto wps-my-8">
     <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-4 wps-pt-4">Produk</div>
-    <div class="wps-grid wps-grid-cols-3 wps-gap-4">
-        <div>
-            <?php echo do_shortcode('[wp_store_filters]'); ?>
-        </div>
-        <div class="wps-col-span-2">
-            <?php
-            echo \WpStore\Frontend\Template::render('pages/shop', [
-                'items' => $items,
-                'currency' => $currency,
-                'page' => $page,
-                'pages' => $pages,
-                'total' => $total
-            ]);
-            ?>
-        </div>
-    </div>
+    <?php echo do_shortcode('[wp_store_shop_with_filters per_page="12"]'); ?>
 </div>
 <?php
 get_footer();
