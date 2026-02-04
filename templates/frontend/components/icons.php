@@ -55,6 +55,8 @@ if ($name === 'cart') {
     echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" fill="' . esc_attr($stroke) . '" class="' . esc_attr($class) . '" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/></svg>';
 } elseif ($name === 'map-pin' || $name === 'location' || $name === 'pin') {
     echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><path d="M12 21s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>';
+} elseif ($name === 'eye') {
+    echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
 } else {
     echo '';
 }

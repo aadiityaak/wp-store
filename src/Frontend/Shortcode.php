@@ -12,6 +12,7 @@ class Shortcode
         add_shortcode('wp_store_thumbnail', [$this, 'render_thumbnail']);
         add_shortcode('wp_store_price', [$this, 'render_price']);
         add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
+        add_shortcode('wp_store_detail', [$this, 'render_detail']);
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
         add_shortcode('wp_store_checkout', [$this, 'render_checkout']);
         add_shortcode('store_checkout', [$this, 'render_checkout']);
@@ -22,10 +23,38 @@ class Shortcode
         add_shortcode('wp_store_wishlist', [$this, 'render_wishlist']);
         add_shortcode('wp_store_add_to_wishlist', [$this, 'render_add_to_wishlist']);
         add_shortcode('wp_store_link_profile', [$this, 'render_link_profile']);
+        add_shortcode('wp_store_products_carousel', [$this, 'render_products_carousel']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
         add_action('template_redirect', [$this, 'redirect_page_conflict']);
+    }
+
+    private function resolve_product_id($given_id = 0)
+    {
+        $id = (int) $given_id;
+        if ($id <= 0) {
+            $loop_id = get_the_ID();
+            if ($loop_id && is_numeric($loop_id)) {
+                $id = (int) $loop_id;
+            }
+        }
+        if ($id > 0 && get_post_type($id) !== 'store_product') {
+            $meta_pid = (int) get_post_meta($id, 'product_id', true);
+            if ($meta_pid > 0) {
+                $id = $meta_pid;
+            }
+        }
+        if ($id > 0 && get_post_type($id) !== 'store_product') {
+            return 0;
+        }
+        return $id > 0 ? $id : 0;
+    }
+
+    private function get_currency()
+    {
+        $settings = get_option('wp_store_settings', []);
+        return ($settings['currency_symbol'] ?? 'Rp');
     }
 
 
@@ -152,13 +181,7 @@ class Shortcode
             'id' => 0,
             'per_page' => 4,
         ], $atts);
-        $id = (int) $atts['id'];
-        if ($id <= 0) {
-            $loop_id = get_the_ID();
-            if ($loop_id && is_numeric($loop_id)) {
-                $id = (int) $loop_id;
-            }
-        }
+        $id = $this->resolve_product_id((int) $atts['id']);
         if ($id <= 0 || get_post_type($id) !== 'store_product') {
             return '';
         }
@@ -210,23 +233,72 @@ class Shortcode
         ]);
     }
 
+    public function render_products_carousel($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        $atts = shortcode_atts([
+            'label' => '',
+            'per_page' => 10,
+            'per_row' => 4,
+            'img_width' => 200,
+            'img_height' => 200,
+            'crop' => 'true'
+        ], $atts);
+        wp_enqueue_style('wp-store-flickity');
+        $per_page = (int) $atts['per_page'];
+        if ($per_page <= 0 || $per_page > 20) {
+            $per_page = 10;
+        }
+        $args = [
+            'post_type' => 'store_product',
+            'posts_per_page' => $per_page,
+            'post_status' => 'publish',
+        ];
+        $query = new \WP_Query($args);
+        $currency = $this->get_currency();
+        $items = [];
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $id = get_the_ID();
+                $price = get_post_meta($id, '_store_price', true);
+                $image = get_the_post_thumbnail_url($id, 'medium');
+                $items[] = [
+                    'id' => $id,
+                    'title' => get_the_title(),
+                    'link' => get_permalink(),
+                    'image' => $image ? $image : null,
+                    'price' => $price !== '' ? (float) $price : null,
+                    'stock' => null
+                ];
+            }
+            wp_reset_postdata();
+        }
+        $html = Template::render('components/products-carousel', [
+            'items' => $items,
+            'per_row' => (int) $atts['per_row'],
+            'currency' => $currency,
+            'label' => (string) $atts['label'],
+            'img_width' => max(1, (int) $atts['img_width']),
+            'img_height' => max(1, (int) $atts['img_height']),
+            'crop' => in_array(strtolower((string) $atts['crop']), ['1', 'true', 'yes'], true)
+        ]);
+        wp_enqueue_script('wp-store-frontend');
+        return $html;
+    }
+
     public function render_thumbnail($atts = [])
     {
         $atts = shortcode_atts([
             'id' => 0,
             'width' => 300,
             'height' => 300,
-            'crop' => 'false',
+            'crop' => 'true',
             'upscale' => 'true',
-            'alt' => ''
+            'alt' => '',
+            'hover' => 'change'
         ], $atts);
-        $id = (int) $atts['id'];
-        if ($id <= 0) {
-            $loop_id = get_the_ID();
-            if ($loop_id && is_numeric($loop_id)) {
-                $id = (int) $loop_id;
-            }
-        }
+        $id = $this->resolve_product_id((int) $atts['id']);
         if ($id <= 0 || get_post_type($id) !== 'store_product') {
             return '';
         }
@@ -240,28 +312,44 @@ class Shortcode
         $alt = is_string($atts['alt']) && $atts['alt'] !== '' ? $atts['alt'] : get_the_title($id);
         $crop = in_array(strtolower((string) $atts['crop']), ['1', 'true', 'yes'], true);
         $style = 'width:' . (int) $w . 'px; height:' . (int) $h . 'px; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
+        $hoverMode = sanitize_key($atts['hover']);
+        if ($hoverMode === 'change') {
+            $hover_src = '';
+            $gal = get_post_meta((int) $id, '_store_gallery_ids', true);
+            if (is_array($gal) && !empty($gal)) {
+                $first = array_values($gal)[0];
+                if (is_numeric($first)) {
+                    $url = wp_get_attachment_image_url((int) $first, $size);
+                    if (is_string($url)) $hover_src = $url;
+                } elseif (is_string($first)) {
+                    $hover_src = $first;
+                }
+            }
+            $wrap_class = 'wps-card-hover';
+            $image_wrap_class = 'wps-image-wrap' . ($hover_src ? ' wps-has-hover' : '');
+            $html = '<div class="' . esc_attr($wrap_class) . '"><div class="' . esc_attr($image_wrap_class) . '" style="width:' . (int) $w . 'px; height:' . (int) $h . 'px;">';
+            $html .= '<img class="wps-rounded img-main" src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '">';
+            if ($hover_src) {
+                $html .= '<img class="wps-rounded img-hover" src="' . esc_url($hover_src) . '" alt="' . esc_attr($alt) . '">';
+            }
+            $html .= '</div></div>';
+            return $html;
+        }
         return '<img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded">';
     }
 
     public function render_price($atts)
     {
         $atts = shortcode_atts([
-            'id' => get_the_ID(),
+            'id' => 0,
             'countdown' => false
         ], $atts);
 
-        $id = (int) $atts['id'];
-        if ($id <= 0) {
-            $loop_id = get_the_ID();
-            if ($loop_id && is_numeric($loop_id)) {
-                $id = (int) $loop_id;
-            }
-        }
+        $id = $this->resolve_product_id((int) $atts['id']);
         if ($id <= 0 || get_post_type($id) !== 'store_product') {
             return '';
         }
-        $settings = get_option('wp_store_settings', []);
-        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        $currency = $this->get_currency();
         $price = get_post_meta($id, '_store_price', true);
         $sale = get_post_meta($id, '_store_sale_price', true);
         $price = $price !== '' ? (float) $price : null;
@@ -340,19 +428,15 @@ class Shortcode
     {
         wp_enqueue_script('alpinejs');
         $atts = shortcode_atts([
-            'id' => get_the_ID(),
+            'id' => 0,
             'label' => '+',
-            'size' => ''
+            'text' => '',
+            'size' => '',
+            'class' => 'wps-btn wps-btn-primary'
         ], $atts);
         $size = sanitize_key($atts['size']);
-        $btn_class = 'wps-btn wps-btn-primary' . ($size === 'sm' ? ' wps-btn-sm' : '');
-        $id = (int) $atts['id'];
-        if ($id <= 0) {
-            $loop_id = get_the_ID();
-            if ($loop_id && is_numeric($loop_id)) {
-                $id = (int) $loop_id;
-            }
-        }
+        $btn_class = trim(($atts['class'] ?: 'wps-btn wps-btn-primary') . ($size === 'sm' ? ' wps-btn-sm' : ''));
+        $id = $this->resolve_product_id((int) $atts['id']);
         if ($id > 0 && get_post_type($id) !== 'store_product') {
             return '';
         }
@@ -364,16 +448,36 @@ class Shortcode
         $adv_name = get_post_meta($id, '_store_option2_name', true);
         $adv_values = get_post_meta($id, '_store_advanced_options', true);
         $nonce = wp_create_nonce('wp_rest');
+        $label = (is_string($atts['text']) && $atts['text'] !== '') ? $atts['text'] : $atts['label'];
         return Template::render('components/add-to-cart', [
             'btn_class' => $btn_class,
             'id' => $id,
-            'label' => $atts['label'],
+            'label' => $label,
             'basic_name' => $basic_name ?: '',
             'basic_values' => (is_array($basic_values) ? array_values($basic_values) : []),
             'adv_name' => $adv_name ?: '',
             'adv_values' => (is_array($adv_values) ? array_values($adv_values) : []),
             'nonce' => $nonce
         ]);
+    }
+
+    public function render_detail($atts = [])
+    {
+        $atts = shortcode_atts([
+            'id' => 0,
+            'text' => 'Detail',
+            'size' => '',
+            'class' => 'wps-btn wps-btn-secondary wps-w-full'
+        ], $atts);
+        $size = sanitize_key($atts['size']);
+        $btn_class = trim(($atts['class'] ?: 'wps-btn wps-btn-secondary') . ($size === 'sm' ? ' wps-btn-sm' : ''));
+        $id = $this->resolve_product_id((int) $atts['id']);
+        if ($id <= 0 || get_post_type($id) !== 'store_product') {
+            return '';
+        }
+        $link = get_permalink($id);
+        $text = (string) $atts['text'];
+        return '<a href="' . esc_url($link) . '" class="' . esc_attr($btn_class) . '">' . \wps_icon(['name' => 'eye', 'size' => 16, 'class' => 'wps-mr-2']) . esc_html($text !== '' ? $text : 'Detail') . '</a>';
     }
 
     public function render_cart_widget($atts = [])

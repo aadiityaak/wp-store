@@ -21,9 +21,17 @@ class Assets
         wp_add_inline_script('alpinejs', 'window.deferLoadingAlpineJs = true;', 'before');
 
         wp_register_script(
+            'wp-store-vendor',
+            WP_STORE_URL . 'assets/frontend/js/vendor.bundle.js',
+            [],
+            WP_STORE_VERSION,
+            true
+        );
+
+        wp_register_script(
             'wp-store-frontend',
             WP_STORE_URL . 'assets/frontend/js/store.js',
-            ['alpinejs'],
+            ['alpinejs', 'wp-store-vendor'],
             WP_STORE_VERSION,
             true
         );
@@ -31,6 +39,12 @@ class Assets
         wp_register_style(
             'wp-store-frontend-css',
             WP_STORE_URL . 'assets/frontend/css/style.css',
+            [],
+            WP_STORE_VERSION
+        );
+        wp_register_style(
+            'wp-store-flickity',
+            WP_STORE_URL . 'assets/frontend/css/vendor/flickity.css',
             [],
             WP_STORE_VERSION
         );
