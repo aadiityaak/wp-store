@@ -44,6 +44,7 @@
       <?php
         }
       }
+      echo wps_discount_badge_html((int) $item['id']);
       ?>
       <?php echo esc_html($item['title']); ?>
     </a>

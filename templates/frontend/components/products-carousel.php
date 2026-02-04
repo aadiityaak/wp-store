@@ -63,6 +63,7 @@
                     . '</span>';
                 }
                 echo wps_label_badge_html((int) $id);
+                echo wps_discount_badge_html((int) $id);
                 ?>
               </div>
             </div>

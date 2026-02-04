@@ -374,10 +374,11 @@ class Shortcode
             if ($badgeHtml) {
                 $html .= $badgeHtml;
             }
+            $html .= \wps_discount_badge_html((int) $id);
             $html .= '</div></div>';
             return $html;
         }
-        return '<div class="wps-image-wrap" style="' . esc_attr($wrap_style) . '"><img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded">' . $digitalHtml . $badgeHtml . '</div>';
+        return '<div class="wps-image-wrap" style="' . esc_attr($wrap_style) . '"><img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded">' . $digitalHtml . $badgeHtml . \wps_discount_badge_html((int) $id) . '</div>';
     }
 
     public function render_price($atts)
@@ -477,7 +478,9 @@ class Shortcode
             'class' => 'wps-btn wps-btn-primary'
         ], $atts);
         $size = sanitize_key($atts['size']);
-        $btn_class = trim(($atts['class'] ?: 'wps-btn wps-btn-primary') . ($size === 'sm' ? ' wps-btn-sm' : ''));
+        $base_class = 'wps-btn wps-btn-primary';
+        $extra_class = is_string($atts['class']) ? trim($atts['class']) : '';
+        $btn_class = trim($base_class . ($size === 'sm' ? ' wps-btn-sm' : '') . ($extra_class ? ' ' . $extra_class : ''));
         $id = $this->resolve_product_id((int) $atts['id']);
         if ($id > 0 && get_post_type($id) !== 'store_product') {
             return '';
@@ -512,7 +515,9 @@ class Shortcode
             'class' => 'wps-btn wps-btn-secondary wps-w-full'
         ], $atts);
         $size = sanitize_key($atts['size']);
-        $btn_class = trim(($atts['class'] ?: 'wps-btn wps-btn-secondary') . ($size === 'sm' ? ' wps-btn-sm' : ''));
+        $base_class = 'wps-btn wps-btn-secondary';
+        $extra_class = is_string($atts['class']) ? trim($atts['class']) : '';
+        $btn_class = trim($base_class . ($size === 'sm' ? ' wps-btn-sm' : '') . ($extra_class ? ' ' . $extra_class : ''));
         $id = $this->resolve_product_id((int) $atts['id']);
         if ($id <= 0 || get_post_type($id) !== 'store_product') {
             return '';

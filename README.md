@@ -67,38 +67,101 @@ WP Store adalah plugin WordPress untuk membuat toko sederhana dengan fitur Produ
   - Header: `key: <API_KEY>`, body `application/x-www-form-urlencoded`.
 
 - Shortcodes
-  - `wp_store_shop`  
-    - Menampilkan katalog produk.  
-    - Opsi: `per_page` (default 12, max 50).  
+  - `wp_store_shop`
+    - Menampilkan katalog produk.
+    - Opsi: `per_page` (default 12, max 50).
     - Contoh: `[wp_store_shop per_page="12"]`
-  - `wp_store_single`  
-    - Menampilkan komponen single produk pada halaman produk CPT.  
+  - `wp_store_single`
+    - Menampilkan komponen single produk pada halaman produk CPT.
     - Dipakai pada template single store_product.
-  - `wp_store_related`  
-    - Menampilkan produk terkait berdasarkan kategori produk.  
-    - Opsi: `id` (ID produk sumber, opsional; fallback ke post saat ini), `per_page` (default 4, max 12).  
+  - `wp_store_related`
+    - Menampilkan produk terkait berdasarkan kategori produk.
+    - Opsi: `id` (ID produk sumber, opsional; fallback ke post saat ini), `per_page` (default 4, max 12).
     - Contoh: `[wp_store_related id="123" per_page="4"]`
-  - `wp_store_add_to_cart`  
-    - Tombol/komponen tambah ke keranjang untuk sebuah produk.  
-    - Opsi: `id` (ID produk).
+  - `wp_store_products_carousel`
+    - Carousel produk berbasis Flickity.
+    - Opsi:
+      - `label`: teks label di atas carousel (default kosong)
+      - `per_page`: jumlah produk diambil (default 10, max 20)
+      - `per_row`: jumlah item per slide (default 1)
+      - `img_width`: lebar dasar rasio gambar (default 200)
+      - `img_height`: tinggi dasar rasio gambar (default 300)
+      - `crop`: `true|false` object-fit cover/contain (default true)
+      - `autoplay`: interval ms otomatis, `0` untuk non-aktif (default 0)
+      - `pause_on_hover`: `true|false` (default true)
+      - `wrap_around`: `true|false` (default true)
+      - `page_dots`: `true|false` (default false)
+      - `prev_next_buttons`: `true|false` (default true)
+      - `lazy_load`: jumlah slide sekitar yang dilazyload (default 0)
+      - `cell_align`: `left|center|right` (default center)
+      - `draggable`: `true|false` (default true)
+      - `contain`: `true|false` (default true)
+    - Contoh:  
+      `[wp_store_products_carousel per_page="8" per_row="2" autoplay="3000" page_dots="true"]`
+    - Badge otomatis di dalam item:
+      - Digital badge jika tipe produk digital
+      - Label badge dari meta `_store_label` (label-best|label-limited|label-new)
+      - Badge diskon persen jika harga promo aktif
+  - `wp_store_add_to_cart`
+    - Tombol/komponen tambah ke keranjang untuk sebuah produk.
+    - Opsi:
+      - `id`: ID produk
+      - `label`: teks default tombol (default `+`)
+      - `text`: teks alternatif tombol, jika diisi override `label`
+      - `size`: `sm` untuk ukuran kecil, kosong untuk normal
+      - `class`: kelas tambahan; akan di-append ke kelas default (bukan replace)
     - Contoh: `[wp_store_add_to_cart id="123"]`
-  - `wp_store_cart`  
+  - `wp_store_detail`
+    - Tombol/tautan untuk membuka halaman detail produk.
+    - Opsi:
+      - `id`: ID produk
+      - `text`: label tombol (default `Detail`)
+      - `size`: `sm` untuk ukuran kecil, kosong untuk normal
+      - `class`: kelas tambahan; akan di-append ke kelas default (bukan replace)
+    - Contoh: `[wp_store_detail id="123" size="sm" class="my-btn"]`
+  - `wp_store_cart`
     - Widget keranjang ringkas untuk ditaruh di halaman/area bebas.
-  - `wp_store_checkout` / `store_checkout`  
+  - `wp_store_checkout` / `store_checkout`
     - Halaman Checkout. Pastikan halaman ini dipetakan di Pengaturan → Halaman.
-  - `wp_store_thanks` / `store_thanks`  
-    - Halaman “Terima Kasih” setelah checkout.  
+  - `wp_store_thanks` / `store_thanks`
+    - Halaman “Terima Kasih” setelah checkout.
     - Mendukung parameter URL `order` untuk menampilkan ringkasan pesanan.
-  - `wp_store_tracking` / `store_tracking`  
-    - Halaman Tracking Pesanan.  
+  - `wp_store_tracking` / `store_tracking`
+    - Halaman Tracking Pesanan.
     - Parameter URL: `order=<ID>` untuk menampilkan status pesanan dan tracking AWB jika tersedia.
-  - `wp_store_wishlist`  
+  - `wp_store_wishlist`
     - Widget wishlist untuk menampilkan daftar favorit user/guest.
-  - `wp_store_add_to_wishlist`  
+  - `wp_store_add_to_wishlist`
     - Tombol tambah ke wishlist pada kartu/halaman produk.
-  - `wp_store_link_profile`  
+    - Opsi:
+      - `id`: ID produk (opsional, fallback ke post saat ini)
+      - `size`: `sm` untuk ukuran kecil
+      - `label_add`: teks saat belum ditambahkan (default `Wishlist`)
+      - `label_remove`: teks saat sudah ada di wishlist (default `Hapus`)
+      - `icon_only`: `1|0` hanya ikon tanpa teks (default `0`)
+  - `wp_store_link_profile`
     - Tautan ke halaman profil pengguna (menampilkan avatar).
     - URL halaman profil dikonfigurasi di Pengaturan → Halaman.
+  - `wp_store_thumbnail`
+    - Menampilkan thumbnail produk dengan dukungan hover dan badge.
+    - Opsi:
+      - `id`: ID produk (opsional, fallback ke post saat ini)
+      - `width`: lebar dasar rasio (default 300)
+      - `height`: tinggi dasar rasio (default 300)
+      - `crop`: `true|false` object-fit cover/contain (default true)
+      - `upscale`: `true|false` (disediakan untuk kompatibilitas)
+      - `alt`: teks alt gambar (default judul produk)
+      - `hover`: `change|none` (default `change` untuk gambar hover jika tersedia gallery)
+      - `label`: `true|false` (default `true`, menampilkan badge Digital, Label, dan Diskon)
+    - Contoh:  
+      `[wp_store_thumbnail id="123" width="240" height="320" hover="change" label="true"]`
+  - `wp_store_price`
+    - Menampilkan harga produk (harga promo vs normal).
+    - Opsi:
+      - `id`: ID produk
+      - `countdown`: `true|false` menampilkan waktu berakhir promo jika tersedia
+    - Contoh:  
+      `[wp_store_price id="123" countdown="true"]`
 
 - Berat & Cache
   - Berat total dihitung dari meta `_store_weight_kg` per produk dan dikonversi ke gram.
@@ -132,6 +195,7 @@ WP Store adalah plugin WordPress untuk membuat toko sederhana dengan fitur Produ
     - `wp_store_captcha_created($id, $code)`
 
 - Contoh Penggunaan Filter
+
 ```php
 // Tambah catatan khusus saat checkout
 add_filter('wp_store_before_create_order', function ($data, $request) {
