@@ -2,15 +2,20 @@
 $currency = isset($currency) ? (string) $currency : (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
 ?>
 <style>
-@media print {
-  .no-print { display: none !important; }
-  .catalog-grid { grid-template-columns: 1fr 1fr 1fr; }
-}
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .catalog-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
 </style>
 <script>
-function wpsDownloadCatalogPdf() {
-  window.print();
-}
+  function wpsDownloadCatalogPdf() {
+    window.print();
+  }
 </script>
 <div class="wps-container wps-mx-auto wps-my-8">
   <div class="wps-flex wps-items-center wps-justify-between wps-mb-4">
@@ -23,23 +28,17 @@ function wpsDownloadCatalogPdf() {
     <div class="catalog-grid wps-grid wps-gap-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
       <?php foreach ($items as $item) : ?>
         <div class="wps-box-gray wps-rounded wps-p-3">
-          <a class="wps-block wps-mb-2" href="<?php echo esc_url($item['link']); ?>">
+          <a class="wps-block wps-mb-2" href="<?php echo esc_url($item['link']); ?>" style="position:relative; display:block;">
             <?php
             $src = is_string($item['image']) && $item['image'] !== '' ? $item['image'] : (WP_STORE_URL . 'assets/frontend/img/noimg.webp');
             $alt = is_string($item['title']) ? $item['title'] : 'Produk';
             ?>
             <img class="wps-rounded" src="<?php echo esc_url($src); ?>" alt="<?php echo esc_attr($alt); ?>" style="width:100%; aspect-ratio: 1 / 1; object-fit: cover;">
+            <?php echo wps_label_badge_html((int) $item['id']); ?>
+            <?php echo wps_discount_badge_html((int) $item['id']); ?>
           </a>
           <div class="wps-text-sm wps-text-gray-900 wps-font-medium"><?php echo esc_html($item['title']); ?></div>
-          <?php if (isset($item['price']) && $item['price'] !== null) : ?>
-            <?php
-            $price_val = (float) ($item['price']);
-            $formatted_price = ($currency ?? 'Rp') === 'Rp'
-              ? number_format($price_val, 0, ',', '.')
-              : number_format_i18n($price_val, 0);
-            ?>
-            <div class="wps-text-sm wps-text-primary-700 wps-font-semibold"><?php echo esc_html(($currency ?? 'Rp') . ' ' . $formatted_price); ?></div>
-          <?php endif; ?>
+          <div class="wps-mt-1"><?php echo do_shortcode('[wp_store_price id="' . esc_attr($item['id']) . '"]'); ?></div>
         </div>
       <?php endforeach; ?>
     </div>

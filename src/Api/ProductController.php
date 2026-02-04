@@ -112,13 +112,26 @@ class ProductController
                 $query->the_post();
                 $id = get_the_ID();
                 $price = get_post_meta($id, '_store_price', true);
+                $sale = get_post_meta($id, '_store_sale_price', true);
+                $untilRaw = (string) get_post_meta($id, '_store_flashsale_until', true);
+                $untilTs = $untilRaw ? strtotime($untilRaw) : 0;
+                $nowTs = current_time('timestamp');
+                $priceNum = $price !== '' ? (float) $price : null;
+                $saleNum = $sale !== '' ? (float) $sale : null;
+                $saleActive = $saleNum !== null && $saleNum > 0 && (($priceNum !== null && $saleNum < $priceNum) || $priceNum === null) && ($untilTs === 0 || $untilTs > $nowTs);
+                $percent = ($saleActive && $priceNum !== null && $priceNum > 0) ? round((($priceNum - $saleNum) / $priceNum) * 100) : 0;
+                $label = get_post_meta($id, '_store_label', true);
                 $image = get_the_post_thumbnail_url($id, 'medium');
                 $items[] = [
                     'id' => $id,
                     'title' => get_the_title(),
                     'link' => get_permalink(),
                     'image' => $image ? $image : null,
-                    'price' => $price !== '' ? (float) $price : null,
+                    'price' => $priceNum,
+                    'sale_price' => $saleNum,
+                    'sale_active' => $saleActive,
+                    'discount_percent' => $percent,
+                    'label' => is_string($label) ? $label : '',
                 ];
             }
             wp_reset_postdata();
@@ -138,10 +151,20 @@ class ProductController
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
         $pdf = $dompdf->output();
-        $resp = new WP_REST_Response($pdf, 200);
-        $resp->header('Content-Type', 'application/pdf');
-        $resp->header('Content-Disposition', 'attachment; filename="katalog.pdf"');
-        return $resp;
+        if (function_exists('nocache_headers')) {
+            nocache_headers();
+        }
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+        $date_part = function_exists('wp_date') ? wp_date('ymd') : date('ymd');
+        $rand_part = str_pad((string) wp_rand(0, 999), 3, '0', STR_PAD_LEFT);
+        $filename = 'katalog-' . $date_part . '-' . $rand_part . '.pdf';
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        echo $pdf;
+        exit;
     }
     public function get_product(WP_REST_Request $request)
     {
