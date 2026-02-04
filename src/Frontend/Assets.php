@@ -128,5 +128,8 @@ class Assets
                 })(),
             ]
         );
+        wp_enqueue_style('wp-store-flickity');
+        wp_enqueue_script('wp-store-vendor');
+        wp_enqueue_script('wp-store-frontend');
     }
 }

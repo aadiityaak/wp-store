@@ -49,10 +49,30 @@
           }
           $alt = $id ? get_the_title($id) : 'Produk';
           ?>
-          <a href="<?php echo esc_url($link); ?>" class="carousel-cell" style="width:100%; margin-right:8px; display:block;">
+          <a href="<?php echo esc_url($link); ?>" class="carousel-cell" style="width:calc(100% / <?php echo (int) $per_row; ?>); margin-right:8px; display:block;">
             <div class="wps-card-hover">
               <div class="wps-image-wrap" style="width:100%; aspect-ratio: <?php echo esc_attr($aspect_ratio); ?>;">
                 <img class="wps-rounded" src="<?php echo esc_url($src); ?>" alt="<?php echo esc_attr($alt); ?>" style="<?php echo esc_attr($style_img); ?>">
+                <?php
+                $ptype = get_post_meta((int) $id, '_store_product_type', true);
+                $is_digital = ($ptype === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
+                if ($is_digital) {
+                  echo '<span class="wps-digital-badge wps-text-xs wps-text-white">'
+                    . wps_icon(['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+                    . '<span class="txt wps-text-white wps-text-xs">Digital</span>'
+                    . '</span>';
+                }
+                $lbl = get_post_meta((int) $id, '_store_label', true);
+                if (is_string($lbl) && $lbl !== '') {
+                  $txt = $lbl === 'label-best' ? 'Best Seller' : ($lbl === 'label-limited' ? 'Limited' : ($lbl === 'label-new' ? 'New' : ''));
+                  if ($txt !== '') {
+                    echo '<span class="wps-label-badge ' . esc_attr($lbl) . '">'
+                      . wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+                      . '<span class="txt wps-text-white wps-text-xs">' . esc_html($txt) . '</span>'
+                      . '</span>';
+                  }
+                }
+                ?>
               </div>
             </div>
           </a>

@@ -316,7 +316,8 @@ class Shortcode
             'crop' => 'true',
             'upscale' => 'true',
             'alt' => '',
-            'hover' => 'change'
+            'hover' => 'change',
+            'label' => 'true'
         ], $atts);
         $id = $this->resolve_product_id((int) $atts['id']);
         if ($id <= 0 || get_post_type($id) !== 'store_product') {
@@ -334,6 +335,20 @@ class Shortcode
         $style = 'width:100%; height:100%; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
         $wrap_style = 'width:100%; max-width:' . (int) $w . 'px; aspect-ratio:' . (int) $w . ' / ' . (int) $h . '; overflow:hidden;';
         $hoverMode = sanitize_key($atts['hover']);
+        $showLabel = in_array(strtolower((string) $atts['label']), ['1', 'true', 'yes'], true);
+        $badgeHtml = '';
+        if ($showLabel) {
+            $lbl = get_post_meta((int) $id, '_store_label', true);
+            if (is_string($lbl) && $lbl !== '') {
+                $txt = $lbl === 'label-best' ? 'Best Seller' : ($lbl === 'label-limited' ? 'Limited' : ($lbl === 'label-new' ? 'New' : ''));
+                if ($txt !== '') {
+                    $badgeHtml = '<span class="wps-label-badge ' . esc_attr($lbl) . '">'
+                        . \wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+                        . '<span class="txt wps-text-white wps-text-xs">' . esc_html($txt) . '</span>'
+                        . '</span>';
+                }
+            }
+        }
         if ($hoverMode === 'change') {
             $hover_src = '';
             $gal = get_post_meta((int) $id, '_store_gallery_ids', true);
@@ -353,10 +368,13 @@ class Shortcode
             if ($hover_src) {
                 $html .= '<img class="wps-rounded img-hover" src="' . esc_url($hover_src) . '" alt="' . esc_attr($alt) . '">';
             }
+            if ($badgeHtml) {
+                $html .= $badgeHtml;
+            }
             $html .= '</div></div>';
             return $html;
         }
-        return '<div class="wps-image-wrap" style="' . esc_attr($wrap_style) . '"><img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded"></div>';
+        return '<div class="wps-image-wrap" style="' . esc_attr($wrap_style) . '"><img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" style="' . esc_attr($style) . '" class="wps-rounded">' . $badgeHtml . '</div>';
     }
 
     public function render_price($atts)

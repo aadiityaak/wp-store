@@ -786,11 +786,11 @@ tr:not(:last-child) .wps-td {
   right: 6px;
 }
 .wps-products-carousel .flickity-button-icon {
-  width: 14px;
-  height: 14px;
+  width: 14px !important;
+  height: 14px !important;
   fill: currentColor;
-  left: 50%;
-  top: 50%;
+  left: 50% !important;
+  top: 50% !important;
   transform: translate(-50%, -50%);
 }
 .wps-products-carousel .flickity-page-dots {

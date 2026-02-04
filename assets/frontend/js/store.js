@@ -261,4 +261,33 @@
     document.addEventListener('DOMContentLoaded', initCarousels);
   }
   document.addEventListener('wp-store:ready', initCarousels);
+  const setupBeaverBuilderIntegration = () => {
+    const content = document.querySelector('.fl-builder-content');
+    if (!content) return;
+    const trigger = () => setTimeout(initCarousels, 20);
+    if (window.jQuery && typeof window.jQuery.fn.on === 'function') {
+      window.jQuery(content).on('fl-builder.layout-rendered', trigger);
+      window.jQuery(content).on('fl-builder.preview-rendered', trigger);
+    }
+    const mo = new MutationObserver((mutations) => {
+      for (let i = 0; i < mutations.length; i++) {
+        const m = mutations[i];
+        if (m.addedNodes && m.addedNodes.length) {
+          for (let j = 0; j < m.addedNodes.length; j++) {
+            const n = m.addedNodes[j];
+            if (n.nodeType === 1) {
+              if ((n.matches && n.matches('[data-wps-carousel], .main-carousel')) || (n.querySelector && n.querySelector('[data-wps-carousel]'))) {
+                trigger();
+                return;
+              }
+            }
+          }
+        }
+      }
+    });
+    mo.observe(content, { childList: true, subtree: true });
+  };
+  if (document.querySelector('.fl-builder-content') || (document.body && document.body.classList.contains('fl-builder-edit'))) {
+    setupBeaverBuilderIntegration();
+  }
 })();
