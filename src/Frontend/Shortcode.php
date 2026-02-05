@@ -398,6 +398,55 @@ class Shortcode
                 ];
             }
         }
+        global $wpdb;
+        $min_price_global = 0.0;
+        $max_price_global = 0.0;
+        $avg_price_global = 0.0;
+        $sqlMin = $wpdb->prepare(
+            "SELECT MIN(CAST(pm.meta_value AS DECIMAL(18,2))) 
+             FROM {$wpdb->postmeta} pm 
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id 
+             WHERE p.post_type = %s AND p.post_status = %s AND pm.meta_key = %s AND pm.meta_value <> ''",
+            'store_product',
+            'publish',
+            '_store_price'
+        );
+        $sqlMax = $wpdb->prepare(
+            "SELECT MAX(CAST(pm.meta_value AS DECIMAL(18,2))) 
+             FROM {$wpdb->postmeta} pm 
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id 
+             WHERE p.post_type = %s AND p.post_status = %s AND pm.meta_key = %s AND pm.meta_value <> ''",
+            'store_product',
+            'publish',
+            '_store_price'
+        );
+        $minv = $wpdb->get_var($sqlMin);
+        $maxv = $wpdb->get_var($sqlMax);
+        $sqlAvg = $wpdb->prepare(
+            "SELECT AVG(CAST(pm.meta_value AS DECIMAL(18,2))) 
+             FROM {$wpdb->postmeta} pm 
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id 
+             WHERE p.post_type = %s AND p.post_status = %s AND pm.meta_key = %s AND pm.meta_value <> ''",
+            'store_product',
+            'publish',
+            '_store_price'
+        );
+        $avgv = $wpdb->get_var($sqlAvg);
+        if ($minv !== null && $minv !== '') {
+            $min_price_global = (float) $minv;
+        }
+        if ($maxv !== null && $maxv !== '') {
+            $max_price_global = (float) $maxv;
+        }
+        if ($avgv !== null && $avgv !== '') {
+            $avg_price_global = (float) $avgv;
+        }
+        if ($min_price_global < 0) $min_price_global = 0.0;
+        if ($max_price_global < $min_price_global) $max_price_global = $min_price_global;
+        // Add a small padding for UI friendliness
+        $min_price_global = floor($min_price_global);
+        $max_price_global = ceil($max_price_global);
+        $avg_price_global = round($avg_price_global);
         $current = [
             'sort' => isset($_GET['sort']) ? sanitize_key($_GET['sort']) : '',
             'min_price' => isset($_GET['min_price']) ? (float) $_GET['min_price'] : '',
@@ -427,6 +476,9 @@ class Shortcode
             'current' => $current,
             'show_labels' => $show_labels,
             'reset_url' => $reset_url,
+            'price_min_global' => $min_price_global,
+            'price_max_global' => $max_price_global,
+            'price_avg_global' => $avg_price_global,
         ]);
     }
 
@@ -435,11 +487,37 @@ class Shortcode
         $atts = shortcode_atts([
             'per_page' => 12,
         ], $atts);
+        wp_enqueue_script('alpinejs');
         $filters = $this->render_filters(['show_labels' => '1']);
         $shop = $this->render_shop(['per_page' => $atts['per_page']]);
-        $html = '<div class="wps-grid wps-grid-cols-3 wps-gap-4">'
-            . '<div>' . $filters . '</div>'
-            . '<div class="wps-col-span-2">' . $shop . '</div>'
+        $html = ''
+            . '<div x-data="{ openFilters:false, isMobile: window.matchMedia(\'(max-width: 768px)\').matches }" x-init="(() => {'
+            . '  const mq = window.matchMedia(\'(max-width: 768px)\');'
+            . '  const update = () => { isMobile = mq.matches };'
+            . '  if (mq.addEventListener) { mq.addEventListener(\'change\', update); } else if (mq.addListener) { mq.addListener(update); }'
+            . '  update();'
+            . '})()">'
+            . '  <div class="wps-flex wps-justify-end wps-mb-2" x-show="isMobile" x-cloak>'
+            . '    <button class="wps-btn wps-btn-secondary" @click="openFilters = true">' . esc_html__('Filter', 'wp-store') . '</button>'
+            . '  </div>'
+            . '  <div class="wps-flex wps-gap-4">'
+            . '    <div x-show="!isMobile" x-cloak style="width:300px;flex:0 0 300px;">' . $filters . '</div>'
+            . '    <div style="flex:1 1 auto;">' . $shop . '</div>'
+            . '  </div>'
+            . '  <template x-if="openFilters">'
+            . '    <div>'
+            . '      <div class="wps-offcanvas-backdrop" @click="openFilters=false"></div>'
+            . '      <div class="wps-offcanvas">'
+            . '        <div class="wps-offcanvas-header">'
+            . '          <div>' . esc_html__('Filter', 'wp-store') . '</div>'
+            . '          <button class="wps-btn wps-btn-secondary" @click="openFilters=false">' . esc_html__('Tutup', 'wp-store') . '</button>'
+            . '        </div>'
+            . '        <div class="wps-offcanvas-body">'
+            .            $filters
+            . '        </div>'
+            . '      </div>'
+            . '    </div>'
+            . '  </template>'
             . '</div>';
         return $html;
     }

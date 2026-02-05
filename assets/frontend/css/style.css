@@ -422,6 +422,113 @@ button.wps-btn-dark {
   border: 1px solid #d1d5db;
   border-radius: 0.2rem;
 }
+
+.wps-range-slider {
+  position: relative;
+  width: 100%;
+  height: 28px;
+  margin-top: 4px;
+}
+.wps-range-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  transform: translateY(-50%);
+}
+.wps-range-fill {
+  position: absolute;
+  top: 0;
+  height: 2px;
+  background-color: #2563eb;
+  border-radius: 9999px;
+}
+.wps-range {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  background: transparent;
+  -webkit-appearance: none;
+}
+.wps-price-input {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.wps-price-input .wps-input {
+  max-width: 140px;
+}
+.wps-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background-color: #2563eb;
+  border: 1px solid #1d4ed8;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+.wps-range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: transparent;
+}
+.wps-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background-color: #2563eb;
+  border: 1px solid #1d4ed8;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+.wps-range::-moz-range-track {
+  height: 2px;
+  background: transparent;
+}
+.wps-price-range {
+  position: relative;
+  width: 100%;
+  margin-top: 4px;
+}
+.wps-price-range .wps-slider {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+}
+.wps-price-range .wps-slider .wps-progress {
+  position: absolute;
+  top: 0;
+  height: 5px;
+  background-color: #2563eb;
+  border-radius: 9999px;
+  left: 0;
+  right: 0;
+}
+.wps-price-range .wps-range-input {
+  position: relative;
+  height: 0;
+}
+.wps-price-range .wps-range-input .wps-range {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 100%;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: none;
+}
+.wps-price-range .wps-range-input .wps-range::-webkit-slider-thumb {
+  pointer-events: auto;
+}
+.wps-price-range .wps-range-input .wps-range::-moz-range-thumb {
+  pointer-events: auto;
+}
 .wps-px-2\.5 {
   padding-left: 0.625rem;
   padding-right: 0.625rem;

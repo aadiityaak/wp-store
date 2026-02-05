@@ -17,46 +17,83 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
     </select>
   </div>
   <div class="wps-mt-3">
-    <label class="wps-label">Harga Minimum</label>
-    <input class="wps-input" type="number" min="0" step="1" name="min_price" x-model.number="min_price" @change="update" value="<?php echo esc_attr($current['min_price']); ?>">
-  </div>
-  <div class="wps-mt-3">
-    <label class="wps-label">Harga Maksimum</label>
-    <input class="wps-input" type="number" min="0" step="1" name="max_price" x-model.number="max_price" @change="update" value="<?php echo esc_attr($current['max_price']); ?>">
-  </div>
-  <div class="wps-mt-3">
-    <div class="wps-text-sm wps-text-gray-700 wps-mb-1">Kategori</div>
-    <div class="" style="gap:8px;">
-      <?php foreach ($categories as $cat): ?>
-        <label class="wps-checkbox-label wps-display-block">
-          <input type="checkbox" class="wps-checkbox" name="cats[]" :value="<?php echo esc_attr($cat['id']); ?>" x-model="cats" @change="update" <?php echo in_array($cat['id'], $current['cats'], true) ? 'checked' : ''; ?>>
-          <span class="wps-text-sm wps-text-gray-900"><?php echo esc_html($cat['name']); ?></span>
-        </label>
-      <?php endforeach; ?>
+    <label class="wps-label">Rentang Harga <span class="wps-text-sm wps-text-gray-700">• Rata-rata <?php echo isset($price_avg_global) ? 'Rp ' . number_format((float)$price_avg_global, 0, ',', '.') : ''; ?></span></label>
+    <div class="wps-text-sm wps-text-gray-700 wps-mb-1">
+      <span>Min: <span x-text="formatCurrency(min_price)"></span></span>
+      <span class="wps-mr-2"></span>
+      <span>Max: <span x-text="formatCurrency(max_price)"></span></span>
     </div>
-  </div>
-  <?php if ($show_labels): ?>
-    <div class="wps-mt-3">
-      <div class="wps-text-sm wps-text-gray-700 wps-mb-1">Label</div>
-      <div class="" style="gap:8px;">
-        <label class="wps-checkbox-label wps-display-block">
-          <input type="checkbox" class="wps-checkbox" name="labels[]" value="best" x-model="labels" @change="update" <?php echo in_array('best', $current['labels'], true) ? 'checked' : ''; ?>>
-          <span class="wps-text-sm wps-text-gray-900">Best Seller</span>
-        </label>
-        <label class="wps-checkbox-label wps-display-block">
-          <input type="checkbox" class="wps-checkbox" name="labels[]" value="limited" x-model="labels" @change="update" <?php echo in_array('limited', $current['labels'], true) ? 'checked' : ''; ?>>
-          <span class="wps-text-sm wps-text-gray-900">Limited</span>
-        </label>
-        <label class="wps-checkbox-label wps-display-block">
-          <input type="checkbox" class="wps-checkbox" name="labels[]" value="new" x-model="labels" @change="update" <?php echo in_array('new', $current['labels'], true) ? 'checked' : ''; ?>>
-          <span class="wps-text-sm wps-text-gray-900">New</span>
-        </label>
+    <div class="wps-price-range">
+      <div class="wps-slider">
+        <div class="wps-progress" :style="rangeFillStyle"></div>
+      </div>
+      <div class="wps-range-input">
+        <input type="range"
+          :min="price_min_bound"
+          :max="price_max_bound"
+          step="1"
+          x-model.number="min_price"
+          @input="clampPrices(); update()"
+          class="wps-range min">
+        <input type="range"
+          :min="price_min_bound"
+          :max="price_max_bound"
+          step="1"
+          x-model.number="max_price"
+          @input="clampPrices(); update()"
+          class="wps-range max">
       </div>
     </div>
-  <?php endif; ?>
-  <div class="wps-mt-4 wps-flex wps-justify-between wps-items-center">
-    <a href="<?php echo esc_url($reset_url); ?>" class="wps-btn wps-btn-secondary"><?php echo wps_icon(['name' => 'trash', 'size' => 16, 'class' => 'wps-mr-2']); ?>Reset</a>
-    <button type="submit" class="wps-btn wps-btn-primary"><?php echo wps_icon(['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Terapkan</button>
+    <div class="wps-price-input wps-mt-2">
+      <div class="wps-form-group wps-mb-0">
+        <label class="wps-label">Min</label>
+        <input class="wps-input" type="number" min="0" step="1" x-model.number="min_price" @input="clampPrices(); update()">
+      </div>
+      <div class="wps-form-group wps-mb-0">
+        <label class="wps-label">Max</label>
+        <input class="wps-input" type="number" min="0" step="1" x-model.number="max_price" @input="clampPrices(); update()">
+      </div>
+    </div>
+    <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+      <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">
+        <span class="wps-text-sm wps-text-gray-700" x-text="formatCurrency(price_min_bound)"></span>
+        <span class="wps-text-sm wps-text-gray-700" x-text="formatCurrency(price_max_bound)"></span>
+      </div>
+    </div>
+    <div class="wps-mt-3">
+      <div class="wps-text-sm wps-text-gray-700 wps-mb-1">Kategori</div>
+      <div class="" style="gap:8px;">
+        <?php foreach ($categories as $cat): ?>
+          <label class="wps-checkbox-label wps-display-block">
+            <input type="checkbox" class="wps-checkbox" name="cats[]" :value="<?php echo esc_attr($cat['id']); ?>" x-model="cats" @change="update" <?php echo in_array($cat['id'], $current['cats'], true) ? 'checked' : ''; ?>>
+            <span class="wps-text-sm wps-text-gray-900"><?php echo esc_html($cat['name']); ?></span>
+          </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php if ($show_labels): ?>
+      <div class="wps-mt-3">
+        <div class="wps-text-sm wps-text-gray-700 wps-mb-1">Label</div>
+        <div class="" style="gap:8px;">
+          <label class="wps-checkbox-label wps-display-block">
+            <input type="checkbox" class="wps-checkbox" name="labels[]" value="best" x-model="labels" @change="update" <?php echo in_array('best', $current['labels'], true) ? 'checked' : ''; ?>>
+            <span class="wps-text-sm wps-text-gray-900">Best Seller</span>
+          </label>
+          <label class="wps-checkbox-label wps-display-block">
+            <input type="checkbox" class="wps-checkbox" name="labels[]" value="limited" x-model="labels" @change="update" <?php echo in_array('limited', $current['labels'], true) ? 'checked' : ''; ?>>
+            <span class="wps-text-sm wps-text-gray-900">Limited</span>
+          </label>
+          <label class="wps-checkbox-label wps-display-block">
+            <input type="checkbox" class="wps-checkbox" name="labels[]" value="new" x-model="labels" @change="update" <?php echo in_array('new', $current['labels'], true) ? 'checked' : ''; ?>>
+            <span class="wps-text-sm wps-text-gray-900">New</span>
+          </label>
+        </div>
+      </div>
+    <?php endif; ?>
+    <div class="wps-mt-4 wps-flex wps-justify-between wps-items-center">
+      <a href="<?php echo esc_url($reset_url); ?>" class="wps-btn wps-btn-secondary"><?php echo wps_icon(['name' => 'trash', 'size' => 16, 'class' => 'wps-mr-2']); ?>Reset</a>
+      <button type="submit" class="wps-btn wps-btn-primary"><?php echo wps_icon(['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Terapkan</button>
+    </div>
   </div>
 </form>
 <script>
@@ -65,15 +102,44 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
       sort: <?php echo wp_json_encode((string) ($current['sort'] ?? '')); ?>,
       min_price: <?php echo is_numeric($current['min_price'] ?? '') ? (float) $current['min_price'] : '""'; ?>,
       max_price: <?php echo is_numeric($current['max_price'] ?? '') ? (float) $current['max_price'] : '""'; ?>,
+      price_min_bound: <?php echo isset($price_min_global) ? (float) $price_min_global : 0; ?>,
+      price_max_bound: <?php echo isset($price_max_global) ? (float) $price_max_global : 0; ?>,
       cats: <?php echo wp_json_encode(array_values($current['cats'] ?? [])); ?>,
       labels: <?php echo wp_json_encode(array_values($current['labels'] ?? [])); ?>,
       updating: false,
       init() {
         this.$watch('sort', () => this.update());
-        this.$watch('min_price', () => this.update());
-        this.$watch('max_price', () => this.update());
+        this.$watch('min_price', () => {
+          this.clampPrices();
+          this.update();
+        });
+        this.$watch('max_price', () => {
+          this.clampPrices();
+          this.update();
+        });
         this.$watch('cats', () => this.update());
         this.$watch('labels', () => this.update());
+        if (this.min_price === '' || isNaN(this.min_price)) this.min_price = this.price_min_bound;
+        if (this.max_price === '' || isNaN(this.max_price)) this.max_price = this.price_max_bound;
+        this.clampPrices();
+      },
+      get rangeFillStyle() {
+        const span = Math.max(1, this.price_max_bound - this.price_min_bound);
+        const minPct = Math.max(0, Math.min(100, ((this.min_price - this.price_min_bound) / span) * 100));
+        const maxPct = Math.max(0, Math.min(100, ((this.max_price - this.price_min_bound) / span) * 100));
+        const left = Math.min(minPct, maxPct);
+        const right = Math.max(0, 100 - Math.max(minPct, maxPct));
+        return `left:${left}%; right:${right}%;`;
+      },
+      clampPrices() {
+        if (this.min_price < this.price_min_bound) this.min_price = this.price_min_bound;
+        if (this.max_price > this.price_max_bound) this.max_price = this.price_max_bound;
+        if (this.min_price > this.max_price) this.min_price = this.max_price;
+      },
+      formatCurrency(v) {
+        const n = parseFloat(v);
+        if (!Number.isFinite(n)) return 'Rp 0';
+        return 'Rp ' + n.toLocaleString('id-ID');
       },
       buildQuery() {
         const p = new URLSearchParams();
