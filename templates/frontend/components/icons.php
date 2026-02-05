@@ -61,6 +61,8 @@ if ($name === 'cart') {
     echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
 } elseif ($name === 'coupon' || $name === 'ticket') {
     echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect><circle cx="12" cy="9" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="15" r="1"></circle></svg>';
+} elseif ($name === 'check') {
+    echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><path d="M20 6 9 17l-5-5"></path></svg>';
 } else {
     echo '';
 }

@@ -6,93 +6,146 @@ $active_couriers = isset($active_couriers) && is_array($active_couriers) ? $acti
 $nonce = isset($nonce) ? (string) $nonce : wp_create_nonce('wp_rest');
 ?>
 <script>
-window.wpStoreSettings = window.wpStoreSettings || {
-  restUrl: window.location.origin + '/wp-json/wp-store/v1/',
-  nonce: '<?php echo esc_js($nonce); ?>'
-};
-window.wpStoreShippingChecker = function() {
-  return {
-    provinces: [],
-    cities: [],
-    subdistricts: [],
-    selectedProvince: '',
-    selectedCity: '',
-    selectedSubdistrict: '',
-    couriers: <?php echo json_encode(array_values($active_couriers)); ?>,
-    selectedCouriers: <?php echo json_encode(array_values($active_couriers)); ?>,
-    originSubdistrict: '<?php echo esc_js($origin_subdistrict); ?>',
-    weightKg: 1,
-    services: [],
-    loading: false,
-    isLoadingProvinces: false,
-    isLoadingCities: false,
-    isLoadingSubdistricts: false,
-    currency: '<?php echo esc_js($currency); ?>',
-    formatPrice(n) {
-      const v = typeof n === 'number' ? n : parseFloat(n || 0);
-      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
-    },
-    async loadProvinces() {
-      this.isLoadingProvinces = true;
-      try {
-        const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
-        const data = await res.json();
-        this.provinces = data.data || [];
-      } catch (e) { this.provinces = []; } finally { this.isLoadingProvinces = false; }
-    },
-    async loadCities() {
-      if (!this.selectedProvince) { this.cities = []; return; }
-      this.isLoadingCities = true;
-      try {
-        const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
-        const data = await res.json();
-        this.cities = data.data || [];
-      } catch (e) { this.cities = []; } finally { this.isLoadingCities = false; }
-    },
-    async loadSubdistricts() {
-      if (!this.selectedCity) { this.subdistricts = []; return; }
-      this.isLoadingSubdistricts = true;
-      try {
-        const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), { headers: { 'X-WP-Nonce': wpStoreSettings.nonce } });
-        const data = await res.json();
-        this.subdistricts = data.data || [];
-      } catch (e) { this.subdistricts = []; } finally { this.isLoadingSubdistricts = false; }
-    },
-    async checkShipping() {
-      if (!this.originSubdistrict || !this.selectedSubdistrict || !Array.isArray(this.selectedCouriers) || this.selectedCouriers.length === 0) {
-        return;
-      }
-      this.loading = true;
-      this.services = [];
-      const grams = Math.max(1, Math.round((parseFloat(this.weightKg || 0) || 0) * 1000));
-      try {
-        const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/calculate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': wpStoreSettings.nonce },
-          body: JSON.stringify({
-            destination_subdistrict: this.selectedSubdistrict,
-            courier: this.selectedCouriers.join(':'),
-            manual_weight_grams: grams
-          })
-        });
-        const data = await res.json();
-        if (res.ok && data && data.success && Array.isArray(data.services)) {
-          this.services = data.services.map(s => ({
-            courier: s.courier || '',
-            service: s.service || '',
-            description: s.description || '',
-            cost: s.cost || 0,
-            etd: s.etd || ''
-          }));
+  window.wpStoreSettings = window.wpStoreSettings || {
+    restUrl: window.location.origin + '/wp-json/wp-store/v1/',
+    nonce: '<?php echo esc_js($nonce); ?>'
+  };
+  window.wpStoreShippingChecker = function() {
+    return {
+      provinces: [],
+      cities: [],
+      subdistricts: [],
+      selectedProvince: '',
+      selectedCity: '',
+      selectedSubdistrict: '',
+      couriers: <?php echo json_encode(array_values($active_couriers)); ?>,
+      selectedCouriers: <?php echo json_encode(array_values($active_couriers)); ?>,
+      originSubdistrict: '<?php echo esc_js($origin_subdistrict); ?>',
+      weightKg: 1,
+      services: [],
+      loading: false,
+      isLoadingProvinces: false,
+      isLoadingCities: false,
+      isLoadingSubdistricts: false,
+      currency: '<?php echo esc_js($currency); ?>',
+      formatPrice(n) {
+        const v = typeof n === 'number' ? n : parseFloat(n || 0);
+        return new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          minimumFractionDigits: 0
+        }).format(v);
+      },
+      captchaRequired: <?php echo is_user_logged_in() ? 'false' : 'true'; ?>,
+      isCaptchaReady() {
+        if (!this.captchaRequired) return true;
+        const root = document.getElementById('shipping-captcha');
+        if (!root) return false;
+        const val = root.querySelector('input[name="captcha_value"]');
+        const idf = root.querySelector('input[name="captcha_id"]');
+        const v = String(val && val.value ? val.value : '').trim();
+        const i = String(idf && idf.value ? idf.value : '').trim();
+        const vf = root.querySelector('input[name="captcha_verified"]');
+        const vv = String(vf && vf.value ? vf.value : '').trim();
+        return v !== '' && i !== '' && vv === '1';
+      },
+      async loadProvinces() {
+        this.isLoadingProvinces = true;
+        try {
+          const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', {
+            headers: {
+              'X-WP-Nonce': wpStoreSettings.nonce
+            }
+          });
+          const data = await res.json();
+          this.provinces = data.data || [];
+        } catch (e) {
+          this.provinces = [];
+        } finally {
+          this.isLoadingProvinces = false;
         }
-      } catch (e) {}
-      this.loading = false;
-    },
-    init() {
-      this.loadProvinces();
+      },
+      async loadCities() {
+        if (!this.selectedProvince) {
+          this.cities = [];
+          return;
+        }
+        this.isLoadingCities = true;
+        try {
+          const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), {
+            headers: {
+              'X-WP-Nonce': wpStoreSettings.nonce
+            }
+          });
+          const data = await res.json();
+          this.cities = data.data || [];
+        } catch (e) {
+          this.cities = [];
+        } finally {
+          this.isLoadingCities = false;
+        }
+      },
+      async loadSubdistricts() {
+        if (!this.selectedCity) {
+          this.subdistricts = [];
+          return;
+        }
+        this.isLoadingSubdistricts = true;
+        try {
+          const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), {
+            headers: {
+              'X-WP-Nonce': wpStoreSettings.nonce
+            }
+          });
+          const data = await res.json();
+          this.subdistricts = data.data || [];
+        } catch (e) {
+          this.subdistricts = [];
+        } finally {
+          this.isLoadingSubdistricts = false;
+        }
+      },
+      async checkShipping() {
+        if (this.captchaRequired && !this.isCaptchaReady()) {
+          return;
+        }
+        if (!this.originSubdistrict || !this.selectedSubdistrict || !Array.isArray(this.selectedCouriers) || this.selectedCouriers.length === 0) {
+          return;
+        }
+        this.loading = true;
+        this.services = [];
+        const grams = Math.max(1, Math.round((parseFloat(this.weightKg || 0) || 0) * 1000));
+        try {
+          const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/calculate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-WP-Nonce': wpStoreSettings.nonce
+            },
+            body: JSON.stringify({
+              destination_subdistrict: this.selectedSubdistrict,
+              courier: this.selectedCouriers.join(':'),
+              manual_weight_grams: grams
+            })
+          });
+          const data = await res.json();
+          if (res.ok && data && data.success && Array.isArray(data.services)) {
+            this.services = data.services.map(s => ({
+              courier: s.courier || '',
+              service: s.service || '',
+              description: s.description || '',
+              cost: s.cost || 0,
+              etd: s.etd || ''
+            }));
+          }
+        } catch (e) {}
+        this.loading = false;
+      },
+      init() {
+        this.loadProvinces();
+      }
     }
   }
-}
 </script>
 <div class="wps-container wps-mx-auto wps-my-8" x-data="wpStoreShippingChecker()">
   <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-4 wps-pt-4">Cek Ongkir</div>
@@ -131,13 +184,15 @@ window.wpStoreShippingChecker = function() {
       <div>
         <label class="wps-label">Berat (Kg)</label>
         <input type="number" min="0.1" step="0.1" class="wps-input" x-model="weightKg" placeholder="1.0">
-        <div class="wps-text-xs wps-text-gray-500 wps-mt-1">Asal pengiriman: <span class="wps-font-medium" x-text="originSubdistrict ? 'Kecamatan #' + originSubdistrict : 'Belum diatur'"></span></div>
       </div>
     </div>
     <div class="wps-divider wps-my-4"></div>
     <div>
+      <div class="wps-mt-2" x-show="<?php echo is_user_logged_in() ? 'false' : 'true'; ?>" id="shipping-captcha" @input="recomputeAllow()" @change="recomputeAllow()">
+        <?php echo \WpStore\Frontend\Template::render('components/captcha'); ?>
+      </div>
       <div class="wps-mt-4">
-        <button type="button" class="wps-btn wps-btn-primary" @click="checkShipping()" :disabled="loading || !selectedSubdistrict || couriers.length === 0">
+        <button type="button" class="wps-btn wps-btn-primary" @click="checkShipping()" :disabled="loading || !selectedSubdistrict || couriers.length === 0 || (captchaRequired && !isCaptchaReady())">
           <span x-show="!loading">Cek Ongkir</span>
           <span x-show="loading">Menghitung...</span>
         </button>

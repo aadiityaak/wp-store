@@ -63,6 +63,19 @@
                     this.toastShow = false;
                 }, 2000);
             },
+            captchaRequired: <?php echo is_user_logged_in() ? 'false' : 'true'; ?>,
+            isCaptchaReady() {
+                if (!this.captchaRequired) return true;
+                const root = document.getElementById('checkout-captcha');
+                if (!root) return false;
+                const val = root.querySelector('input[name="captcha_value"]');
+                const idf = root.querySelector('input[name="captcha_id"]');
+                const v = String(val && val.value ? val.value : '').trim();
+                const i = String(idf && idf.value ? idf.value : '').trim();
+                const vf = root.querySelector('input[name="captcha_verified"]');
+                const vv = String(vf && vf.value ? vf.value : '').trim();
+                return v !== '' && i !== '' && vv === '1';
+            },
             currency: '<?php echo esc_js($currency); ?>',
             originSubdistrict: '<?php echo esc_js($origin_subdistrict); ?>',
             shippingCouriers: <?php echo json_encode($active_couriers); ?>,
@@ -90,6 +103,11 @@
                 }).format(v);
             },
             async calculateAllShipping() {
+                if (this.captchaRequired && !this.isCaptchaReady()) {
+                    this.showToast('Verifikasi captcha terlebih dahulu.', 'error');
+                    this.recomputeAllow();
+                    return;
+                }
                 if (!this.selectedSubdistrict || !Array.isArray(this.shippingCouriers) || this.shippingCouriers.length === 0) {
                     this.recomputeAllow();
                     return;
@@ -206,9 +224,17 @@
             },
             recomputeAllow() {
                 this.allowSubmit = this.getBlockingReasons().length === 0;
+                if (this.captchaRequired && !this.isCaptchaReady()) {
+                    this.allowSubmit = false;
+                }
             },
             trySubmit() {
                 if (this.submitting) return;
+                if (this.captchaRequired && !this.isCaptchaReady()) {
+                    this.warnMessage = 'Verifikasi captcha terlebih dahulu.';
+                    this.warnShow = true;
+                    return;
+                }
                 if (!this.allowSubmit) {
                     const r = this.getBlockingReasons()[0] || 'Tidak dapat melanjutkan';
                     this.warnMessage = r;
@@ -711,6 +737,10 @@
                                     @click="paymentMethod = 'qris'">
                                     <span class="wps-text-sm wps-text-gray-900">QRIS</span>
                                 </button>
+                            </div>
+
+                            <div class="wps-mt-2" x-show="!loggedIn" id="checkout-captcha" @input="recomputeAllow()" @change="recomputeAllow()">
+                                <?php echo \WpStore\Frontend\Template::render('components/captcha'); ?>
                             </div>
 
                             <div class="wps-mt-4 wps-flex wps-justify-end">
