@@ -4,7 +4,7 @@ $current = isset($current) && is_array($current) ? $current : ['sort' => '', 'mi
 $reset_url = isset($reset_url) ? (string) $reset_url : '';
 $show_labels = isset($show_labels) ? (bool) $show_labels : true;
 ?>
-<form x-data="wpStoreFilters()" x-init="init()" @submit.prevent="update" method="get" action="" class="wps-card wps-p-4" style="margin-bottom:12px;">
+<form x-data="typeof wpStoreFilters === 'function' ? wpStoreFilters() : {}" x-init="init && typeof init === 'function' ? init() : null" @submit.prevent="update && typeof update === 'function' ? update() : null" method="get" action="" class="wps-card wps-p-4" style="margin-bottom:12px;">
   <div class="wps-text-lg wps-font-medium wps-mb-3 wps-text-bold">Filter & Urutkan</div>
   <div class="wps-mt-3">
     <label class="wps-label">Urutkan</label>
@@ -212,13 +212,16 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
               }
               curBlock.innerHTML = newBlock.innerHTML;
               if (window.Alpine) {
-                try {
-                  if (typeof window.Alpine.initTree === 'function') {
-                    window.Alpine.initTree(curBlock);
-                  } else if (typeof window.Alpine.start === 'function') {
-                    window.Alpine.start();
-                  }
-                } catch (e) {}
+                const hasAlpine = curBlock.querySelector('[x-data],[x-init],[x-show],[x-model],[x-on],[x-bind],[x-if],[x-for]');
+                if (hasAlpine) {
+                  try {
+                    if (typeof window.Alpine.initTree === 'function') {
+                      requestAnimationFrame(() => window.Alpine.initTree(curBlock));
+                    } else if (typeof window.Alpine.start === 'function') {
+                      requestAnimationFrame(() => window.Alpine.start());
+                    }
+                  } catch (e) {}
+                }
               }
             }
           })

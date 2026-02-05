@@ -313,15 +313,8 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     <p class="wp-store-helper">Tentukan halaman untuk fitur-fitur toko.</p>
 
                     <div>
-                        <label class="wp-store-label" for="page_shop">Halaman Toko (Shop)</label>
-                        <?php
-                        wp_dropdown_pages([
-                            'name' => 'page_shop',
-                            'selected' => $settings['page_shop'] ?? 0,
-                            'show_option_none' => '-- Pilih Halaman --',
-                            'class' => 'wp-store-input'
-                        ]);
-                        ?>
+                        <label class="wp-store-label">Halaman Toko (Shop)</label>
+                        <div class="wp-store-helper">Menggunakan archive produk: <?php echo esc_html(site_url('/produk/')); ?></div>
                     </div>
 
                     <div>
@@ -410,7 +403,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
                     <div class="wp-store-box-gray">
                         <h3 class="wp-store-subtitle">Generate Halaman Otomatis</h3>
-                        <p class="wp-store-helper">Belum punya halaman? Klik tombol di bawah ini untuk membuat halaman Toko, Profil, Keranjang, Checkout, Terima Kasih, dan Tracking Order secara otomatis dengan shortcode yang sesuai.</p>
+                        <p class="wp-store-helper">Belum punya halaman? Klik tombol di bawah ini untuk membuat halaman Profil, Keranjang, Checkout, Terima Kasih, dan Tracking Order secara otomatis dengan shortcode yang sesuai.</p>
 
                         <div class="wp-store-mt-4">
                             <button type="button" @click="openGeneratePagesModal" class="wp-store-btn wp-store-btn-secondary" :disabled="isGenerating">

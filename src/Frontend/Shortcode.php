@@ -505,7 +505,7 @@ class Shortcode
         $filters = $this->render_filters(['show_labels' => '1']);
         $shop = $this->render_shop(['per_page' => $atts['per_page']]);
         $html = ''
-            . '<div x-data="{ openFilters:false, isMobile: window.matchMedia(\'(max-width: 768px)\').matches }" x-init="(() => {'
+            . '<div x-data="{ openFilters:false, isMobile: window.matchMedia(\'(max-width: 768px)\').matches } ?? {}" x-init="(() => {'
             . '  const mq = window.matchMedia(\'(max-width: 768px)\');'
             . '  const update = () => { isMobile = mq.matches };'
             . '  if (mq.addEventListener) { mq.addEventListener(\'change\', update); } else if (mq.addListener) { mq.addListener(update); }'
@@ -729,7 +729,7 @@ class Shortcode
         if ($wantCountdown && $untilTs > $nowTs) {
             wp_enqueue_script('alpinejs');
             $endJs = esc_js($untilRaw);
-            $html .= '<div class="wps-text-xs wps-text-gray-700 wps-mt-1" x-data="{ end: new Date(\'' . $endJs . '\'), d:0,h:0,m:0,s:0, tick(){ const diff = Math.max(0, this.end - new Date()); this.d = Math.floor(diff/86400000); this.h = Math.floor((diff%86400000)/3600000); this.m = Math.floor((diff%3600000)/60000); this.s = Math.floor((diff%60000)/1000); }, init(){ this.tick(); setInterval(()=>this.tick(), 1000); } }" x-init="init">';
+            $html .= '<div class="wps-text-xs wps-text-gray-700 wps-mt-1" x-data="{ end: new Date(\'' . $endJs . '\'), d:0,h:0,m:0,s:0, tick(){ const diff = Math.max(0, this.end - new Date()); this.d = Math.floor(diff/86400000); this.h = Math.floor((diff%86400000)/3600000); this.m = Math.floor((diff%3600000)/60000); this.s = Math.floor((diff%60000)/1000); }, init(){ this.tick(); setInterval(()=>this.tick(), 1000); } } ?? {}" x-init="init">';
             $html .= '<span>Berakhir dalam </span><span x-text="d"></span><span> hari </span><span x-text="h"></span><span> jam </span><span x-text="m"></span><span> menit </span><span x-text="s"></span><span> detik</span>';
             $html .= '</div>';
         }
