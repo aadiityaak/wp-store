@@ -805,6 +805,9 @@ tr:not(:last-child) .wps-td {
 .wps-products-carousel .flickity-prev-next-button.previous {
   left: 6px;
 }
+.wps-display-block {
+  display: block;
+}
 .wps-products-carousel .flickity-prev-next-button.next {
   right: 6px;
 }
