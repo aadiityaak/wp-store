@@ -170,7 +170,7 @@
 .wps-label {
   display: block;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #374151;
   margin-bottom: 0.25rem;
 }
@@ -491,14 +491,18 @@ button.wps-btn-dark {
 .wps-price-range {
   position: relative;
   width: 100%;
+  height: 28px;
   margin-top: 4px;
 }
 .wps-price-range .wps-slider {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 0;
   width: 100%;
   height: 5px;
   background-color: #e5e7eb;
   border-radius: 9999px;
+  transform: translateY(-50%);
 }
 .wps-price-range .wps-slider .wps-progress {
   position: absolute;
@@ -510,12 +514,15 @@ button.wps-btn-dark {
   right: 0;
 }
 .wps-price-range .wps-range-input {
-  position: relative;
-  height: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 28px;
 }
 .wps-price-range .wps-range-input .wps-range {
   position: absolute;
-  top: -6px;
+  top: -7px;
   left: 0;
   width: 100%;
   background: transparent;

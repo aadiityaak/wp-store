@@ -17,12 +17,7 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
     </select>
   </div>
   <div class="wps-mt-3">
-    <label class="wps-label">Rentang Harga <span class="wps-text-sm wps-text-gray-700">• Rata-rata <?php echo isset($price_avg_global) ? 'Rp ' . number_format((float)$price_avg_global, 0, ',', '.') : ''; ?></span></label>
-    <div class="wps-text-sm wps-text-gray-700 wps-mb-1">
-      <span>Min: <span x-text="formatCurrency(min_price)"></span></span>
-      <span class="wps-mr-2"></span>
-      <span>Max: <span x-text="formatCurrency(max_price)"></span></span>
-    </div>
+    <label class="wps-label">Rentang Harga</label>
     <div class="wps-price-range">
       <div class="wps-slider">
         <div class="wps-progress" :style="rangeFillStyle"></div>
@@ -46,11 +41,9 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
     </div>
     <div class="wps-price-input wps-mt-2">
       <div class="wps-form-group wps-mb-0">
-        <label class="wps-label">Min</label>
         <input class="wps-input" type="number" min="0" step="1" x-model.number="min_price" @input="clampPrices(); update()">
       </div>
       <div class="wps-form-group wps-mb-0">
-        <label class="wps-label">Max</label>
         <input class="wps-input" type="number" min="0" step="1" x-model.number="max_price" @input="clampPrices(); update()">
       </div>
     </div>
@@ -61,7 +54,7 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
       </div>
     </div>
     <div class="wps-mt-3">
-      <div class="wps-text-sm wps-text-gray-700 wps-mb-1">Kategori</div>
+      <div class="wps-label">Kategori</div>
       <div class="" style="gap:8px;">
         <?php foreach ($categories as $cat): ?>
           <label class="wps-checkbox-label wps-display-block">
@@ -73,7 +66,7 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
     </div>
     <?php if ($show_labels): ?>
       <div class="wps-mt-3">
-        <div class="wps-text-sm wps-text-gray-700 wps-mb-1">Label</div>
+        <div class="wps-label">Label</div>
         <div class="" style="gap:8px;">
           <label class="wps-checkbox-label wps-display-block">
             <input type="checkbox" class="wps-checkbox" name="labels[]" value="best" x-model="labels" @change="update" <?php echo in_array('best', $current['labels'], true) ? 'checked' : ''; ?>>
@@ -107,6 +100,7 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
       cats: <?php echo wp_json_encode(array_values($current['cats'] ?? [])); ?>,
       labels: <?php echo wp_json_encode(array_values($current['labels'] ?? [])); ?>,
       updating: false,
+      _updateTimer: null,
       init() {
         this.$watch('sort', () => this.update());
         this.$watch('min_price', () => {
@@ -119,9 +113,14 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
         });
         this.$watch('cats', () => this.update());
         this.$watch('labels', () => this.update());
+        this.parseQueryIntoState();
         if (this.min_price === '' || isNaN(this.min_price)) this.min_price = this.price_min_bound;
         if (this.max_price === '' || isNaN(this.max_price)) this.max_price = this.price_max_bound;
         this.clampPrices();
+        window.addEventListener('popstate', () => {
+          this.parseQueryIntoState();
+          this.refreshShop();
+        });
       },
       get rangeFillStyle() {
         const span = Math.max(1, this.price_max_bound - this.price_min_bound);
@@ -156,12 +155,27 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
         });
         return p.toString();
       },
-      update() {
+      parseQueryIntoState() {
+        try {
+          const url = new URL(window.location.href);
+          const qs = url.searchParams;
+          const sp = qs.get('sort') || '';
+          const mn = qs.get('min_price');
+          const mx = qs.get('max_price');
+          if (sp !== null) this.sort = String(sp);
+          if (mn !== null) this.min_price = parseFloat(mn);
+          if (mx !== null) this.max_price = parseFloat(mx);
+          const cats = qs.getAll('cats[]').map((v) => parseInt(v, 10)).filter((n) => Number.isFinite(n) && n > 0);
+          if (cats.length) this.cats = cats;
+          const labels = qs.getAll('labels[]').map((v) => String(v).toLowerCase()).filter((s) => ['best', 'limited', 'new'].includes(s));
+          if (labels.length) this.labels = labels;
+          this.clampPrices();
+        } catch (e) {}
+      },
+      refreshShop() {
         if (this.updating) return;
         this.updating = true;
         const url = new URL(window.location.href);
-        url.search = this.buildQuery();
-        history.replaceState({}, '', url.toString());
         fetch(url.toString(), {
             credentials: 'same-origin'
           })
@@ -172,11 +186,54 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
             const curBlock = document.querySelector('#wps-shop');
             if (newBlock && curBlock) {
               curBlock.innerHTML = newBlock.innerHTML;
+              if (window.Alpine) {
+                try {
+                  if (typeof window.Alpine.initTree === 'function') {
+                    window.Alpine.initTree(curBlock);
+                  } else if (typeof window.Alpine.start === 'function') {
+                    window.Alpine.start();
+                  }
+                } catch (e) {}
+              }
             }
           })
           .finally(() => {
             this.updating = false;
           });
+      },
+      update() {
+        if (this.updating) return;
+        clearTimeout(this._updateTimer);
+        this._updateTimer = setTimeout(() => {
+          this.updating = true;
+          const url = new URL(window.location.href);
+          url.search = this.buildQuery();
+          history.replaceState({}, '', url.toString());
+          fetch(url.toString(), {
+              credentials: 'same-origin'
+            })
+            .then((r) => r.text())
+            .then((html) => {
+              const doc = new DOMParser().parseFromString(html, 'text/html');
+              const newBlock = doc.querySelector('#wps-shop');
+              const curBlock = document.querySelector('#wps-shop');
+              if (newBlock && curBlock) {
+                curBlock.innerHTML = newBlock.innerHTML;
+                if (window.Alpine) {
+                  try {
+                    if (typeof window.Alpine.initTree === 'function') {
+                      window.Alpine.initTree(curBlock);
+                    } else if (typeof window.Alpine.start === 'function') {
+                      window.Alpine.start();
+                    }
+                  } catch (e) {}
+                }
+              }
+            })
+            .finally(() => {
+              this.updating = false;
+            });
+        }, 150);
       }
     }));
   });
