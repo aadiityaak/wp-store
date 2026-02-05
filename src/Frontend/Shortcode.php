@@ -771,6 +771,8 @@ class Shortcode
 
     public function render_single($atts = [])
     {
+        wp_enqueue_script('wp-store-frontend');
+        wp_enqueue_style('wp-store-flickity');
         $atts = shortcode_atts([
             'id' => get_the_ID(),
         ], $atts);

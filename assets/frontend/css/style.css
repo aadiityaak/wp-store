@@ -948,6 +948,11 @@ tr:not(:last-child) .wps-td {
   background: #111827;
 }
 
+.carousel-nav .carousel-cell.is-nav-selected {
+  border: 2px solid #2563eb;
+  border-radius: 6px;
+}
+
 @media (max-width: 768px) {
   .wps-flex.wps-items-start {
     flex-direction: column;

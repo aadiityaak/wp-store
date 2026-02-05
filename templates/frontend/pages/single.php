@@ -1,7 +1,5 @@
 <div class="wps-p-4">
-    <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-4"><?php echo esc_html($title); ?></div>
-    <?php echo \WpStore\Frontend\Template::render('components/breadcrumb', ['post_id' => $id]); ?>
-    <div class="wps-flex wps-gap-4 wps-items-start">
+    <div class="wps-flex wps-gap-4 wps-items-start wps-mb-4">
         <div class="wps-w-full" style="flex: 1;">
             <?php $image_src = (!empty($image) ? $image : (WP_STORE_URL . 'assets/frontend/img/noimg.webp')); ?>
             <?php
@@ -27,261 +25,44 @@
             }
             ?>
             <?php if (count($items) > 1) : ?>
-                <div class="wps-flex wps-gap-2 wps-items-start">
-                    <div id="wps-thumbs-<?php echo esc_attr($id); ?>" class="wps-flex wps-flex-col wps-gap-2 wps-thumbs">
+                <div class="wps-position-relative wps-w-full wps-products-carousel" data-wps-carousel data-cell-align="center" data-contain="true" data-wrap-around="true" data-page-dots="true" data-prev-next-buttons="true" data-draggable="true">
+                    <div class="main-carousel carousel-main" id="wps-main-carousel-<?php echo esc_attr($id); ?>">
                         <?php foreach ($items as $idx => $gi) : ?>
-                            <img src="<?php echo esc_url($gi['thumb']); ?>" alt="" class="wps-img-60 wps-rounded wps-gallery-thumb" style="border:1px solid #e5e7eb; cursor:pointer;" data-full="<?php echo esc_attr($gi['full']); ?>" data-idx="<?php echo esc_attr($idx); ?>">
+                            <div class="carousel-cell">
+                                <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($gi['full']); ?>" alt="<?php echo esc_attr($title); ?>">
+                            </div>
                         <?php endforeach; ?>
                     </div>
-                    <div class="wps-position-relative wps-w-full" style="display:block;flex:1;overflow:hidden;">
-                        <img id="wps-main-img-<?php echo esc_attr($id); ?>" class="wps-w-full wps-rounded wps-img-320 wps-transition" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
-                        <button type="button" class="wps-gallery-prev" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
-                            <?php echo wps_icon(['name' => 'chevron-left', 'size' => 16]); ?>
-                        </button>
-                        <button type="button" class="wps-gallery-next" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#111827cc;color:#fff;border:0;cursor:pointer;">
-                            <?php echo wps_icon(['name' => 'chevron-right', 'size' => 16]); ?>
-                        </button>
-                        <?php
-                        $ptype_single = get_post_meta((int) $id, '_store_product_type', true);
-                        $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
-                        if ($is_digital_single) {
-                            echo '<span class="wps-digital-badge wps-text-xs wps-text-white">'
-                                . wps_icon(['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
-                                . '<span class="txt wps-text-white wps-text-xs">Digital</span>'
+                    <?php
+                    $ptype_single = get_post_meta((int) $id, '_store_product_type', true);
+                    $is_digital_single = ($ptype_single === 'digital') || (bool) get_post_meta((int) $id, '_store_is_digital', true);
+                    if ($is_digital_single) {
+                        echo '<span class="wps-digital-badge wps-text-xs wps-text-white">'
+                            . wps_icon(['name' => 'cloud-download', 'size' => 12, 'stroke_color' => '#ffffff'])
+                            . '<span class="txt wps-text-white wps-text-xs">Digital</span>'
+                            . '</span>';
+                    }
+                    $lbl_single = get_post_meta((int) $id, '_store_label', true);
+                    if (is_string($lbl_single) && $lbl_single !== '') {
+                        $txt = $lbl_single === 'label-best' ? 'Best Seller' : ($lbl_single === 'label-limited' ? 'Limited' : ($lbl_single === 'label-new' ? 'New' : ''));
+                        if ($txt !== '') {
+                            echo '<span class="wps-label-badge ' . esc_attr($lbl_single) . ' wps-text-xs">'
+                                . wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
+                                . '<span class="txt wps-text-white wps-text-xs">' . esc_html($txt) . '</span>'
                                 . '</span>';
                         }
-                        $lbl_single = get_post_meta((int) $id, '_store_label', true);
-                        if (is_string($lbl_single) && $lbl_single !== '') {
-                            $txt = $lbl_single === 'label-best' ? 'Best Seller' : ($lbl_single === 'label-limited' ? 'Limited' : ($lbl_single === 'label-new' ? 'New' : ''));
-                            if ($txt !== '') {
-                                echo '<span class="wps-label-badge ' . esc_attr($lbl_single) . ' wps-text-xs">'
-                                    . wps_icon(['name' => 'heart', 'size' => 10, 'stroke_color' => '#ffffff'])
-                                    . '<span class="txt wps-text-white wps-text-xs">' . esc_html($txt) . '</span>'
-                                    . '</span>';
-                            }
-                        }
-                        ?>
+                    }
+                    ?>
+                </div>
+                <div class="wps-mt-2 wps-products-carousel" data-wps-carousel data-as-nav-for="#wps-main-carousel-<?php echo esc_attr($id); ?>" data-cell-align="left" data-contain="true" data-wrap-around="false" data-page-dots="false" data-prev-next-buttons="false" data-draggable="true">
+                    <div class="main-carousel carousel-nav">
+                        <?php foreach ($items as $idx => $gi) : ?>
+                            <div class="carousel-cell" style="width:64px;">
+                                <img class="wps-img-60 wps-rounded" src="<?php echo esc_url($gi['thumb']); ?>" alt="">
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-                <script>
-                    (function() {
-                        var container = document.currentScript.previousElementSibling;
-                        var mainImg = container.querySelector('#<?php echo 'wps-main-img-' . esc_js($id); ?>');
-                        var thumbs = container.querySelectorAll('img[data-full]');
-                        var idx = 0;
-
-                        function setActive(i) {
-                            idx = i;
-                            thumbs.forEach(function(t) {
-                                t.style.border = '1px solid #e5e7eb';
-                            });
-                            var el = container.querySelector('img[data-idx="' + i + '"]');
-                            if (el) {
-                                el.style.border = '2px solid <?php echo esc_js($primary_color); ?>';
-                            }
-                        }
-                        setActive(0);
-                        var animating = false;
-
-                        function slideTo(newSrc, direction) {
-                            if (!mainImg) return;
-                            if (animating) return;
-                            animating = true;
-                            var out = direction === 'left' ? '-100%' : '100%';
-                            var inn = direction === 'left' ? '100%' : '-100%';
-                            mainImg.style.transform = 'translateX(' + out + ')';
-                            mainImg.style.opacity = '0';
-                            var onOut = function() {
-                                mainImg.removeEventListener('transitionend', onOut);
-                                mainImg.setAttribute('src', newSrc);
-                                mainImg.style.transform = 'translateX(' + inn + ')';
-                                mainImg.style.opacity = '0';
-                                requestAnimationFrame(function() {
-                                    requestAnimationFrame(function() {
-                                        mainImg.style.transform = 'translateX(0)';
-                                        mainImg.style.opacity = '1';
-                                    });
-                                });
-                                mainImg.addEventListener('transitionend', onIn);
-                            };
-                            var onIn = function() {
-                                mainImg.removeEventListener('transitionend', onIn);
-                                animating = false;
-                            };
-                            mainImg.addEventListener('transitionend', onOut);
-                        }
-                        thumbs.forEach(function(t) {
-                            t.addEventListener('click', function() {
-                                var full = this.getAttribute('data-full');
-                                if (full) {
-                                    var target = parseInt(this.getAttribute('data-idx'), 10);
-                                    var direction = target > idx ? 'right' : 'left';
-                                    setActive(target);
-                                    slideTo(full, direction);
-                                }
-                            });
-                        });
-                        var prevBtn = container.querySelector('.wps-gallery-prev');
-                        var nextBtn = container.querySelector('.wps-gallery-next');
-
-                        function go(delta) {
-                            var n = thumbs.length;
-                            var next = (idx + delta + n) % n;
-                            var el = container.querySelector('img[data-idx="' + next + '"]');
-                            if (el) {
-                                var full = el.getAttribute('data-full');
-                                if (full) {
-                                    var direction = delta > 0 ? 'right' : 'left';
-                                    setActive(next);
-                                    slideTo(full, direction);
-                                }
-                            }
-                        }
-                        if (prevBtn) prevBtn.addEventListener('click', function() {
-                            go(-1);
-                        });
-                        if (nextBtn) nextBtn.addEventListener('click', function() {
-                            go(1);
-                        });
-                        var thumbsWrap = container.querySelector('#<?php echo 'wps-thumbs-' . esc_js($id); ?>');
-                        if (thumbsWrap) {
-                            var track = document.createElement('div');
-                            track.style.position = 'absolute';
-                            track.style.top = '0';
-                            track.style.right = '0';
-                            track.style.width = '4px';
-                            track.style.height = '100%';
-                            track.style.background = '#e5e7eb';
-                            track.style.borderRadius = '9999px';
-                            track.style.zIndex = '2';
-                            track.style.opacity = '0';
-                            track.style.transition = 'opacity .15s ease';
-                            track.style.pointerEvents = 'none';
-                            var knob = document.createElement('div');
-                            knob.style.position = 'absolute';
-                            knob.style.top = '0';
-                            knob.style.left = '0';
-                            knob.style.width = '100%';
-                            knob.style.background = '<?php echo esc_js($primary_color); ?>';
-                            knob.style.borderRadius = '9999px';
-                            knob.style.cursor = 'grab';
-                            knob.style.opacity = '0';
-                            knob.style.transition = 'opacity .15s ease';
-                            track.appendChild(knob);
-                            thumbsWrap.appendChild(track);
-
-                            function updateScrollbar() {
-                                var viewH = thumbsWrap.clientHeight;
-                                var scrollH = thumbsWrap.scrollHeight;
-                                if (scrollH <= viewH) {
-                                    track.style.display = 'none';
-                                    return;
-                                }
-                                track.style.display = 'block';
-                                var ratio = viewH / scrollH;
-                                var knobH = Math.max(20, Math.floor(viewH * ratio));
-                                knob.style.height = knobH + 'px';
-                                var maxScroll = scrollH - viewH;
-                                var maxKnob = viewH - knobH;
-                                var y = Math.floor((thumbsWrap.scrollTop / maxScroll) * maxKnob);
-                                knob.style.transform = 'translateY(' + y + 'px)';
-                            }
-                            var dragging = false;
-                            var startY = 0;
-                            var startScroll = 0;
-                            knob.addEventListener('mousedown', function(e) {
-                                dragging = true;
-                                startY = e.clientY;
-                                startScroll = thumbsWrap.scrollTop;
-                                knob.style.cursor = 'grabbing';
-                                e.preventDefault();
-                            });
-                            document.addEventListener('mousemove', function(e) {
-                                if (!dragging) return;
-                                var viewH = thumbsWrap.clientHeight;
-                                var scrollH = thumbsWrap.scrollHeight;
-                                var knobH = knob.offsetHeight;
-                                var maxScroll = scrollH - viewH;
-                                var maxKnob = viewH - knobH;
-                                var dy = e.clientY - startY;
-                                var scrollDelta = (dy / maxKnob) * maxScroll;
-                                var nextScroll = Math.max(0, Math.min(maxScroll, startScroll + scrollDelta));
-                                thumbsWrap.scrollTop = nextScroll;
-                                updateScrollbar();
-                            });
-                            document.addEventListener('mouseup', function() {
-                                if (!dragging) return;
-                                dragging = false;
-                                knob.style.cursor = 'grab';
-                            });
-                            thumbsWrap.addEventListener('scroll', updateScrollbar);
-                            window.addEventListener('resize', updateScrollbar);
-                            updateScrollbar();
-                            thumbs.forEach(function(img) {
-                                if (img.complete) {
-                                    updateScrollbar();
-                                } else {
-                                    img.addEventListener('load', updateScrollbar);
-                                }
-                            });
-
-                            var hideTimer = null;
-
-                            function showTrack() {
-                                updateScrollbar();
-                                if (track.style.display === 'none') return;
-                                track.style.opacity = '0.6';
-                                knob.style.opacity = '0.6';
-                                track.style.pointerEvents = 'auto';
-                                if (hideTimer) {
-                                    clearTimeout(hideTimer);
-                                    hideTimer = null;
-                                }
-                            }
-
-                            function scheduleHide() {
-                                if (dragging) return;
-                                if (hideTimer) clearTimeout(hideTimer);
-                                hideTimer = setTimeout(function() {
-                                    track.style.opacity = '0';
-                                    knob.style.opacity = '0';
-                                    track.style.pointerEvents = 'none';
-                                }, 500);
-                            }
-                            thumbsWrap.addEventListener('mouseenter', function() {
-                                showTrack();
-                            });
-                            thumbsWrap.addEventListener('mousemove', function() {
-                                showTrack();
-                                scheduleHide();
-                            });
-                            thumbsWrap.addEventListener('mouseleave', function() {
-                                scheduleHide();
-                            });
-                            container.addEventListener('mouseenter', function() {
-                                showTrack();
-                            });
-                            container.addEventListener('mousemove', function() {
-                                showTrack();
-                                scheduleHide();
-                            });
-                            thumbsWrap.addEventListener('wheel', function() {
-                                showTrack();
-                                scheduleHide();
-                            });
-                            knob.addEventListener('mousedown', function() {
-                                showTrack();
-                                if (hideTimer) {
-                                    clearTimeout(hideTimer);
-                                    hideTimer = null;
-                                }
-                            });
-                            document.addEventListener('mouseup', function() {
-                                scheduleHide();
-                            });
-                        }
-                    })();
-                </script>
             <?php else : ?>
                 <div style="position:relative;display:block;">
                     <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($title); ?>">
@@ -310,6 +91,8 @@
             <?php endif; ?>
         </div>
         <div style="flex: 1;">
+            <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-2"><?php echo esc_html($title); ?></div>
+            <?php echo \WpStore\Frontend\Template::render('components/breadcrumb', ['post_id' => $id]); ?>
             <div class="wps-text-sm wps-text-gray-900 wps-mb-4">
                 <?php if ($price !== null) : ?>
                     <?php echo esc_html(($currency ?? 'Rp') . ' ' . number_format_i18n((float) $price, 0)); ?>
@@ -403,9 +186,12 @@
                     <a href="<?php echo esc_url($mail_url); ?>" class="wps-btn wps-btn-secondary wps-btn-sm"><?php echo wps_icon(['name' => 'email', 'size' => 18]); ?></a>
                 </div>
             </div>
-            <div class="wps-text-sm wps-text-gray-500">
-                <?php echo $content; ?>
-            </div>
+        </div>
+    </div>
+    <div class="wps-mb-4">
+        <h2 class="wps-text-lg wps-font-bold wps-text-gray-900">Deskripsi Produk</h2>
+        <div class="wps-text-sm wps-text-gray-500">
+            <?php echo $content; ?>
         </div>
     </div>
 </div>

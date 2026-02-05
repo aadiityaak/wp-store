@@ -23,19 +23,19 @@
       } finally {
         this.loading = false;
       }
-      document.addEventListener('wp-store:cart-updated', (e) => {
-          if (e.detail && e.detail.items) {
-              this.cart = e.detail.items;
-          } else {
-              this.fetchCart();
-          }
+      document.addEventListener("wp-store:cart-updated", (e) => {
+        if (e.detail && e.detail.items) {
+          this.cart = e.detail.items;
+        } else {
+          this.fetchCart();
+        }
       });
-      document.addEventListener('wp-store:wishlist-updated', (e) => {
-          if (e.detail && e.detail.items) {
-              this.wishlist = e.detail.items;
-          } else {
-              this.fetchWishlist();
-          }
+      document.addEventListener("wp-store:wishlist-updated", (e) => {
+        if (e.detail && e.detail.items) {
+          this.wishlist = e.detail.items;
+        } else {
+          this.fetchWishlist();
+        }
       });
     },
     async fetchCart() {
@@ -91,7 +91,7 @@
       try {
         const base = String(wpStoreSettings.restUrl).replace(
           /wp-store\/v1\/?$/,
-          ""
+          "",
         );
         const url = new URL(base + "wp/v2/store_product");
         url.searchParams.set("per_page", this.perPage);
@@ -232,42 +232,51 @@
   }
   const initCarousels = () => {
     if (!window.Flickity) return;
-    const nodes = document.querySelectorAll('[data-wps-carousel]');
+    const nodes = document.querySelectorAll("[data-wps-carousel]");
     nodes.forEach((node) => {
-      const track = node.querySelector('.main-carousel');
+      const track = node.querySelector(".main-carousel");
       if (!track || track.__flickity) return;
       const d = node.dataset;
-      const groupCellsVal = parseInt(d.groupCells || '0', 10);
-      const lazyVal = parseInt(d.lazyLoad || '0', 10);
-      const autoPlayVal = parseInt(d.autoplay || '0', 10);
+      const groupCellsVal = parseInt(d.groupCells || "0", 10);
+      const lazyVal = parseInt(d.lazyLoad || "0", 10);
+      const autoPlayVal = parseInt(d.autoplay || "0", 10);
       const opts = {
-        cellAlign: d.cellAlign || 'center',
-        contain: d.contain === 'false' ? false : true,
-        wrapAround: d.wrapAround === 'true',
-        pageDots: d.pageDots === 'false' ? false : true,
-        prevNextButtons: d.prevNextButtons === 'false' ? false : true,
+        cellAlign: d.cellAlign || "center",
+        contain: d.contain === "false" ? false : true,
+        wrapAround: d.wrapAround === "true",
+        pageDots: d.pageDots === "false" ? false : true,
+        prevNextButtons: d.prevNextButtons === "false" ? false : true,
         groupCells: groupCellsVal > 1 ? groupCellsVal : false,
         lazyLoad: lazyVal > 0 ? lazyVal : false,
         autoPlay: autoPlayVal > 0 ? autoPlayVal : false,
-        pauseAutoPlayOnHover: d.pauseOnHover === 'false' ? false : true,
-        draggable: d.draggable === 'false' ? false : true
+        pauseAutoPlayOnHover: d.pauseOnHover === "false" ? false : true,
+        draggable: d.draggable === "false" ? false : true,
       };
+      if (d.asNavFor) {
+        let target = null;
+        try {
+          target =
+            node.querySelector(d.asNavFor) ||
+            document.querySelector(d.asNavFor);
+        } catch (e) {}
+        opts.asNavFor = target || d.asNavFor;
+      }
       track.__flickity = new window.Flickity(track, opts);
     });
   };
-  if (document.readyState !== 'loading') {
+  if (document.readyState !== "loading") {
     initCarousels();
   } else {
-    document.addEventListener('DOMContentLoaded', initCarousels);
+    document.addEventListener("DOMContentLoaded", initCarousels);
   }
-  document.addEventListener('wp-store:ready', initCarousels);
+  document.addEventListener("wp-store:ready", initCarousels);
   const setupBeaverBuilderIntegration = () => {
-    const content = document.querySelector('.fl-builder-content');
+    const content = document.querySelector(".fl-builder-content");
     if (!content) return;
     const trigger = () => setTimeout(initCarousels, 20);
-    if (window.jQuery && typeof window.jQuery.fn.on === 'function') {
-      window.jQuery(content).on('fl-builder.layout-rendered', trigger);
-      window.jQuery(content).on('fl-builder.preview-rendered', trigger);
+    if (window.jQuery && typeof window.jQuery.fn.on === "function") {
+      window.jQuery(content).on("fl-builder.layout-rendered", trigger);
+      window.jQuery(content).on("fl-builder.preview-rendered", trigger);
     }
     const mo = new MutationObserver((mutations) => {
       for (let i = 0; i < mutations.length; i++) {
@@ -276,7 +285,11 @@
           for (let j = 0; j < m.addedNodes.length; j++) {
             const n = m.addedNodes[j];
             if (n.nodeType === 1) {
-              if ((n.matches && n.matches('[data-wps-carousel], .main-carousel')) || (n.querySelector && n.querySelector('[data-wps-carousel]'))) {
+              if (
+                (n.matches &&
+                  n.matches("[data-wps-carousel], .main-carousel")) ||
+                (n.querySelector && n.querySelector("[data-wps-carousel]"))
+              ) {
                 trigger();
                 return;
               }
@@ -287,7 +300,10 @@
     });
     mo.observe(content, { childList: true, subtree: true });
   };
-  if (document.querySelector('.fl-builder-content') || (document.body && document.body.classList.contains('fl-builder-edit'))) {
+  if (
+    document.querySelector(".fl-builder-content") ||
+    (document.body && document.body.classList.contains("fl-builder-edit"))
+  ) {
     setupBeaverBuilderIntegration();
   }
 })();
