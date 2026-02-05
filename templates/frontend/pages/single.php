@@ -28,7 +28,7 @@
                 <div class="wps-position-relative wps-w-full wps-products-carousel" data-wps-carousel data-cell-align="center" data-contain="true" data-wrap-around="true" data-page-dots="true" data-prev-next-buttons="true" data-draggable="true">
                     <div class="main-carousel carousel-main" id="wps-main-carousel-<?php echo esc_attr($id); ?>">
                         <?php foreach ($items as $idx => $gi) : ?>
-                            <div class="carousel-cell">
+                            <div class="carousel-cell wps-mx-0">
                                 <img class="wps-w-full wps-rounded wps-img-320" src="<?php echo esc_url($gi['full']); ?>" alt="<?php echo esc_attr($title); ?>">
                             </div>
                         <?php endforeach; ?>
@@ -57,7 +57,7 @@
                 <div class="wps-mt-2 wps-products-carousel" data-wps-carousel data-as-nav-for="#wps-main-carousel-<?php echo esc_attr($id); ?>" data-cell-align="left" data-contain="true" data-wrap-around="false" data-page-dots="false" data-prev-next-buttons="false" data-draggable="true">
                     <div class="main-carousel carousel-nav">
                         <?php foreach ($items as $idx => $gi) : ?>
-                            <div class="carousel-cell" style="width:64px;">
+                            <div class="carousel-cell wps-mr-2" style="width:64px;">
                                 <img class="wps-img-60 wps-rounded" src="<?php echo esc_url($gi['thumb']); ?>" alt="">
                             </div>
                         <?php endforeach; ?>

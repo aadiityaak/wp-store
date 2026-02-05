@@ -262,6 +262,44 @@
         opts.asNavFor = target || d.asNavFor;
       }
       track.__flickity = new window.Flickity(track, opts);
+      if (d.asNavFor) {
+        let target = null;
+        try {
+          target =
+            node.querySelector(d.asNavFor) ||
+            document.querySelector(d.asNavFor);
+        } catch (e) {}
+        const mainEl = target;
+        const navFlkty = track.__flickity;
+        const mainFlkty =
+          mainEl && mainEl.__flickity ? mainEl.__flickity : null;
+        if (mainFlkty) {
+          const updateNavSelected = (index) => {
+            const cells = track.querySelectorAll(".carousel-cell");
+            for (let i = 0; i < cells.length; i++) {
+              const c = cells[i];
+              if (i === index) {
+                c.classList.add("is-nav-selected");
+              } else {
+                c.classList.remove("is-nav-selected");
+              }
+            }
+          };
+          navFlkty.on(
+            "staticClick",
+            (event, pointer, cellElement, cellIndex) => {
+              if (typeof cellIndex === "number") {
+                mainFlkty.select(cellIndex);
+              }
+            },
+          );
+          mainFlkty.on("change", (index) => {
+            navFlkty.select(index);
+            updateNavSelected(index);
+          });
+          updateNavSelected(mainFlkty.selectedIndex || 0);
+        }
+      }
     });
   };
   if (document.readyState !== "loading") {

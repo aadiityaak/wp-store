@@ -94,6 +94,9 @@
 .wps-pb-0 {
   padding-bottom: 0 !important;
 }
+.wps-pr-2 {
+  padding-right: 0.5rem;
+}
 .wps-pr-3 {
   padding-right: 0.75rem;
 }
@@ -112,6 +115,10 @@
 .wps-mx-auto {
   margin-left: auto;
   margin-right: auto;
+}
+.wps-mx-2 {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
 }
 .wps-my-8 {
   margin-top: 2rem;
