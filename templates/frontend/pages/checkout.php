@@ -669,7 +669,10 @@
                             </div>
                             <div class="wps-flex wps-items-center wps-gap-2 wps-mt-2">
                                 <input class="wps-input wps-flex-1" type="text" x-model="couponCode" placeholder="Masukkan kode kupon">
-                                <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="applyCoupon()">Terapkan</button>
+                                <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="applyCoupon()">
+                                    <?php echo wps_icon(['name' => 'coupon', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                    Terapkan
+                                </button>
                             </div>
                             <template x-if="discountAmount">
                                 <div class="wps-flex wps-justify-between wps-items-center wps-mt-2">

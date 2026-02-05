@@ -662,9 +662,6 @@ button.wps-btn-dark {
   border-radius: 6px;
 }
 @media (max-width: 480px) {
-  .wps-offcanvas-footer {
-    justify-content: flex-start;
-  }
   .wps-checkout-btn {
     text-align: center;
   }
