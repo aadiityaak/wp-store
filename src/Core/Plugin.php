@@ -45,6 +45,9 @@ class Plugin
         $order_actions = new \WpStore\Admin\OrderActions();
         $order_actions->register();
 
+        $order_print = new \WpStore\Admin\OrderPrint();
+        $order_print->register();
+
         $coupon_meta = new \WpStore\Admin\CouponMetaBoxes();
         $coupon_meta->register();
 
