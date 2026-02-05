@@ -960,6 +960,15 @@ tr:not(:last-child) .wps-td {
   border-radius: 6px;
 }
 
+.wps-products-carousel .carousel-main .carousel-cell {
+  width: 100%;
+  margin-right: 0;
+}
+.wps-products-carousel .carousel-main .carousel-cell img {
+  width: 100%;
+  display: block;
+}
+
 @media (max-width: 768px) {
   .wps-flex.wps-items-start {
     flex-direction: column;

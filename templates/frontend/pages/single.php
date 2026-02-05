@@ -91,7 +91,7 @@
             <?php endif; ?>
         </div>
         <div style="flex: 1;">
-            <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-2"><?php echo esc_html($title); ?></div>
+            <h1 class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-2"><?php echo esc_html($title); ?></h1>
             <?php echo \WpStore\Frontend\Template::render('components/breadcrumb', ['post_id' => $id]); ?>
             <div class="wps-text-sm wps-text-gray-900 wps-mb-4">
                 <?php if ($price !== null) : ?>
