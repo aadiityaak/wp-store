@@ -506,6 +506,16 @@ class Shortcode
             $path = '/';
         }
         $reset_url = home_url($path);
+        $locked_cats = [];
+        if (is_tax('store_product_cat')) {
+            $term = get_queried_object();
+            if ($term && isset($term->term_id)) {
+                $tid = (int) $term->term_id;
+                if ($tid > 0) {
+                    $locked_cats[] = $tid;
+                }
+            }
+        }
         return Template::render('components/filters', [
             'categories' => $categories,
             'current' => $current,
@@ -514,6 +524,7 @@ class Shortcode
             'price_min_global' => $min_price_global,
             'price_max_global' => $max_price_global,
             'price_avg_global' => $avg_price_global,
+            'locked_cats' => $locked_cats,
         ]);
     }
 

@@ -58,7 +58,7 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
       <div class="" style="gap:8px;">
         <?php foreach ($categories as $cat): ?>
           <label class="wps-checkbox-label wps-display-block">
-            <input type="checkbox" class="wps-checkbox" name="cats[]" :value="<?php echo esc_attr($cat['id']); ?>" x-model="cats" @change="update" <?php echo in_array($cat['id'], $current['cats'], true) ? 'checked' : ''; ?>>
+            <input type="checkbox" class="wps-checkbox" name="cats[]" :value="<?php echo esc_attr($cat['id']); ?>" x-model="cats" @change="update" :disabled="isCatLocked(<?php echo esc_attr($cat['id']); ?>)" <?php echo in_array($cat['id'], $current['cats'], true) ? 'checked' : ''; ?>>
             <span class="wps-text-sm wps-text-gray-900"><?php echo esc_html($cat['name']); ?></span>
           </label>
         <?php endforeach; ?>
@@ -99,15 +99,16 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
       price_max_bound: <?php echo isset($price_max_global) ? (float) $price_max_global : 0; ?>,
       cats: <?php echo wp_json_encode(array_values($current['cats'] ?? [])); ?>,
       labels: <?php echo wp_json_encode(array_values($current['labels'] ?? [])); ?>,
+      locked_cats: <?php echo wp_json_encode(isset($locked_cats) ? array_values($locked_cats) : []); ?>,
       updating: false,
       _updateTimer: null,
       initializing: true,
       init() {
         this.parseQueryIntoState();
+        this.enforceLockedCats();
         if (this.min_price === '' || isNaN(this.min_price)) this.min_price = this.price_min_bound;
         if (this.max_price === '' || isNaN(this.max_price)) this.max_price = this.price_max_bound;
         this.clampPrices();
-        this.initializing = false;
         this.$watch('sort', () => this.update());
         this.$watch('min_price', () => {
           this.clampPrices();
@@ -117,8 +118,12 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
           this.clampPrices();
           this.update();
         });
-        this.$watch('cats', () => this.update());
+        this.$watch('cats', () => {
+          this.enforceLockedCats();
+          this.update();
+        });
         this.$watch('labels', () => this.update());
+        this.initializing = false;
         window.addEventListener('popstate', () => {
           this.parseQueryIntoState();
           this.refreshShop();
@@ -167,6 +172,22 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
         if (this.max_price > this.price_max_bound) this.max_price = this.price_max_bound;
         if (this.min_price > this.max_price) this.min_price = this.max_price;
       },
+      enforceLockedCats() {
+        const base = Array.isArray(this.cats) ? this.cats.map((n) => parseInt(n, 10)).filter((n) => Number.isFinite(n)) : [];
+        const lock = Array.isArray(this.locked_cats) ? this.locked_cats.map((n) => parseInt(n, 10)).filter((n) => Number.isFinite(n)) : [];
+        const set = new Set(base.concat(lock));
+        const next = Array.from(set).sort((a, b) => a - b);
+        const cur = base.slice().sort((a, b) => a - b);
+        const equal = next.length === cur.length && next.every((v, i) => v === cur[i]);
+        if (!equal) {
+          this.cats = next;
+        }
+      },
+      isCatLocked(id) {
+        const n = parseInt(id, 10);
+        if (!Number.isFinite(n)) return false;
+        return Array.isArray(this.locked_cats) && this.locked_cats.map((m) => parseInt(m, 10)).includes(n);
+      },
       formatCurrency(v) {
         const n = parseFloat(v);
         if (!Number.isFinite(n)) return 'Rp 0';
@@ -201,6 +222,7 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
           if (cats.length) this.cats = cats;
           const labels = qs.getAll('labels[]').map((v) => String(v).toLowerCase()).filter((s) => ['best', 'limited', 'new'].includes(s));
           if (labels.length) this.labels = labels;
+          this.enforceLockedCats();
           this.clampPrices();
         } catch (e) {}
       },
