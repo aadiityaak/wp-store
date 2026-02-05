@@ -103,11 +103,6 @@
                 }).format(v);
             },
             async calculateAllShipping() {
-                if (this.captchaRequired && !this.isCaptchaReady()) {
-                    this.showToast('Verifikasi captcha terlebih dahulu.', 'error');
-                    this.recomputeAllow();
-                    return;
-                }
                 if (!this.selectedSubdistrict || !Array.isArray(this.shippingCouriers) || this.shippingCouriers.length === 0) {
                     this.recomputeAllow();
                     return;
@@ -744,7 +739,7 @@
                             </div>
 
                             <div class="wps-mt-4 wps-flex wps-justify-end">
-                                <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting" @click="trySubmit()">
+                                <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || !allowSubmit" @click="trySubmit()">
                                     <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                     <span x-show="submitting">Memproses...</span>
                                     <span x-show="!submitting">Buat Pesanan</span>

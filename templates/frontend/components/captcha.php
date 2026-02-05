@@ -77,6 +77,14 @@ $uid = substr(md5(uniqid('', true)), 0, 8);
                     if (checkIcon) checkIcon.style.display = 'none';
                     if (topWrap) topWrap.style.display = '';
                     if (bottomWrap) bottomWrap.style.display = '';
+                    if (root) {
+                        root.dispatchEvent(new Event('change', {
+                            bubbles: true
+                        }));
+                        root.dispatchEvent(new Event('input', {
+                            bubbles: true
+                        }));
+                    }
                 }
             });
         }
@@ -103,8 +111,12 @@ $uid = substr(md5(uniqid('', true)), 0, 8);
                 showToast('Captcha tidak valid. Periksa kembali.', 'error');
             }
             if (root) {
-                root.dispatchEvent(new Event('change'));
-                root.dispatchEvent(new Event('input'));
+                root.dispatchEvent(new Event('change', {
+                    bubbles: true
+                }));
+                root.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
             }
         });
     })();
