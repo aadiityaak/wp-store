@@ -182,6 +182,18 @@ class Shortcode
                 ]
             ];
         }
+        if (empty($cats) && is_tax('store_product_cat')) {
+            $term = get_queried_object();
+            if ($term && isset($term->term_id)) {
+                $args['tax_query'] = [
+                    [
+                        'taxonomy' => 'store_product_cat',
+                        'field' => 'term_id',
+                        'terms' => [(int) $term->term_id]
+                    ]
+                ];
+            }
+        }
         if ($sort === 'az') {
             $args['orderby'] = 'title';
             $args['order'] = 'ASC';
@@ -465,6 +477,15 @@ class Shortcode
             foreach ($raw as $c) {
                 $id = absint($c);
                 if ($id > 0) $current['cats'][] = $id;
+            }
+        }
+        if (empty($current['cats']) && is_tax('store_product_cat')) {
+            $term = get_queried_object();
+            if ($term && isset($term->term_id)) {
+                $tid = (int) $term->term_id;
+                if ($tid > 0) {
+                    $current['cats'][] = $tid;
+                }
             }
         }
         if (isset($_GET['labels'])) {
@@ -921,6 +942,12 @@ class Shortcode
     {
         if (is_post_type_archive('store_product') || (get_query_var('post_type') === 'store_product' && !is_singular())) {
             $tpl = WP_STORE_PATH . 'templates/frontend/archive-store_product.php';
+            if (file_exists($tpl)) {
+                return $tpl;
+            }
+        }
+        if (is_tax('store_product_cat')) {
+            $tpl = WP_STORE_PATH . 'templates/frontend/taxonomy-store_product_cat.php';
             if (file_exists($tpl)) {
                 return $tpl;
             }

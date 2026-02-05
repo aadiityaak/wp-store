@@ -132,7 +132,19 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
             if (!href) return;
             try {
               const url = new URL(href, window.location.origin);
-              if (url.origin === window.location.origin) {
+              if (url.origin !== window.location.origin) return;
+              const cur = new URL(window.location.href);
+              const norm = (p) => p.replace(/\/page\/\d+\/?/, '/');
+              const sameBase = norm(url.pathname) === norm(cur.pathname);
+              const hasFilterParams =
+                url.searchParams.has('sort') ||
+                url.searchParams.has('min_price') ||
+                url.searchParams.has('max_price') ||
+                url.searchParams.has('shop_page') ||
+                (url.searchParams.getAll('cats[]').length > 0) ||
+                (url.searchParams.getAll('labels[]').length > 0);
+              const isPaginationPath = /\/page\/\d+\/?/.test(url.pathname);
+              if (sameBase && (hasFilterParams || isPaginationPath)) {
                 e.preventDefault();
                 history.pushState({}, '', url.toString());
                 this.parseQueryIntoState();

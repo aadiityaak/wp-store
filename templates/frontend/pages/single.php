@@ -1,5 +1,6 @@
 <div class="wps-p-4">
     <div class="wps-text-lg wps-font-medium wps-text-gray-900 wps-mb-4"><?php echo esc_html($title); ?></div>
+    <?php echo \WpStore\Frontend\Template::render('components/breadcrumb', ['post_id' => $id]); ?>
     <div class="wps-flex wps-gap-4 wps-items-start">
         <div class="wps-w-full" style="flex: 1;">
             <?php $image_src = (!empty($image) ? $image : (WP_STORE_URL . 'assets/frontend/img/noimg.webp')); ?>
