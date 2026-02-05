@@ -98,9 +98,13 @@ class Shortcode
             $per_page = 12;
         }
 
-        $paged = isset($_GET['shop_page']) ? (int) $_GET['shop_page'] : 1;
+        $paged = isset($_GET['shop_page']) ? (int) $_GET['shop_page'] : 0;
         if ($paged <= 0) {
-            $paged = 1;
+            $qp = (int) get_query_var('paged');
+            if ($qp <= 0) {
+                $qp = (int) get_query_var('page');
+            }
+            $paged = $qp > 0 ? $qp : 1;
         }
 
         $sort = isset($_GET['sort']) ? sanitize_key($_GET['sort']) : '';
@@ -150,15 +154,11 @@ class Shortcode
             ];
         }
         if (!empty($labels)) {
-            $map = [
-                'best' => 'label-best',
-                'limited' => 'label-limited',
-                'new' => 'label-new',
-            ];
             $or = ['relation' => 'OR'];
             foreach ($labels as $lk) {
-                $val = isset($map[$lk]) ? $map[$lk] : '';
-                if ($val !== '') {
+                $lk = sanitize_key($lk);
+                $variants = [$lk, 'label-' . $lk];
+                foreach ($variants as $val) {
                     $or[] = [
                         'key' => '_store_label',
                         'value' => $val,
@@ -199,6 +199,12 @@ class Shortcode
         }
 
         $query = new \WP_Query($args);
+        $max_pages = (int) $query->max_num_pages;
+        if ($paged > $max_pages && $max_pages > 0) {
+            $paged = $max_pages;
+            $args['paged'] = $paged;
+            $query = new \WP_Query($args);
+        }
         $currency = (get_option('wp_store_settings', [])['currency_symbol'] ?? 'Rp');
         $items = [];
         if ($query->have_posts()) {
@@ -470,7 +476,15 @@ class Shortcode
                 }
             }
         }
-        $reset_url = home_url(parse_url(isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH));
+        $req = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
+        $path = parse_url($req, PHP_URL_PATH);
+        if (is_string($path)) {
+            $path = preg_replace('#/page/\d+/?#', '/', $path);
+            if (!$path) $path = '/';
+        } else {
+            $path = '/';
+        }
+        $reset_url = home_url($path);
         return Template::render('components/filters', [
             'categories' => $categories,
             'current' => $current,
@@ -960,15 +974,11 @@ class Shortcode
                 ];
             }
             if (!empty($labels)) {
-                $map = [
-                    'best' => 'label-best',
-                    'limited' => 'label-limited',
-                    'new' => 'label-new',
-                ];
                 $or = ['relation' => 'OR'];
                 foreach ($labels as $lk) {
-                    $val = isset($map[$lk]) ? $map[$lk] : '';
-                    if ($val !== '') {
+                    $lk = sanitize_key($lk);
+                    $variants = [$lk, 'label-' . $lk];
+                    foreach ($variants as $val) {
                         $or[] = [
                             'key' => '_store_label',
                             'value' => $val,

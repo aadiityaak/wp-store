@@ -101,7 +101,13 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
       labels: <?php echo wp_json_encode(array_values($current['labels'] ?? [])); ?>,
       updating: false,
       _updateTimer: null,
+      initializing: true,
       init() {
+        this.parseQueryIntoState();
+        if (this.min_price === '' || isNaN(this.min_price)) this.min_price = this.price_min_bound;
+        if (this.max_price === '' || isNaN(this.max_price)) this.max_price = this.price_max_bound;
+        this.clampPrices();
+        this.initializing = false;
         this.$watch('sort', () => this.update());
         this.$watch('min_price', () => {
           this.clampPrices();
@@ -113,14 +119,28 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
         });
         this.$watch('cats', () => this.update());
         this.$watch('labels', () => this.update());
-        this.parseQueryIntoState();
-        if (this.min_price === '' || isNaN(this.min_price)) this.min_price = this.price_min_bound;
-        if (this.max_price === '' || isNaN(this.max_price)) this.max_price = this.price_max_bound;
-        this.clampPrices();
         window.addEventListener('popstate', () => {
           this.parseQueryIntoState();
           this.refreshShop();
         });
+        const shop = document.querySelector('#wps-shop');
+        if (shop) {
+          shop.addEventListener('click', (e) => {
+            const a = e.target.closest('a[href]');
+            if (!a) return;
+            const href = a.href || a.getAttribute('href');
+            if (!href) return;
+            try {
+              const url = new URL(href, window.location.origin);
+              if (url.origin === window.location.origin) {
+                e.preventDefault();
+                history.pushState({}, '', url.toString());
+                this.parseQueryIntoState();
+                this.refreshShop();
+              }
+            } catch (err) {}
+          });
+        }
       },
       get rangeFillStyle() {
         const span = Math.max(1, this.price_max_bound - this.price_min_bound);
@@ -185,6 +205,11 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
             const newBlock = doc.querySelector('#wps-shop');
             const curBlock = document.querySelector('#wps-shop');
             if (newBlock && curBlock) {
+              if (window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+                try {
+                  window.Alpine.destroyTree(curBlock);
+                } catch (e) {}
+              }
               curBlock.innerHTML = newBlock.innerHTML;
               if (window.Alpine) {
                 try {
@@ -202,12 +227,15 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
           });
       },
       update() {
-        if (this.updating) return;
+        if (this.initializing || this.updating) return;
         clearTimeout(this._updateTimer);
         this._updateTimer = setTimeout(() => {
           this.updating = true;
           const url = new URL(window.location.href);
           url.search = this.buildQuery();
+          try {
+            url.pathname = url.pathname.replace(/\/page\/\d+\/?/, '/');
+          } catch (e) {}
           history.replaceState({}, '', url.toString());
           fetch(url.toString(), {
               credentials: 'same-origin'
@@ -218,15 +246,23 @@ $show_labels = isset($show_labels) ? (bool) $show_labels : true;
               const newBlock = doc.querySelector('#wps-shop');
               const curBlock = document.querySelector('#wps-shop');
               if (newBlock && curBlock) {
+                if (window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+                  try {
+                    window.Alpine.destroyTree(curBlock);
+                  } catch (e) {}
+                }
                 curBlock.innerHTML = newBlock.innerHTML;
                 if (window.Alpine) {
-                  try {
-                    if (typeof window.Alpine.initTree === 'function') {
-                      window.Alpine.initTree(curBlock);
-                    } else if (typeof window.Alpine.start === 'function') {
-                      window.Alpine.start();
-                    }
-                  } catch (e) {}
+                  const hasAlpine = curBlock.querySelector('[x-data]');
+                  if (hasAlpine) {
+                    try {
+                      if (typeof window.Alpine.initTree === 'function') {
+                        requestAnimationFrame(() => window.Alpine.initTree(curBlock));
+                      } else if (typeof window.Alpine.start === 'function') {
+                        requestAnimationFrame(() => window.Alpine.start());
+                      }
+                    } catch (e) {}
+                  }
                 }
               }
             })
