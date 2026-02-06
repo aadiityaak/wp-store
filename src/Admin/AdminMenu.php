@@ -7,7 +7,28 @@ class AdminMenu
     public function register()
     {
         add_action('admin_menu', [$this, 'add_main_menu'], 5);
+        add_action('admin_menu', [$this, 'add_submenus'], 20);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
+        add_filter('parent_file', [$this, 'fix_parent_menu']);
+        add_filter('submenu_file', [$this, 'fix_submenu_menu']);
+    }
+
+    public function fix_parent_menu($parent_file)
+    {
+        global $current_screen;
+        if ($current_screen && $current_screen->taxonomy === 'store_product_cat') {
+            return 'wp-store';
+        }
+        return $parent_file;
+    }
+
+    public function fix_submenu_menu($submenu_file)
+    {
+        global $current_screen;
+        if ($current_screen && $current_screen->taxonomy === 'store_product_cat') {
+            return 'edit-tags.php?taxonomy=store_product_cat&post_type=store_product';
+        }
+        return $submenu_file;
     }
 
     public function add_main_menu()
@@ -41,6 +62,17 @@ class AdminMenu
             'edit_posts',
             'edit.php?post_type=store_order',
             null
+        );
+    }
+
+    public function add_submenus()
+    {
+        add_submenu_page(
+            'wp-store',
+            'Kategori Produk',
+            'Kategori',
+            'manage_categories',
+            'edit-tags.php?taxonomy=store_product_cat&post_type=store_product'
         );
     }
 
