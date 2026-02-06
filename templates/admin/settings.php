@@ -665,6 +665,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/provinces`, {
                         method: 'GET',
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreConfig.nonce
                         }
@@ -687,6 +688,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/cities?province=${provinceId}`, {
                         method: 'GET',
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreConfig.nonce
                         }
@@ -713,6 +715,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/subdistricts?city=${cityId}`, {
                         method: 'GET',
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreConfig.nonce
                         }
@@ -834,6 +837,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/settings/generate-pages`, {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-WP-Nonce': wpStoreConfig.nonce
@@ -875,6 +879,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/tools/seed-products`, {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-WP-Nonce': wpStoreConfig.nonce
@@ -902,6 +907,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/tools/clear-cache`, {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-WP-Nonce': wpStoreConfig.nonce
@@ -926,6 +932,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/tools/cache-stats`, {
                         method: 'GET',
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreConfig.nonce
                         }

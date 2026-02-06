@@ -29,7 +29,7 @@
         async fetchCart() {
             try {
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', { 
-                    credentials: 'include',
+                    credentials: 'same-origin',
                     headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
                 });
                 const data = await res.json();
@@ -45,7 +45,7 @@
             try {
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                     method: 'POST',
-                    credentials: 'include',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-WP-Nonce': wpStoreSettings.nonce

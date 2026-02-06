@@ -67,7 +67,12 @@ $uid = substr(md5(uniqid('', true)), 0, 8);
         }
 
         function load() {
-            fetch('/wp-json/wp-store/v1/captcha/new').then(function(r) {
+            fetch(wpStoreSettings.restUrl + 'captcha/new', {
+                credentials: 'same-origin',
+                headers: {
+                    'X-WP-Nonce': wpStoreSettings.nonce
+                }
+            }).then(function(r) {
                 return r.json()
             }).then(function(j) {
                 if (j && j.success) {

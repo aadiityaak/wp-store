@@ -36,7 +36,10 @@
         async fetchWishlist() {
             this.loading = true;
             try {
-                const res = await fetch(wpStoreSettings.restUrl + 'wishlist', { credentials: 'same-origin' });
+                const res = await fetch(wpStoreSettings.restUrl + 'wishlist', { 
+                    credentials: 'same-origin',
+                    headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
+                });
                 const data = await res.json();
                 if (!res.ok) { this.message = data.message || 'Gagal mengambil wishlist'; this.items = []; return; }
                 this.items = data.items || [];
@@ -59,7 +62,7 @@
             try {
                 const res = await fetch(wpStoreSettings.restUrl + 'wishlist', {
                     method: 'DELETE',
-                    credentials: 'include',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': wpStoreSettings.nonce },
                     body: JSON.stringify({ id: item.id })
                 });
@@ -77,7 +80,7 @@
                 let currentQty = 0;
                 try {
                     const resCart = await fetch(wpStoreSettings.restUrl + 'cart', {
-                        credentials: 'include',
+                        credentials: 'same-origin',
                         headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
                     });
                     const dataCart = await resCart.json();
@@ -91,7 +94,7 @@
                 const nextQty = currentQty + 1;
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                     method: 'POST',
-                    credentials: 'include',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': wpStoreSettings.nonce },
                     body: JSON.stringify({ id: item.id, qty: nextQty, options: (item.options || {}) })
                 });

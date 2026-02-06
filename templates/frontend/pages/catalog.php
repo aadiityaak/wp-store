@@ -20,7 +20,13 @@ $currency = isset($currency) ? (string) $currency : (get_option('wp_store_settin
 <div class="wps-container wps-mx-auto wps-my-8">
   <div class="wps-flex wps-items-center wps-justify-between wps-mb-4">
     <div class="wps-text-lg wps-font-medium wps-text-gray-900">Katalog Produk</div>
-    <a href="<?php echo esc_url(site_url('/wp-json/wp-store/v1/catalog/pdf')); ?>" class="wps-btn wps-btn-secondary">
+    <?php
+    $pdf_url = site_url('/wp-json/wp-store/v1/catalog/pdf');
+    if (is_user_logged_in()) {
+        $pdf_url = add_query_arg('_wpnonce', wp_create_nonce('wp_rest'), $pdf_url);
+    }
+    ?>
+    <a href="<?php echo esc_url($pdf_url); ?>" class="wps-btn wps-btn-secondary">
       <?php echo wps_icon(['name' => 'filetype-pdf', 'size' => 16, 'class' => 'wps-mr-2']); ?>
       
       Download PDF

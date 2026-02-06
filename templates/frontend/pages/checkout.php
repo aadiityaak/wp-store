@@ -115,6 +115,7 @@
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/calculate', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-WP-Nonce': wpStoreSettings.nonce
@@ -249,6 +250,7 @@
             async fetchProfile() {
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreSettings.nonce
                         }
@@ -260,6 +262,7 @@
             async fetchAddresses() {
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreSettings.nonce
                         }
@@ -294,6 +297,7 @@
                 this.isLoadingProvinces = true;
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', {
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreSettings.nonce
                         }
@@ -314,6 +318,7 @@
                 this.isLoadingCities = true;
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), {
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreSettings.nonce
                         }
@@ -334,6 +339,7 @@
                 this.isLoadingSubdistricts = true;
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), {
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreSettings.nonce
                         }
@@ -350,7 +356,7 @@
                 this.loading = true;
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'cart', {
-                        credentials: 'include',
+                        credentials: 'same-origin',
                         headers: {
                             'X-WP-Nonce': wpStoreSettings.nonce
                         }
@@ -378,6 +384,7 @@
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'coupons/validate', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-WP-Nonce': wpStoreSettings.nonce
@@ -431,7 +438,7 @@
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'checkout', {
                         method: 'POST',
-                        credentials: 'include',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-WP-Nonce': wpStoreSettings.nonce

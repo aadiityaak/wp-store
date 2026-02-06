@@ -53,6 +53,7 @@ $nonce = isset($nonce) ? (string) $nonce : wp_create_nonce('wp_rest');
         this.isLoadingProvinces = true;
         try {
           const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', {
+            credentials: 'same-origin',
             headers: {
               'X-WP-Nonce': wpStoreSettings.nonce
             }
@@ -73,6 +74,7 @@ $nonce = isset($nonce) ? (string) $nonce : wp_create_nonce('wp_rest');
         this.isLoadingCities = true;
         try {
           const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + encodeURIComponent(this.selectedProvince), {
+            credentials: 'same-origin',
             headers: {
               'X-WP-Nonce': wpStoreSettings.nonce
             }
@@ -93,6 +95,7 @@ $nonce = isset($nonce) ? (string) $nonce : wp_create_nonce('wp_rest');
         this.isLoadingSubdistricts = true;
         try {
           const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + encodeURIComponent(this.selectedCity), {
+            credentials: 'same-origin',
             headers: {
               'X-WP-Nonce': wpStoreSettings.nonce
             }
@@ -118,6 +121,7 @@ $nonce = isset($nonce) ? (string) $nonce : wp_create_nonce('wp_rest');
         try {
           const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/calculate', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
               'Content-Type': 'application/json',
               'X-WP-Nonce': wpStoreSettings.nonce

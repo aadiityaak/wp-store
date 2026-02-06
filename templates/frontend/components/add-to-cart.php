@@ -67,7 +67,7 @@
                 let currentQty = 0;
                 try {
                     const resCart = await fetch(wpStoreSettings.restUrl + 'cart', { 
-                        credentials: 'include',
+                        credentials: 'same-origin',
                         headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
                     });
                     const dataCart = await resCart.json();
@@ -81,7 +81,7 @@
                 const nextQty = currentQty + 1;
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                     method: 'POST',
-                    credentials: 'include',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-WP-Nonce': wpStoreSettings.nonce
