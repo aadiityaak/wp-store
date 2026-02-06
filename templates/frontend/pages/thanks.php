@@ -154,7 +154,7 @@ if (!$order_number) {
                 </div>
                 <div>
                     <div class="wps-text-lg wps-font-medium wps-text-gray-900">Informasi Pembayaran</div>
-                    <div class="wps-text-sm wps-text-gray-700 wps-mt-1">Gunakan nomor pesanan <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span> sebagai berita.</div>
+                    <div class="wps-text-sm wps-text-gray-700 wps-mt-1">Gunakan nomor pesanan <span class="wps-font-medium">#<?php echo esc_html($order_number); ?></span> sebagai berita.</div>
                     <div class="wps-mt-3">
                         <div class="wps-flex wps-justify-between wps-items-center">
                             <div class="wps-text-sm wps-text-gray-500">Total yang harus dibayar</div>
@@ -194,7 +194,7 @@ if (!$order_number) {
                     $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
                     $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
                     if ($tracking_url) {
-                        $tracking_target = add_query_arg(['order' => $order_id], $tracking_url);
+                        $tracking_target = add_query_arg(['order' => $order_number], $tracking_url);
                         $qr_src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($tracking_target);
                     }
                     ?>

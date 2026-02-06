@@ -347,7 +347,10 @@ class Shortcode
         if (is_numeric($input)) {
             $id = absint($input);
             if ($id > 0 && get_post_type($id) === 'store_order') {
-                return $id;
+                $has_token = get_post_meta($id, '_store_order_number', true);
+                if (!$has_token) {
+                    return $id;
+                }
             }
         }
 

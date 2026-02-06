@@ -97,12 +97,17 @@ class CustomerProfile
                 ]);
                 foreach ($q->posts as $p) {
                     $oid = $p->ID;
+                    $order_number = get_post_meta($oid, '_store_order_number', true);
+                    if (!$order_number) {
+                        $order_number = $oid;
+                    }
                     $orders[] = [
                         'id' => $oid,
+                        'order_number' => $order_number,
                         'date' => get_the_date('d M Y', $oid),
                         'total' => (float) get_post_meta($oid, '_store_order_total', true),
                         'status' => (string) (get_post_meta($oid, '_store_order_status', true) ?: 'pending'),
-                        'tracking_url' => add_query_arg(['order' => $oid], $tracking_base),
+                        'tracking_url' => add_query_arg(['order' => $order_number], $tracking_base),
                         'items' => (array) (get_post_meta($oid, '_store_order_items', true) ?: [])
                     ];
                 }
@@ -397,7 +402,7 @@ class CustomerProfile
                             <div class="wps-card wps-p-4">
                                 <div class="wps-flex wps-justify-between wps-items-center">
                                     <div>
-                                        <div class="wps-text-sm wps-text-gray-900 wps-font-medium">#<span x-text="order.id"></span></div>
+                                        <div class="wps-text-sm wps-text-gray-900 wps-font-medium">#<span x-text="order.order_number || order.id"></span></div>
                                         <div class="wps-text-xs wps-text-gray-500" x-text="order.date"></div>
                                     </div>
                                     <div class="wps-text-sm wps-text-gray-900 wps-font-medium"><?php echo esc_html(($currency ?: 'Rp')); ?> <span x-text="formatCurrency(order.total)"></span></div>

@@ -59,7 +59,11 @@ class OrderColumns
             $tracking_id = isset($settings['page_tracking']) ? (int) $settings['page_tracking'] : 0;
             $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
             if ($tracking_url) {
-                $url = add_query_arg(['order' => $post_id], $tracking_url);
+                $order_number = get_post_meta($post_id, '_store_order_number', true);
+                if (!$order_number) {
+                    $order_number = $post_id;
+                }
+                $url = add_query_arg(['order' => $order_number], $tracking_url);
                 echo '<a class="button button-small" href="' . esc_url($url) . '" target="_blank" rel="noopener">Tracking</a>';
             } else {
                 echo '-';
