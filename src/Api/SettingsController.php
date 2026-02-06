@@ -128,6 +128,22 @@ class SettingsController
             if ($hex) $settings['theme_danger_border'] = $hex;
         }
 
+        // thumbnail size
+        if (isset($params['product_thumbnail_width'])) {
+            $mw = absint($params['product_thumbnail_width']);
+            if ($mw > 0) {
+                $settings['product_thumbnail_width'] = $mw;
+            }
+        }
+
+        if (isset($params['product_thumbnail_height'])) {
+            $mh = absint($params['product_thumbnail_height']);
+            if ($mh > 0) {
+                $settings['product_thumbnail_height'] = $mh;
+            }
+        }
+
+
         // Layout
         if (isset($params['container_max_width'])) {
             $mw = absint($params['container_max_width']);

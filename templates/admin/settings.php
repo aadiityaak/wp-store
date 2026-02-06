@@ -37,7 +37,6 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         </div>
 
         <form @submit.prevent="saveSettings" x-ref="form">
-            <?php wp_nonce_field('wp_rest', '_wpnonce'); ?>
             <input type="hidden" name="active_tab" :value="activeTab">
 
             <!-- Tab: Umum -->
@@ -557,6 +556,16 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 </div>
 
 <script>
+    const wpStoreConfig = {
+        nonce: '<?php echo wp_create_nonce("wp_rest"); ?>',
+        apiUrl: '<?php echo esc_url_raw(rest_url("wp-store/v1")); ?>',
+        debug: true
+    };
+
+    if (wpStoreConfig.debug) {
+        console.log('WP Store Config loaded:', wpStoreConfig);
+    }
+
     document.addEventListener('alpine:init', () => {
         Alpine.data('storeSettingsManager', () => ({
             activeTab: '<?php echo esc_js($active_tab); ?>',
@@ -654,10 +663,10 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             async loadProvinces() {
                 this.isLoadingProvinces = true;
                 try {
-                    const response = await fetch('/wp-json/wp-store/v1/rajaongkir/provinces', {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/provinces`, {
                         method: 'GET',
                         headers: {
-                            'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         }
                     });
                     const result = await response.json();
@@ -676,10 +685,10 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 this.isLoadingCities = true;
                 this.cities = [];
                 try {
-                    const response = await fetch(`/wp-json/wp-store/v1/rajaongkir/cities?province=${provinceId}`, {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/cities?province=${provinceId}`, {
                         method: 'GET',
                         headers: {
-                            'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         }
                     });
                     const result = await response.json();
@@ -702,10 +711,10 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 this.isLoadingSubdistricts = true;
                 this.subdistricts = [];
                 try {
-                    const response = await fetch(`/wp-json/wp-store/v1/rajaongkir/subdistricts?city=${cityId}`, {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/subdistricts?city=${cityId}`, {
                         method: 'GET',
                         headers: {
-                            'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         }
                     });
                     const result = await response.json();
@@ -775,6 +784,9 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 const formData = new FormData(this.$refs.form);
                 const data = {};
                 formData.forEach((value, key) => {
+                    // Skip nonce and referer fields if they exist
+                    if (key === '_wpnonce' || key === '_wp_http_referer') return;
+
                     // Handle array inputs like shipping_couriers[]
                     if (key.endsWith('[]')) {
                         const realKey = key.slice(0, -2);
@@ -791,11 +803,12 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 data.store_bank_accounts = this.bankAccounts;
 
                 try {
-                    const response = await fetch('/wp-json/wp-store/v1/settings', {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/settings`, {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-WP-Nonce': formData.get('_wpnonce')
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         },
                         body: JSON.stringify(data)
                     });
@@ -817,14 +830,13 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
             async generatePages() {
                 this.isGenerating = true;
-                const nonce = document.getElementById('_wpnonce').value;
 
                 try {
-                    const response = await fetch('/wp-json/wp-store/v1/settings/generate-pages', {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/settings/generate-pages`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-WP-Nonce': nonce
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         }
                     });
 
@@ -860,13 +872,12 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             },
             async runSeeder() {
                 this.isSeeding = true;
-                const nonce = document.getElementById('_wpnonce').value;
                 try {
-                    const response = await fetch('/wp-json/wp-store/v1/tools/seed-products', {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/tools/seed-products`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-WP-Nonce': nonce
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         },
                         body: JSON.stringify({
                             count: 12
@@ -888,13 +899,12 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             },
             async clearCache() {
                 this.isClearing = true;
-                const nonce = document.getElementById('_wpnonce').value;
                 try {
-                    const response = await fetch('/wp-json/wp-store/v1/tools/clear-cache', {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/tools/clear-cache`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-WP-Nonce': nonce
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         }
                     });
                     const result = await response.json();
@@ -913,12 +923,11 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             },
             async loadCacheStats() {
                 this.isLoadingCacheStats = true;
-                const nonce = document.getElementById('_wpnonce').value;
                 try {
-                    const response = await fetch('/wp-json/wp-store/v1/tools/cache-stats', {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/tools/cache-stats`, {
                         method: 'GET',
                         headers: {
-                            'X-WP-Nonce': nonce
+                            'X-WP-Nonce': wpStoreConfig.nonce
                         }
                     });
                     const result = await response.json();
