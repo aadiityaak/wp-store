@@ -481,6 +481,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             </a>
                         </div>
                     </div>
+                    <?php do_action('wp_store_settings_tools_tab'); ?>
                 </div>
             </div>
 
