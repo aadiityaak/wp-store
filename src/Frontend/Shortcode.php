@@ -61,6 +61,16 @@ class Shortcode
         return ($settings['currency_symbol'] ?? 'Rp');
     }
 
+    private function get_thumbnail_size()
+    {
+        $settings = get_option('wp_store_settings', []);
+        $w = isset($settings['product_thumbnail_width']) ? (int) $settings['product_thumbnail_width'] : 200;
+        $h = isset($settings['product_thumbnail_height']) ? (int) $settings['product_thumbnail_height'] : 300;
+        if ($w <= 0) $w = 200;
+        if ($h <= 0) $h = 300;
+        return [$w, $h];
+    }
+
 
 
     public function filter_single_content($content)
@@ -225,7 +235,7 @@ class Shortcode
                 $id = get_the_ID();
                 $price = get_post_meta($id, '_store_price', true);
                 $stock = get_post_meta($id, '_store_stock', true);
-                $image = get_the_post_thumbnail_url($id, 'medium');
+                $image = get_the_post_thumbnail_url($id, $this->get_thumbnail_size());
                 $items[] = [
                     'id' => $id,
                     'title' => get_the_title(),
@@ -300,7 +310,7 @@ class Shortcode
                 $query->the_post();
                 $id = get_the_ID();
                 $price = get_post_meta($id, '_store_price', true);
-                $image = get_the_post_thumbnail_url($id, 'medium');
+                $image = get_the_post_thumbnail_url($id, $this->get_thumbnail_size());
                 $items[] = [
                     'id' => $id,
                     'title' => get_the_title(),
@@ -571,12 +581,13 @@ class Shortcode
     public function render_products_carousel($atts = [])
     {
         wp_enqueue_script('alpinejs');
+        $defaults = $this->get_thumbnail_size();
         $atts = shortcode_atts([
             'label' => '',
             'per_page' => 10,
             'per_row' => 1,
-            'img_width' => 200,
-            'img_height' => 300,
+            'img_width' => $defaults[0],
+            'img_height' => $defaults[1],
             'crop' => 'true',
             'autoplay' => 0,
             'pause_on_hover' => 'true',
@@ -644,10 +655,11 @@ class Shortcode
 
     public function render_thumbnail($atts = [])
     {
+        $defaults = $this->get_thumbnail_size();
         $atts = shortcode_atts([
             'id' => 0,
-            'width' => 300,
-            'height' => 300,
+            'width' => $defaults[0],
+            'height' => $defaults[1],
             'crop' => 'true',
             'upscale' => 'true',
             'alt' => '',
@@ -953,6 +965,12 @@ class Shortcode
 
     public function override_archive_template($template)
     {
+        if (is_singular('store_product')) {
+            $tpl = WP_STORE_PATH . 'templates/frontend/single-store_product.php';
+            if (file_exists($tpl)) {
+                return $tpl;
+            }
+        }
         if (is_post_type_archive('store_product') || (get_query_var('post_type') === 'store_product' && !is_singular())) {
             $tpl = WP_STORE_PATH . 'templates/frontend/archive-store_product.php';
             if (file_exists($tpl)) {

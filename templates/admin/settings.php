@@ -123,6 +123,21 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         </div>
                     </div>
                     <div class="wp-store-box-gray wp-store-mt-4">
+                        <h3 class="wp-store-subtitle">Thumbnail Produk</h3>
+                        <p class="wp-store-helper">Atur ukuran default untuk thumbnail produk di archive dan shortcode.</p>
+                        <div class="wp-store-grid-2">
+                            <div>
+                                <label class="wp-store-label" for="product_thumbnail_width">Lebar (px)</label>
+                                <input name="product_thumbnail_width" id="product_thumbnail_width" type="number" min="10" class="wp-store-input" value="<?php echo esc_attr($settings['product_thumbnail_width'] ?? 200); ?>">
+                            </div>
+                            <div>
+                                <label class="wp-store-label" for="product_thumbnail_height">Tinggi (px)</label>
+                                <input name="product_thumbnail_height" id="product_thumbnail_height" type="number" min="10" class="wp-store-input" value="<?php echo esc_attr($settings['product_thumbnail_height'] ?? 300); ?>">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wp-store-box-gray wp-store-mt-4">
                         <h3 class="wp-store-subtitle">Layout</h3>
                         <div class="wp-store-grid-3">
                             <div>
