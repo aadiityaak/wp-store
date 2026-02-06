@@ -63,6 +63,58 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <input name="store_phone" type="text" id="store_phone" value="<?php echo esc_attr($settings['store_phone'] ?? ''); ?>" class="wp-store-input">
                         </div>
                     </div>
+
+                    <div class="wp-store-box-gray wp-store-mt-4">
+                        <div class="wp-store-flex wp-store-justify-between wp-store-items-center">
+                            <div>
+                                <h4 class="wp-store-subtitle-small">Tarif Ongkir Custom</h4>
+                                <p class="wp-store-helper">Atur tarif ongkir manual berdasarkan lokasi.</p>
+                            </div>
+                            <button type="button" class="wp-store-btn wp-store-btn-small wp-store-btn-secondary" @click="openRateModal()">
+                                <span class="dashicons dashicons-plus-alt2"></span> Tambah Tarif
+                            </button>
+                        </div>
+
+                        <div class="wp-store-table-wrapper wp-store-mt-2" x-show="customShippingRates.length > 0">
+                            <table class="wp-store-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipe</th>
+                                        <th>Lokasi</th>
+                                        <th>Tarif (Rp)</th>
+                                        <th>Label</th>
+                                        <th style="width: 80px;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(rate, index) in customShippingRates" :key="index">
+                                        <tr>
+                                            <td x-text="rate.type.toUpperCase()"></td>
+                                            <td x-text="rate.name"></td>
+                                            <td x-text="parseInt(rate.price).toLocaleString('id-ID')"></td>
+                                            <td x-text="rate.label || '-'"></td>
+                                            <td>
+                                                <div class="wp-store-flex-gap">
+                                                    <button type="button" class="wp-store-icon-btn" @click="openRateModal(index)" title="Edit">
+                                                        <span class="dashicons dashicons-edit"></span>
+                                                    </button>
+                                                    <button type="button" class="wp-store-icon-btn wp-store-text-red" @click="removeRate(index)" title="Hapus">
+                                                        <span class="dashicons dashicons-trash"></span>
+                                                    </button>
+                                                </div>
+                                                <input type="hidden" :name="`custom_shipping_rates[${index}][type]`" :value="rate.type">
+                                                <input type="hidden" :name="`custom_shipping_rates[${index}][id]`" :value="rate.id">
+                                                <input type="hidden" :name="`custom_shipping_rates[${index}][name]`" :value="rate.name">
+                                                <input type="hidden" :name="`custom_shipping_rates[${index}][price]`" :value="rate.price">
+                                                <input type="hidden" :name="`custom_shipping_rates[${index}][label]`" :value="rate.label">
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div x-show="customShippingRates.length === 0" class="wp-store-helper wp-store-mt-2">Belum ada tarif custom.</div>
+                    </div>
                 </div>
             </div>
 
@@ -553,6 +605,94 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             </div>
         </div>
     </div>
+
+    <!-- Rate Modal -->
+    <div x-show="isRateModalOpen" x-cloak class="wp-store-modal-overlay">
+        <div class="wp-store-modal" @keydown.escape.window="closeRateModal" style="max-width: 500px;">
+            <div class="wp-store-modal-header">
+                <span x-text="rateForm.index >= 0 ? 'Edit Tarif' : 'Tambah Tarif'"></span>
+            </div>
+            <div class="wp-store-modal-body">
+                <div class="wp-store-form-grid">
+                    <div>
+                        <label class="wp-store-label">Provinsi</label>
+                        <select class="wp-store-input" x-model="rateForm.provId" @change="loadCitiesForRate(rateForm.provId); rateForm.cityId=''; rateForm.subId='';">
+                            <option value="">-- Pilih Provinsi --</option>
+                            <template x-for="p in provinces" :key="p.province_id">
+                                <option :value="p.province_id" x-text="p.province"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div x-show="rateForm.provId">
+                        <label class="wp-store-label">Kota/Kabupaten</label>
+                        <select class="wp-store-input" x-model="rateForm.cityId" @change="loadSubdistrictsForRate(rateForm.cityId); rateForm.subId='';">
+                            <option value="">-- Seluruh Kota di Provinsi ini --</option>
+                            <template x-for="c in rateCities" :key="c.city_id">
+                                <option :value="c.city_id" x-text="c.type + ' ' + c.city_name"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div x-show="rateForm.cityId">
+                        <label class="wp-store-label">Kecamatan</label>
+                        <select class="wp-store-input" x-model="rateForm.subId">
+                            <option value="">-- Seluruh Kecamatan di Kota ini --</option>
+                            <template x-for="s in rateSubdistricts" :key="s.subdistrict_id">
+                                <option :value="s.subdistrict_id" x-text="s.subdistrict_name"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="wp-store-label">Tarif (Rp)</label>
+                        <input type="number" class="wp-store-input" x-model="rateForm.price" min="0">
+                    </div>
+
+                    <div>
+                        <label class="wp-store-label">Label (Opsional)</label>
+                        <input type="text" class="wp-store-input" x-model="rateForm.label" placeholder="Contoh: Ongkir Khusus">
+                    </div>
+                </div>
+            </div>
+            <div class="wp-store-modal-actions">
+                <button type="button" class="wp-store-btn wp-store-btn-secondary" @click="closeRateModal">Batal</button>
+                <button type="button" class="wp-store-btn wp-store-btn-primary" @click="
+                    // Determine Type, ID, and Name
+                    let type = 'province';
+                    let id = rateForm.provId;
+                    let name = '';
+                    
+                    if (rateForm.subId) {
+                        type = 'subdistrict';
+                        id = rateForm.subId;
+                        let s = rateSubdistricts.find(x => x.subdistrict_id == id);
+                        let c = rateCities.find(x => x.city_id == rateForm.cityId);
+                        let p = provinces.find(x => x.province_id == rateForm.provId);
+                        name = (s ? s.subdistrict_name : id) + ', ' + (c ? c.city_name : '') + ', ' + (p ? p.province : '');
+                    } else if (rateForm.cityId) {
+                        type = 'city';
+                        id = rateForm.cityId;
+                        let c = rateCities.find(x => x.city_id == id);
+                        let p = provinces.find(x => x.province_id == rateForm.provId);
+                        name = (c ? c.type + ' ' + c.city_name : id) + ', ' + (p ? p.province : '');
+                    } else if (rateForm.provId) {
+                        type = 'province';
+                        id = rateForm.provId;
+                        let p = provinces.find(x => x.province_id == id);
+                        name = p ? p.province : id;
+                    }
+
+                    if (!id) { alert('Pilih minimal provinsi'); return; }
+
+                    rateForm.type = type;
+                    rateForm.id = id;
+                    rateForm.name = name;
+                    saveRate();
+                ">Simpan</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -587,6 +727,24 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 approx_mb: 0
             },
             bankAccounts: [],
+            customShippingRates: [],
+            isRateModalOpen: false,
+            rateForm: {
+                index: -1, // -1 for new
+                type: 'province',
+                id: '',
+                name: '',
+                price: 0,
+                label: '',
+                provId: '',
+                cityId: '',
+                subId: ''
+            },
+            rateLocations: [], // Dropdown options for the modal
+            rateCities: [],
+            rateSubdistricts: [],
+            isLoadingRateLocations: false,
+
             indonesianBanks: [
                 'Bank Mandiri', 'BRI', 'BCA', 'BNI', 'BTN', 'BSI', 'CIMB Niaga',
                 'OCBC NISP', 'Bank Permata', 'Bank Danamon', 'Panin Bank',
@@ -628,6 +786,11 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
                 this.loadCacheStats();
 
+                const savedRates = <?php echo json_encode($settings['custom_shipping_rates'] ?? []); ?>;
+                if (Array.isArray(savedRates)) {
+                    this.customShippingRates = savedRates;
+                }
+
                 const savedAccounts = <?php echo json_encode($settings['store_bank_accounts'] ?? []); ?>;
                 if (Array.isArray(savedAccounts) && savedAccounts.length > 0) {
                     this.bankAccounts = savedAccounts;
@@ -658,6 +821,164 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
             removeBankAccount(index) {
                 this.bankAccounts.splice(index, 1);
+            },
+
+            openRateModal(index = -1) {
+                this.rateForm.index = index;
+                this.rateForm.provId = '';
+                this.rateForm.cityId = '';
+                this.rateForm.subId = '';
+                this.rateCities = [];
+                this.rateSubdistricts = [];
+
+                if (index >= 0 && this.customShippingRates[index]) {
+                    const r = this.customShippingRates[index];
+                    this.rateForm.type = r.type;
+                    this.rateForm.id = r.id;
+                    this.rateForm.name = r.name;
+                    this.rateForm.price = r.price;
+                    this.rateForm.label = r.label;
+
+                    // Try to pre-fill if possible
+                    if (r.type === 'province') {
+                        this.rateForm.provId = r.id;
+                    }
+                } else {
+                    this.rateForm.type = 'province';
+                    this.rateForm.id = '';
+                    this.rateForm.name = '';
+                    this.rateForm.price = 0;
+                    this.rateForm.label = '';
+                }
+                this.isRateModalOpen = true;
+            },
+
+            async loadCitiesForRate(provId) {
+                if (!provId) {
+                    this.rateCities = [];
+                    return;
+                }
+                try {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/cities?province=${provId}`, {
+                        headers: {
+                            'X-WP-Nonce': wpStoreConfig.nonce
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) this.rateCities = result.data;
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+
+            async loadSubdistrictsForRate(cityId) {
+                if (!cityId) {
+                    this.rateSubdistricts = [];
+                    return;
+                }
+                try {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/rajaongkir/subdistricts?city=${cityId}`, {
+                        headers: {
+                            'X-WP-Nonce': wpStoreConfig.nonce
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) this.rateSubdistricts = result.data;
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+
+            closeRateModal() {
+                this.isRateModalOpen = false;
+            },
+
+            async loadRateLocations(type) {
+                this.isLoadingRateLocations = true;
+                this.rateLocations = [];
+                let endpoint = '';
+
+                if (type === 'province') {
+                    endpoint = 'provinces';
+                } else if (type === 'city') {
+                    endpoint = 'cities'; // Ideally filtered by province, but for custom rate we might want all cities? 
+                    // Wait, listing ALL cities (500+) in a dropdown is bad. 
+                    // Usually user selects Province first then City.
+                    // But here "Type" defines the scope.
+                    // If Type is City, we need to select a City. 
+                    // If Type is Subdistrict, we need to select a Subdistrict.
+                    // To make it usable, we should probably still require Province selection for City, and City for Subdistrict.
+                    // But the requirement says "Based on Province, City OR Subdistrict".
+                    // So if I select "City", I'm setting a rate for that specific City regardless of province (though City implies Province).
+                    // To keep UI simple for now:
+                    // If Type = Province: List Provinces.
+                    // If Type = City: List All Cities (might be slow but ok for admin).
+                    // If Type = Subdistrict: This is too many (7000+). 
+                    // We MUST have a hierarchy selector even for "Subdistrict" rule.
+                }
+
+                // Actually, let's just use the existing loadProvinces/loadCities methods but adapted.
+                // However, the rule is simple: Type + ID.
+                // If I select "Subdistrict", I need to find that subdistrict.
+                // Let's rely on the existing API.
+
+                try {
+                    let url = `${wpStoreConfig.apiUrl}/rajaongkir/${endpoint}`;
+                    // For now let's just support Province and City for direct listing.
+                    // Subdistricts are too many. 
+                    // Maybe we need a cascading select in the modal: Province -> City -> Subdistrict.
+                    // And the "Rule Type" is determined by what level you stop at?
+                    // No, the user wants "Based on Province OR City OR Subdistrict".
+                    // So I can select a Province and say "Ongkir to West Java = 20k".
+                    // Or select a City "Bandung = 10k".
+
+                    // Revised Plan for Modal:
+                    // Always show Province dropdown.
+                    // Show City dropdown if Province selected.
+                    // Show Subdistrict dropdown if City selected.
+                    // And a Radio button to select "Apply Rule Level": Province / City / Subdistrict.
+
+                    // But to simplify implementation given existing API:
+                    // Let's fetch all Provinces first.
+                    // When Province selected, fetch Cities.
+                    // When City selected, fetch Subdistricts.
+
+                    // The "Type" in `rateForm` will be the selected level.
+                    // But to make it work, I'll just use the `onRateProvinceChange` etc.
+                } catch (e) {
+                    console.error(e);
+                }
+                this.isLoadingRateLocations = false;
+            },
+
+            // We will use a more interactive approach in the modal HTML, so this loadRateLocations might be redundant if we reuse the logic.
+            // Let's implement specific loaders for the modal.
+
+            saveRate() {
+                if (!this.rateForm.id) {
+                    alert('Pilih lokasi terlebih dahulu');
+                    return;
+                }
+                const rate = {
+                    type: this.rateForm.type,
+                    id: this.rateForm.id,
+                    name: this.rateForm.name,
+                    price: parseFloat(this.rateForm.price),
+                    label: this.rateForm.label
+                };
+
+                if (this.rateForm.index >= 0) {
+                    this.customShippingRates[this.rateForm.index] = rate;
+                } else {
+                    this.customShippingRates.push(rate);
+                }
+                this.closeRateModal();
+            },
+
+            removeRate(index) {
+                if (confirm('Hapus tarif ini?')) {
+                    this.customShippingRates.splice(index, 1);
+                }
             },
 
             async loadProvinces() {
@@ -804,6 +1125,8 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
                 // Add bank accounts manually to data
                 data.store_bank_accounts = this.bankAccounts;
+                // Add custom shipping rates manually to data
+                data.custom_shipping_rates = this.customShippingRates;
 
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/settings`, {

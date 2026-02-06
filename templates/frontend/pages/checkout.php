@@ -121,6 +121,8 @@
                             'X-WP-Nonce': wpStoreSettings.nonce
                         },
                         body: JSON.stringify({
+                            destination_province: this.selectedProvince,
+                            destination_city: this.selectedCity,
                             destination_subdistrict: this.selectedSubdistrict,
                             courier: this.shippingCouriers.join(':'),
                             items: (Array.isArray(this.cart) ? this.cart.filter(i => i.selected !== false).map(i => ({

@@ -100,19 +100,53 @@ class RajaOngkirController
         $params = $request->get_json_params();
         $params = apply_filters('wp_store_before_calculate_shipping', $params, $request);
         $destination_subdistrict = isset($params['destination_subdistrict']) ? sanitize_text_field($params['destination_subdistrict']) : '';
+        $destination_city = isset($params['destination_city']) ? sanitize_text_field($params['destination_city']) : '';
+        $destination_province = isset($params['destination_province']) ? sanitize_text_field($params['destination_province']) : '';
         $courier = isset($params['courier']) ? sanitize_text_field($params['courier']) : '';
-        if (empty($api_key) || empty($origin_subdistrict) || empty($destination_subdistrict) || empty($courier)) {
-            return new WP_REST_Response([
-                'success' => false,
-                'message' => 'Pengaturan atau parameter tidak lengkap.'
-            ], 400);
+
+        // Custom Rates
+        $custom_services = [];
+        $custom_rates = isset($settings['custom_shipping_rates']) && is_array($settings['custom_shipping_rates']) ? $settings['custom_shipping_rates'] : [];
+        foreach ($custom_rates as $rate) {
+            $type = $rate['type'] ?? '';
+            $id = $rate['id'] ?? '';
+            $match = false;
+            if ($type === 'subdistrict' && (string)$id === (string)$destination_subdistrict) $match = true;
+            elseif ($type === 'city' && (string)$id === (string)$destination_city) $match = true;
+            elseif ($type === 'province' && (string)$id === (string)$destination_province) $match = true;
+            
+            if ($match) {
+                $custom_services[] = [
+                    'courier' => 'custom',
+                    'service' => isset($rate['label']) && $rate['label'] ? $rate['label'] : 'Custom',
+                    'description' => isset($rate['name']) && $rate['name'] ? $rate['name'] : 'Shipping',
+                    'cost' => (float)($rate['price'] ?? 0),
+                    'etd' => ''
+                ];
+            }
         }
+
         $items = isset($params['items']) && is_array($params['items']) ? $params['items'] : null;
         $manual_weight = isset($params['manual_weight_grams']) ? (int) $params['manual_weight_grams'] : 0;
         if ($manual_weight < 0) $manual_weight = 0;
         $weight_base = $manual_weight > 0 ? $manual_weight : ($items ? $this->get_items_total_weight_grams($items) : $this->get_cart_total_weight_grams());
         $weight = apply_filters('wp_store_shipping_weight', $weight_base, $params);
-        $cache_key = apply_filters('wp_store_shipping_cache_key', 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier])), $params);
+
+        if (empty($api_key) || empty($origin_subdistrict) || empty($destination_subdistrict) || empty($courier)) {
+            if (!empty($custom_services)) {
+                return new WP_REST_Response([
+                    'success' => true,
+                    'weight' => $weight,
+                    'services' => $custom_services
+                ], 200);
+            }
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Pengaturan atau parameter tidak lengkap.'
+            ], 400);
+        }
+
+        $cache_key = apply_filters('wp_store_shipping_cache_key', 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier, serialize($custom_services)])), $params);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             return new WP_REST_Response($cached, 200);
@@ -240,6 +274,7 @@ class RajaOngkirController
                 }
             }
         }
+        $services = array_merge($custom_services, $services);
         $services = apply_filters('wp_store_shipping_services', $services, $params);
         $payload = [
             'success' => true,

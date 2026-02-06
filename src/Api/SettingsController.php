@@ -76,6 +76,22 @@ class SettingsController
             $settings['shipping_couriers'] = array_map('sanitize_text_field', $params['shipping_couriers']);
         }
 
+        if (isset($params['custom_shipping_rates']) && is_array($params['custom_shipping_rates'])) {
+            $rates = [];
+            foreach ($params['custom_shipping_rates'] as $rate) {
+                if (isset($rate['type']) && isset($rate['id']) && isset($rate['price'])) {
+                    $rates[] = [
+                        'type' => sanitize_text_field($rate['type']),
+                        'id' => sanitize_text_field($rate['id']),
+                        'name' => isset($rate['name']) ? sanitize_text_field($rate['name']) : '',
+                        'price' => floatval($rate['price']),
+                        'label' => isset($rate['label']) ? sanitize_text_field($rate['label']) : '',
+                    ];
+                }
+            }
+            $settings['custom_shipping_rates'] = $rates;
+        }
+
         if (isset($params['page_catalog'])) $settings['page_catalog'] = absint($params['page_catalog']);
         if (isset($params['page_shipping_check'])) $settings['page_shipping_check'] = absint($params['page_shipping_check']);
         if (isset($params['page_profile'])) $settings['page_profile'] = absint($params['page_profile']);
