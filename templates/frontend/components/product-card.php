@@ -2,50 +2,9 @@
 <div class="wps-card wps-card-hover wps-transition">
   <div class="wps-p-2">
     <a class="wps-text-sm wps-text-gray-900 wps-mb-4 wps-text-bold wps-d-block wps-rel" href="<?php echo esc_url($item['link']); ?>">
-      <?php
-      $hover_src = '';
-      $gal = get_post_meta((int) $item['id'], '_store_gallery_ids', true);
-      if (is_array($gal) && !empty($gal)) {
-        $first = array_values($gal)[0];
-        if (is_numeric($first)) {
-          $url = wp_get_attachment_image_url((int) $first, 'medium');
-          if (is_string($url)) $hover_src = $url;
-        } elseif (is_string($first)) {
-          $hover_src = $first;
-        }
-      }
-      ?>
-      <div class="wps-image-wrap wps-mb-2 wps-img-160<?php echo $hover_src ? ' wps-has-hover' : ''; ?>">
-        <img class="wps-w-full wps-rounded wps-mb-4 img-main" src="<?php echo esc_url($image_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
-        <?php if ($hover_src) : ?>
-          <img class="wps-w-full wps-rounded img-hover" src="<?php echo esc_url($hover_src); ?>" alt="<?php echo esc_attr($item['title']); ?>">
-        <?php endif; ?>
+      <div class="wps-mb-2">
+        <?php echo do_shortcode('[wp_store_thumbnail id="' . esc_attr($item['id']) . '"]'); ?>
       </div>
-      <?php
-      $type = get_post_meta((int) $item['id'], '_store_product_type', true);
-      $is_digital = ($type === 'digital') || (bool) get_post_meta((int) $item['id'], '_store_is_digital', true);
-      if ($is_digital) {
-      ?>
-        <span class="wps-digital-badge wps-text-xs wps-text-white">
-          <?php echo wps_icon(["name" => "cloud-download", "size" => 12, "stroke_color" => "#ffffff"]); ?>
-          <span class="txt wps-text-white wps-text-xs">Digital</span>
-        </span>
-        <?php
-      }
-      $lbl = get_post_meta((int) $item['id'], '_store_label', true);
-      if (is_string($lbl) && $lbl !== '') {
-        $txt = $lbl === 'label-best' ? 'Best Seller' : ($lbl === 'label-limited' ? 'Limited' : ($lbl === 'label-new' ? 'New' : ''));
-        if ($txt !== '') {
-        ?>
-          <span class="wps-label-badge <?php echo esc_attr($lbl); ?> wps-text-xs">
-            <?php echo wps_icon(["name" => "heart", "size" => 10, "stroke_color" => "#ffffff"]); ?>
-            <span class="txt wps-text-white wps-text-xs"><?php echo esc_html($txt); ?></span>
-          </span>
-      <?php
-        }
-      }
-      echo wps_discount_badge_html((int) $item['id']);
-      ?>
       <?php echo esc_html($item['title']); ?>
     </a>
     <div class="wps-text-xxs wps-text-gray-900 wps-mb-4">

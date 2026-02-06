@@ -546,36 +546,38 @@ class Shortcode
         wp_enqueue_script('alpinejs');
         $filters = $this->render_filters(['show_labels' => '1']);
         $shop = $this->render_shop(['per_page' => $atts['per_page']]);
-        $html = ''
-            . '<div x-data="{ openFilters:false, isMobile: window.matchMedia(\'(max-width: 768px)\').matches } ?? {}" x-init="(() => {'
-            . '  const mq = window.matchMedia(\'(max-width: 768px)\');'
-            . '  const update = () => { isMobile = mq.matches };'
-            . '  if (mq.addEventListener) { mq.addEventListener(\'change\', update); } else if (mq.addListener) { mq.addListener(update); }'
-            . '  update();'
-            . '})()">'
-            . '  <div class="wps-flex wps-justify-end wps-mb-2" x-show="isMobile" x-cloak>'
-            . '    <button class="wps-btn wps-btn-secondary" @click="openFilters = true">' . esc_html__('Filter', 'wp-store') . '</button>'
-            . '  </div>'
-            . '  <div class="wps-flex wps-gap-4">'
-            . '    <div x-show="!isMobile" x-cloak style="width:300px;flex:0 0 300px;">' . $filters . '</div>'
-            . '    <div style="flex:1 1 auto;">' . $shop . '</div>'
-            . '  </div>'
-            . '  <template x-if="openFilters">'
-            . '    <div>'
-            . '      <div class="wps-offcanvas-backdrop" @click="openFilters=false"></div>'
-            . '      <div class="wps-offcanvas">'
-            . '        <div class="wps-offcanvas-header">'
-            . '          <div>' . esc_html__('Filter', 'wp-store') . '</div>'
-            . '          <button class="wps-btn wps-btn-secondary" @click="openFilters=false">' . esc_html__('Tutup', 'wp-store') . '</button>'
-            . '        </div>'
-            . '        <div class="wps-offcanvas-body">'
-            .            $filters
-            . '        </div>'
-            . '      </div>'
-            . '    </div>'
-            . '  </template>'
-            . '</div>';
-        return $html;
+        ob_start();
+?>
+        <div x-data="{ openFilters:false, isMobile: window.matchMedia('(max-width: 768px)').matches } ?? {}" x-init="(() => {
+              const mq = window.matchMedia('(max-width: 768px)');
+              const update = () => { isMobile = mq.matches };
+              if (mq.addEventListener) { mq.addEventListener('change', update); } else if (mq.addListener) { mq.addListener(update); }
+              update();
+            })()">
+            <div class="wps-flex wps-justify-end wps-mb-2" x-show="isMobile" x-cloak>
+                <button class="wps-btn wps-btn-secondary" @click="openFilters = true"><?php echo esc_html__('Filter', 'wp-store'); ?></button>
+            </div>
+            <div class="wps-flex wps-gap-4">
+                <div x-show="!isMobile" x-cloak style="width:300px;flex:0 0 300px;"><?php echo $filters; ?></div>
+                <div style="flex:1 1 auto;"><?php echo $shop; ?></div>
+            </div>
+            <template x-if="openFilters">
+                <div>
+                    <div class="wps-offcanvas-backdrop" @click="openFilters=false"></div>
+                    <div class="wps-offcanvas">
+                        <div class="wps-offcanvas-header">
+                            <div><?php echo esc_html__('Filter', 'wp-store'); ?></div>
+                            <button class="wps-btn wps-btn-secondary" @click="openFilters=false"><?php echo esc_html__('Tutup', 'wp-store'); ?></button>
+                        </div>
+                        <div class="wps-offcanvas-body">
+                            <?php echo $filters; ?>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+<?php
+        return ob_get_clean();
     }
 
     public function render_products_carousel($atts = [])
@@ -680,7 +682,7 @@ class Shortcode
         $alt = is_string($atts['alt']) && $atts['alt'] !== '' ? $atts['alt'] : get_the_title($id);
         $crop = in_array(strtolower((string) $atts['crop']), ['1', 'true', 'yes'], true);
         $style = 'width:100%; height:100%; object-fit:' . ($crop ? 'cover' : 'contain') . ';';
-        $wrap_style = 'width:100%; max-width:' . (int) $w . 'px; aspect-ratio:' . (int) $w . ' / ' . (int) $h . '; overflow:hidden;';
+        $wrap_style = 'width:100%; aspect-ratio:' . (int) $w . ' / ' . (int) $h . '; overflow:hidden;';
         $hoverMode = sanitize_key($atts['hover']);
         $showLabel = in_array(strtolower((string) $atts['label']), ['1', 'true', 'yes'], true);
         $badgeHtml = '';
