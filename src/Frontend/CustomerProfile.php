@@ -530,6 +530,7 @@ class CustomerProfile
                     async fetchProfile() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
+                                credentials: 'same-origin',
                                 headers: {
                                     'X-WP-Nonce': wpStoreSettings.nonce
                                 }
@@ -558,6 +559,7 @@ class CustomerProfile
                             fd.append('avatar', file);
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/avatar', {
                                 method: 'POST',
+                                credentials: 'same-origin',
                                 headers: {
                                     'X-WP-Nonce': wpStoreSettings.nonce
                                 },
@@ -581,7 +583,10 @@ class CustomerProfile
                     async fetchWishlistCount() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'wishlist', {
-                                credentials: 'same-origin'
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
                             });
                             const data = await res.json();
                             this.wishlistCount = Array.isArray(data.items) ? data.items.length : 0;
@@ -596,6 +601,7 @@ class CustomerProfile
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
                                 method: 'POST',
+                                credentials: 'same-origin',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'X-WP-Nonce': wpStoreSettings.nonce
@@ -634,6 +640,7 @@ class CustomerProfile
                     async fetchAddresses() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
+                                credentials: 'same-origin',
                                 headers: {
                                     'X-WP-Nonce': wpStoreSettings.nonce
                                 }
@@ -651,6 +658,7 @@ class CustomerProfile
                         this.isLoadingProvinces = true;
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/provinces', {
+                                credentials: 'same-origin',
                                 headers: {
                                     'X-WP-Nonce': wpStoreSettings.nonce
                                 }
@@ -675,6 +683,7 @@ class CustomerProfile
                         this.isLoadingCities = true;
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/cities?province=' + provinceId, {
+                                credentials: 'same-origin',
                                 headers: {
                                     'X-WP-Nonce': wpStoreSettings.nonce
                                 }
@@ -729,6 +738,7 @@ class CustomerProfile
                         this.isLoadingSubdistricts = true;
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + cityId, {
+                                credentials: 'same-origin',
                                 headers: {
                                     'X-WP-Nonce': wpStoreSettings.nonce
                                 }
@@ -888,6 +898,7 @@ class CustomerProfile
 
                             const res = await fetch(url, {
                                 method: method,
+                                credentials: 'same-origin',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'X-WP-Nonce': wpStoreSettings.nonce
@@ -925,6 +936,7 @@ class CustomerProfile
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses/' + id, {
                                 method: 'DELETE',
+                                credentials: 'same-origin',
                                 headers: {
                                     'X-WP-Nonce': wpStoreSettings.nonce
                                 }

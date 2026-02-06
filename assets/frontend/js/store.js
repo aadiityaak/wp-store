@@ -42,6 +42,9 @@
       try {
         const response = await fetch(wpStoreSettings.restUrl + "cart", {
           credentials: "same-origin",
+          headers: {
+            "X-WP-Nonce": wpStoreSettings.nonce,
+          },
         });
         if (!response.ok) {
           throw new Error("Gagal mengambil keranjang");
@@ -56,6 +59,9 @@
       try {
         const response = await fetch(wpStoreSettings.restUrl + "wishlist", {
           credentials: "same-origin",
+          headers: {
+            "X-WP-Nonce": wpStoreSettings.nonce,
+          },
         });
         if (!response.ok) {
           throw new Error("Gagal mengambil wishlist");
