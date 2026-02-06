@@ -530,10 +530,7 @@ class CustomerProfile
                     async fetchProfile() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
-                                credentials: 'same-origin',
-                                headers: {
-                                    'X-WP-Nonce': wpStoreSettings.nonce
-                                }
+                                credentials: 'same-origin'
                             });
                             const data = await res.json();
                             this.profile = data;
@@ -583,10 +580,7 @@ class CustomerProfile
                     async fetchWishlistCount() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'wishlist', {
-                                credentials: 'same-origin',
-                                headers: {
-                                    'X-WP-Nonce': wpStoreSettings.nonce
-                                }
+                                credentials: 'same-origin'
                             });
                             const data = await res.json();
                             this.wishlistCount = Array.isArray(data.items) ? data.items.length : 0;
@@ -640,10 +634,7 @@ class CustomerProfile
                     async fetchAddresses() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
-                                credentials: 'same-origin',
-                                headers: {
-                                    'X-WP-Nonce': wpStoreSettings.nonce
-                                }
+                                credentials: 'same-origin'
                             });
                             this.addresses = await res.json();
                         } catch (err) {
@@ -738,10 +729,7 @@ class CustomerProfile
                         this.isLoadingSubdistricts = true;
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'rajaongkir/subdistricts?city=' + cityId, {
-                                credentials: 'same-origin',
-                                headers: {
-                                    'X-WP-Nonce': wpStoreSettings.nonce
-                                }
+                                credentials: 'same-origin'
                             });
                             const data = await res.json();
                             this.subdistricts = (data.data || []).map(s => ({

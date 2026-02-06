@@ -7,7 +7,7 @@ $nonce = isset($nonce) ? (string) $nonce : wp_create_nonce('wp_rest');
 ?>
 <script>
   window.wpStoreSettings = window.wpStoreSettings || {
-    restUrl: window.location.origin + '/wp-json/wp-store/v1/',
+    restUrl: '<?php echo esc_url_raw(rest_url('wp-store/v1/')); ?>',
     nonce: '<?php echo esc_js($nonce); ?>'
   };
   window.wpStoreShippingChecker = function() {

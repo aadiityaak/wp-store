@@ -103,7 +103,12 @@
         url.searchParams.set("per_page", this.perPage);
         url.searchParams.set("page", this.page);
         url.searchParams.set("_embed", "1");
-        const res = await fetch(url.toString(), { credentials: "same-origin" });
+        const res = await fetch(url.toString(), {
+          credentials: "same-origin",
+          headers: {
+            "X-WP-Nonce": wpStoreSettings.nonce,
+          },
+        });
         if (!res.ok) {
           return;
         }

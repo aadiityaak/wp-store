@@ -1,7 +1,7 @@
 <script>
     if (typeof window.wpStoreSettings === 'undefined') {
         window.wpStoreSettings = {
-            restUrl: window.location.origin + '/wp-json/wp-store/v1/',
+            restUrl: '<?php echo esc_url_raw(rest_url('wp-store/v1/')); ?>',
             nonce: '<?php echo esc_js($nonce); ?>'
         };
     }
