@@ -530,7 +530,10 @@ class CustomerProfile
                     async fetchProfile() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/profile', {
-                                credentials: 'same-origin'
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
                             });
                             const data = await res.json();
                             this.profile = data;
@@ -580,7 +583,10 @@ class CustomerProfile
                     async fetchWishlistCount() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'wishlist', {
-                                credentials: 'same-origin'
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
                             });
                             const data = await res.json();
                             this.wishlistCount = Array.isArray(data.items) ? data.items.length : 0;
@@ -634,7 +640,10 @@ class CustomerProfile
                     async fetchAddresses() {
                         try {
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
-                                credentials: 'same-origin'
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
                             });
                             this.addresses = await res.json();
                         } catch (err) {

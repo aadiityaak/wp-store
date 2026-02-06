@@ -29,33 +29,48 @@ class CaptchaController
         return apply_filters('wp_store_captcha_code', $code);
     }
 
-    private function svg_image($code)
+    private function generate_image($code)
     {
+        if (!extension_loaded('gd')) {
+            $html = '<div style="font-family:monospace; font-size: 24px; letter-spacing: 4px; padding: 8px 16px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; display: inline-block;">' . esc_html($code) . '</div>';
+            return apply_filters('wp_store_captcha_html', $html, $code);
+        }
+
         $w = 160;
         $h = 48;
-        $bg = '#f3f4f6';
-        $fg = '#111827';
-        $noise = '';
-        for ($i = 0; $i < 6; $i++) {
-            $x1 = wp_rand(0, $w);
-            $y1 = wp_rand(0, $h);
-            $x2 = wp_rand(0, $w);
-            $y2 = wp_rand(0, $h);
-            $c = sprintf('#%06X', wp_rand(0, 0xFFFFFF));
-            $noise .= '<line x1="' . $x1 . '" y1="' . $y1 . '" x2="' . $x2 . '" y2="' . $y2 . '" stroke="' . $c . '" stroke-width="1" opacity="0.3"/>';
+        $im = imagecreate($w, $h);
+        $bg = imagecolorallocate($im, 243, 244, 246);
+        $fg = imagecolorallocate($im, 17, 24, 39);
+        $line = imagecolorallocate($im, 209, 213, 219);
+        $pixel = imagecolorallocate($im, 156, 163, 175);
+
+        for ($i = 0; $i < 8; $i++) {
+            imageline($im, wp_rand(0, $w), wp_rand(0, $h), wp_rand(0, $w), wp_rand(0, $h), $line);
         }
-        $letters = str_split($code);
-        $text = '';
-        $x = 14;
-        foreach ($letters as $i => $ch) {
-            $rotate = wp_rand(-15, 15);
-            $y = 30 + wp_rand(-5, 5);
-            $color = $fg;
-            $text .= '<text x="' . $x . '" y="' . $y . '" fill="' . $color . '" font-family="Arial, sans-serif" font-size="24" transform="rotate(' . $rotate . ' ' . $x . ',' . $y . ')">' . esc_html($ch) . '</text>';
-            $x += 26;
+        for ($i = 0; $i < 50; $i++) {
+            imagesetpixel($im, wp_rand(0, $w), wp_rand(0, $h), $pixel);
         }
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $w . '" height="' . $h . '"><rect width="100%" height="100%" fill="' . $bg . '"/>' . $noise . $text . '</svg>';
-        return apply_filters('wp_store_captcha_svg', $svg, $code);
+
+        $font = 5;
+        $fw = imagefontwidth($font);
+        $fh = imagefontheight($font);
+        $x = ($w - (strlen($code) * ($fw + 6))) / 2;
+        $y = ($h - $fh) / 2;
+
+        $len = strlen($code);
+        for ($i = 0; $i < $len; $i++) {
+            imagestring($im, $font, (int)$x, (int)$y, $code[$i], $fg);
+            $x += $fw + 6;
+        }
+
+        ob_start();
+        imagepng($im);
+        $data = ob_get_clean();
+        imagedestroy($im);
+
+        $src = 'data:image/png;base64,' . base64_encode($data);
+        $html = '<img src="' . $src . '" width="' . $w . '" height="' . $h . '" style="border-radius:4px;border:1px solid #e5e7eb;display:block;" />';
+        return apply_filters('wp_store_captcha_html', $html, $code);
     }
 
     public function new_captcha()
@@ -63,7 +78,7 @@ class CaptchaController
         $code = $this->random_code(5);
         $id = wp_generate_uuid4();
         set_transient('wp_store_captcha_' . $id, $code, 10 * MINUTE_IN_SECONDS);
-        $svg = $this->svg_image($code);
+        $svg = $this->generate_image($code);
         do_action('wp_store_captcha_created', $id, $code);
         return new WP_REST_Response([
             'success' => true,
