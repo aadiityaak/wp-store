@@ -503,7 +503,9 @@
                     try {
                         const base = typeof wpStoreSettings !== 'undefined' && wpStoreSettings.thanksUrl ? wpStoreSettings.thanksUrl : '<?php echo esc_js(site_url('/thanks/')); ?>';
                         const url = new URL(base, window.location.origin);
-                        if (data && data.id) {
+                        if (data && data.order_number) {
+                            url.searchParams.set('order', String(data.order_number));
+                        } else if (data && data.id) {
                             url.searchParams.set('order', String(data.id));
                         }
                         window.location.href = url.toString();

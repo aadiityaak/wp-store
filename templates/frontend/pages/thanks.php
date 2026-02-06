@@ -16,6 +16,11 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
 $payment_method = $order_exists ? get_post_meta($order_id, '_store_order_payment_method', true) : '';
 $shop_archive = function_exists('get_post_type_archive_link') ? get_post_type_archive_link('store_product') : '';
 $shop_url = $shop_archive ?: site_url('/produk/');
+$settings = get_option('wp_store_settings', []);
+$order_number = $order_exists ? get_post_meta($order_id, '_store_order_number', true) : '';
+if (!$order_number) {
+    $order_number = $order_id;
+}
 ?>
 <div class="wps-container">
     <div class="wps-card wps-p-6">
@@ -23,7 +28,7 @@ $shop_url = $shop_archive ?: site_url('/produk/');
             <div class="wps-text-2xl wps-font-extrabold wps-text-gray-900">Terima Kasih</div>
             <div class="wps-text-sm wps-text-gray-600 wps-mt-1">Pesanan Anda sudah kami terima.</div>
             <?php if ($order_exists) : ?>
-                <div class="wps-mt-2 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span></div>
+                <div class="wps-mt-2 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_number); ?></span></div>
             <?php endif; ?>
         </div>
         <?php if ($order_exists) : ?>

@@ -327,11 +327,39 @@ class Shortcode
         ]);
     }
 
+    private function resolve_order_id($input)
+    {
+        if (empty($input)) return 0;
+
+        $args = [
+            'post_type' => 'store_order',
+            'meta_key' => '_store_order_number',
+            'meta_value' => $input,
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'post_status' => 'any'
+        ];
+        $query = new \WP_Query($args);
+        if ($query->have_posts()) {
+            return $query->posts[0];
+        }
+
+        if (is_numeric($input)) {
+            $id = absint($input);
+            if ($id > 0 && get_post_type($id) === 'store_order') {
+                return $id;
+            }
+        }
+
+        return 0;
+    }
+
     public function render_thanks($atts = [])
     {
         $settings = get_option('wp_store_settings', []);
         $currency = ($settings['currency_symbol'] ?? 'Rp');
-        $order_id = isset($_GET['order']) ? absint($_GET['order']) : 0;
+        $input = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : '';
+        $order_id = $this->resolve_order_id($input);
         return Template::render('pages/thanks', [
             'currency' => $currency,
             'order_id' => $order_id,
@@ -342,7 +370,8 @@ class Shortcode
     {
         $settings = get_option('wp_store_settings', []);
         $currency = ($settings['currency_symbol'] ?? 'Rp');
-        $order_id = isset($_GET['order']) ? absint($_GET['order']) : 0;
+        $input = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : '';
+        $order_id = $this->resolve_order_id($input);
         return Template::render('pages/tracking', [
             'currency' => $currency,
             'order_id' => $order_id,

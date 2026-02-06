@@ -13,13 +13,17 @@ $province_name = $order_exists ? get_post_meta($order_id, '_store_order_province
 $city_name = $order_exists ? get_post_meta($order_id, '_store_order_city_name', true) : '';
 $subdistrict_name = $order_exists ? get_post_meta($order_id, '_store_order_subdistrict_name', true) : '';
 $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_code', true) : '';
+$order_number = $order_exists ? get_post_meta($order_id, '_store_order_number', true) : '';
+if (!$order_number) {
+    $order_number = $order_id;
+}
 ?>
 <div class="wps-container">
     <div class="wps-card wps-p-6">
         <div class="wps-text-center">
             <div class="wps-text-2xl wps-font-semibold wps-text-gray-900 wps-mb-2">Tracking Pesanan</div>
             <?php if ($order_exists) : ?>
-                <div class="wps-mt-1 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_id); ?></span></div>
+                <div class="wps-mt-1 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_number); ?></span></div>
             <?php else : ?>
                 <div class="wps-text-sm wps-text-gray-600 wps-mt-1 wps-mb-2">Masukkan parameter <span class="wps-font-medium">order</span> di URL untuk melihat status.</div>
                 <?php
@@ -29,7 +33,7 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                 ?>
                 <div class="wps-mt-4" style="max-width:420px; margin:0 auto;">
                     <form id="wps-find-order" class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
-                        <input type="number" min="1" step="1" id="wps-order-id" class="wps-input" placeholder="Masukkan Nomor Order (contoh: 651)">
+                        <input type="text" id="wps-order-id" class="wps-input" placeholder="Masukkan Nomor Order">
                         <button type="submit" class="wps-btn wps-btn-primary">Lacak</button>
                     </form>
                 </div>
@@ -43,15 +47,14 @@ $postal_code = $order_exists ? get_post_meta($order_id, '_store_order_postal_cod
                         f.addEventListener('submit', function(e) {
                             e.preventDefault();
                             var val = input && typeof input.value === 'string' ? input.value.trim() : '';
-                            var id = parseInt(val, 10);
-                            if (!id || id <= 0) {
+                            if (val === '') {
                                 if (msg) {
                                     msg.className = 'wps-text-xs wps-text-red-700 wps-mt-1';
                                     msg.textContent = 'Nomor order tidak valid.';
                                 }
                                 return;
                             }
-                            var url = base + (base.indexOf('?') === -1 ? '?order=' + encodeURIComponent(String(id)) : '&order=' + encodeURIComponent(String(id)));
+                            var url = base + (base.indexOf('?') === -1 ? '?order=' + encodeURIComponent(val) : '&order=' + encodeURIComponent(val));
                             window.location.href = url;
                         });
                     })();

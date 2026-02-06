@@ -115,6 +115,10 @@ class CheckoutController
             return new WP_REST_Response(['message' => 'Gagal membuat pesanan'], 500);
         }
 
+        $rand_suffix = str_pad((string) rand(0, 999), 3, '0', STR_PAD_LEFT);
+        $order_number = date('Ymd') . $order_id . $rand_suffix;
+        update_post_meta($order_id, '_store_order_number', $order_number);
+
         update_post_meta($order_id, '_store_order_email', $email);
         update_post_meta($order_id, '_store_order_phone', $phone);
         $shipping_courier = isset($data['shipping_courier']) ? sanitize_text_field($data['shipping_courier']) : '';
@@ -241,6 +245,7 @@ class CheckoutController
         do_action('wp_store_after_create_order', $order_id, $data, $lines, $order_total);
         $resp = [
             'id' => $order_id,
+            'order_number' => isset($order_number) ? $order_number : $order_id,
             'total' => $order_total,
             'message' => 'Pesanan berhasil dibuat',
         ];
