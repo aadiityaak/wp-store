@@ -275,6 +275,9 @@
 .wp-store-mt-4 {
   margin-top: 16px;
 }
+.wp-store-mb-2 {
+  margin-bottom: 16px;
+}
 .wp-store-form-actions {
   padding: 20px 30px;
   background: #f6f7f7;

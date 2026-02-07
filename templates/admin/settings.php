@@ -68,7 +68,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         <div class="wp-store-flex wp-store-justify-between wp-store-items-center">
                             <div>
                                 <h4 class="wp-store-subtitle-small">Tarif Ongkir Custom</h4>
-                                <p class="wp-store-helper">Atur tarif ongkir manual berdasarkan lokasi.</p>
+                                <p class="wp-store-helper wp-store-mb-2">Atur tarif ongkir manual berdasarkan lokasi.</p>
                             </div>
                             <button type="button" class="wp-store-btn wp-store-btn-small wp-store-btn-secondary" @click="openRateModal()">
                                 <span class="dashicons dashicons-plus-alt2"></span> Tambah Tarif
