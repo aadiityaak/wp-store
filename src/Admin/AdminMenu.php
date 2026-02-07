@@ -153,45 +153,52 @@ class AdminMenu
             $counts[] = isset($map[$d]) ? (int) $map[$d] : 0;
         }
 ?>
-        <div class="wrap wp-store-dashboard">
-            <h1 class="wp-store-dashboard-title">Dashboard Toko</h1>
-            <div class="wp-store-dashboard-grid">
-                <div class="wp-store-card">
-                    <div class="wp-store-card-title">Total Produk</div>
-                    <div class="wp-store-card-value"><?php echo esc_html($product_count); ?></div>
-                    <div class="wp-store-card-desc">Jumlah produk aktif</div>
-                </div>
-                <div class="wp-store-card">
-                    <div class="wp-store-card-title">Total Pesanan</div>
-                    <div class="wp-store-card-value"><?php echo esc_html($order_count); ?></div>
-                    <div class="wp-store-card-desc">Semua pesanan masuk</div>
-                </div>
-                <div class="wp-store-card">
-                    <div class="wp-store-card-title">Pendapatan Total</div>
-                    <div class="wp-store-card-value"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($revenue_total, 0, ',', '.')); ?></div>
-                    <div class="wp-store-card-desc">Status dibayar/selesai</div>
-                </div>
-                <div class="wp-store-card">
-                    <div class="wp-store-card-title">Pendapatan 30 Hari</div>
-                    <div class="wp-store-card-value"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($revenue_30d, 0, ',', '.')); ?></div>
-                    <div class="wp-store-card-desc">Terakhir 30 hari</div>
+        <div class="wrap wp-store-wrapper">
+            <div class="wp-store-header">
+                <div>
+                    <h1 class="wp-store-title">Dashboard Toko</h1>
+                    <p class="wp-store-helper">Ringkasan performa toko dan status pesanan.</p>
                 </div>
             </div>
-            <div class="wp-store-dashboard-sections">
-                <div class="wp-store-box">
-                    <div class="wp-store-box-header">Ringkasan Status Pesanan</div>
-                    <div class="wp-store-status-grid">
-                        <div class="wp-store-status-item"><span>Menunggu Pembayaran</span><span class="wp-store-badge wp-store-badge-yellow"><?php echo esc_html($status_counts['awaiting_payment']); ?></span></div>
-                        <div class="wp-store-status-item"><span>Sudah Dibayar</span><span class="wp-store-badge wp-store-badge-green"><?php echo esc_html($status_counts['paid']); ?></span></div>
-                        <div class="wp-store-status-item"><span>Sedang Diproses</span><span class="wp-store-badge wp-store-badge-blue"><?php echo esc_html($status_counts['processing']); ?></span></div>
-                        <div class="wp-store-status-item"><span>Dikirim</span><span class="wp-store-badge wp-store-badge-indigo"><?php echo esc_html($status_counts['shipped']); ?></span></div>
-                        <div class="wp-store-status-item"><span>Selesai</span><span class="wp-store-badge wp-store-badge-teal"><?php echo esc_html($status_counts['completed']); ?></span></div>
-                        <div class="wp-store-status-item"><span>Dibatalkan</span><span class="wp-store-badge wp-store-badge-red"><?php echo esc_html($status_counts['cancelled']); ?></span></div>
+            <div class="wp-store-card">
+                <div class="wp-store-dashboard-grid">
+                    <div class="wp-store-card">
+                        <div class="wp-store-card-title">Total Produk</div>
+                        <div class="wp-store-card-value"><?php echo esc_html($product_count); ?></div>
+                        <div class="wp-store-card-desc">Jumlah produk aktif</div>
+                    </div>
+                    <div class="wp-store-card">
+                        <div class="wp-store-card-title">Total Pesanan</div>
+                        <div class="wp-store-card-value"><?php echo esc_html($order_count); ?></div>
+                        <div class="wp-store-card-desc">Semua pesanan masuk</div>
+                    </div>
+                    <div class="wp-store-card">
+                        <div class="wp-store-card-title">Pendapatan Total</div>
+                        <div class="wp-store-card-value"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($revenue_total, 0, ',', '.')); ?></div>
+                        <div class="wp-store-card-desc">Status dibayar/selesai</div>
+                    </div>
+                    <div class="wp-store-card">
+                        <div class="wp-store-card-title">Pendapatan 30 Hari</div>
+                        <div class="wp-store-card-value"><?php echo esc_html(($currency ?: 'Rp') . ' ' . number_format($revenue_30d, 0, ',', '.')); ?></div>
+                        <div class="wp-store-card-desc">Terakhir 30 hari</div>
                     </div>
                 </div>
-                <div class="wp-store-box">
-                    <div class="wp-store-box-header">Pesanan 14 Hari Terakhir</div>
-                    <canvas id="wpStoreOrdersChart" width="800" height="280"></canvas>
+                <div class="wp-store-dashboard-sections">
+                    <div class="wp-store-box">
+                        <div class="wp-store-box-header">Ringkasan Status Pesanan</div>
+                        <div class="wp-store-status">
+                            <div class="wp-store-status-item"><span>Menunggu Pembayaran</span><span class="wp-store-badge wp-store-badge-yellow"><?php echo esc_html($status_counts['awaiting_payment']); ?></span></div>
+                            <div class="wp-store-status-item"><span>Sudah Dibayar</span><span class="wp-store-badge wp-store-badge-green"><?php echo esc_html($status_counts['paid']); ?></span></div>
+                            <div class="wp-store-status-item"><span>Sedang Diproses</span><span class="wp-store-badge wp-store-badge-blue"><?php echo esc_html($status_counts['processing']); ?></span></div>
+                            <div class="wp-store-status-item"><span>Dikirim</span><span class="wp-store-badge wp-store-badge-indigo"><?php echo esc_html($status_counts['shipped']); ?></span></div>
+                            <div class="wp-store-status-item"><span>Selesai</span><span class="wp-store-badge wp-store-badge-teal"><?php echo esc_html($status_counts['completed']); ?></span></div>
+                            <div class="wp-store-status-item"><span>Dibatalkan</span><span class="wp-store-badge wp-store-badge-red"><?php echo esc_html($status_counts['cancelled']); ?></span></div>
+                        </div>
+                    </div>
+                    <div class="wp-store-box">
+                        <div class="wp-store-box-header">Pesanan 14 Hari Terakhir</div>
+                        <canvas id="wpStoreOrdersChart" width="800" height="280"></canvas>
+                    </div>
                 </div>
             </div>
         </div>

@@ -10,7 +10,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         </div>
     </div>
 
-    <div class="wp-store-card wp-store-card-settings">
+    <div class="wp-store-card wp-store-card-settings wp-store-p-0">
         <!-- Tabs Navigation -->
         <div class="wp-store-tabs">
             <div @click="switchTab('general')" class="wp-store-tab" :class="{ 'active': activeTab === 'general' }">
@@ -102,11 +102,6 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                                                         <span class="dashicons dashicons-trash"></span>
                                                     </button>
                                                 </div>
-                                                <input type="hidden" :name="`custom_shipping_rates[${index}][type]`" :value="rate.type">
-                                                <input type="hidden" :name="`custom_shipping_rates[${index}][id]`" :value="rate.id">
-                                                <input type="hidden" :name="`custom_shipping_rates[${index}][name]`" :value="rate.name">
-                                                <input type="hidden" :name="`custom_shipping_rates[${index}][price]`" :value="rate.price">
-                                                <input type="hidden" :name="`custom_shipping_rates[${index}][label]`" :value="rate.label">
                                             </td>
                                         </tr>
                                     </template>
@@ -608,11 +603,11 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
     <!-- Rate Modal -->
     <div x-show="isRateModalOpen" x-cloak class="wp-store-modal-overlay">
-        <div class="wp-store-modal" @keydown.escape.window="closeRateModal" style="max-width: 500px;">
+        <div class="wp-store-modal" @keydown.escape.window="closeRateModal" style="max-width: 500px; max-height: 90vh; display: flex; flex-direction: column;">
             <div class="wp-store-modal-header">
                 <span x-text="rateForm.index >= 0 ? 'Edit Tarif' : 'Tambah Tarif'"></span>
             </div>
-            <div class="wp-store-modal-body">
+            <div class="wp-store-modal-body" style="overflow-y: auto;">
                 <div class="wp-store-form-grid">
                     <div>
                         <label class="wp-store-label">Provinsi</label>
@@ -657,39 +652,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             </div>
             <div class="wp-store-modal-actions">
                 <button type="button" class="wp-store-btn wp-store-btn-secondary" @click="closeRateModal">Batal</button>
-                <button type="button" class="wp-store-btn wp-store-btn-primary" @click="
-                    // Determine Type, ID, and Name
-                    let type = 'province';
-                    let id = rateForm.provId;
-                    let name = '';
-                    
-                    if (rateForm.subId) {
-                        type = 'subdistrict';
-                        id = rateForm.subId;
-                        let s = rateSubdistricts.find(x => x.subdistrict_id == id);
-                        let c = rateCities.find(x => x.city_id == rateForm.cityId);
-                        let p = provinces.find(x => x.province_id == rateForm.provId);
-                        name = (s ? s.subdistrict_name : id) + ', ' + (c ? c.city_name : '') + ', ' + (p ? p.province : '');
-                    } else if (rateForm.cityId) {
-                        type = 'city';
-                        id = rateForm.cityId;
-                        let c = rateCities.find(x => x.city_id == id);
-                        let p = provinces.find(x => x.province_id == rateForm.provId);
-                        name = (c ? c.type + ' ' + c.city_name : id) + ', ' + (p ? p.province : '');
-                    } else if (rateForm.provId) {
-                        type = 'province';
-                        id = rateForm.provId;
-                        let p = provinces.find(x => x.province_id == id);
-                        name = p ? p.province : id;
-                    }
-
-                    if (!id) { alert('Pilih minimal provinsi'); return; }
-
-                    rateForm.type = type;
-                    rateForm.id = id;
-                    rateForm.name = name;
-                    saveRate();
-                ">Simpan</button>
+                <button type="button" class="wp-store-btn wp-store-btn-primary" @click="submitRate">Simpan</button>
             </div>
         </div>
     </div>
@@ -954,7 +917,43 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             // We will use a more interactive approach in the modal HTML, so this loadRateLocations might be redundant if we reuse the logic.
             // Let's implement specific loaders for the modal.
 
-            saveRate() {
+            submitRate() {
+                let type = 'province';
+                let id = this.rateForm.provId;
+                let name = '';
+
+                if (this.rateForm.subId) {
+                    type = 'subdistrict';
+                    id = this.rateForm.subId;
+                    let s = this.rateSubdistricts.find(x => x.subdistrict_id == id);
+                    let c = this.rateCities.find(x => x.city_id == this.rateForm.cityId);
+                    let p = this.provinces.find(x => x.province_id == this.rateForm.provId);
+                    name = (s ? s.subdistrict_name : id) + ', ' + (c ? c.city_name : '') + ', ' + (p ? p.province : '');
+                } else if (this.rateForm.cityId) {
+                    type = 'city';
+                    id = this.rateForm.cityId;
+                    let c = this.rateCities.find(x => x.city_id == id);
+                    let p = this.provinces.find(x => x.province_id == this.rateForm.provId);
+                    name = (c ? c.type + ' ' + c.city_name : id) + ', ' + (p ? p.province : '');
+                } else if (this.rateForm.provId) {
+                    type = 'province';
+                    id = this.rateForm.provId;
+                    let p = this.provinces.find(x => x.province_id == id);
+                    name = p ? p.province : id;
+                }
+
+                if (!id) {
+                    alert('Pilih minimal provinsi');
+                    return;
+                }
+
+                this.rateForm.type = type;
+                this.rateForm.id = id;
+                this.rateForm.name = name;
+                this.saveRate();
+            },
+
+            async saveRate() {
                 if (!this.rateForm.id) {
                     alert('Pilih lokasi terlebih dahulu');
                     return;
@@ -973,6 +972,27 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     this.customShippingRates.push(rate);
                 }
                 this.closeRateModal();
+                try {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/settings/custom-shipping-rates`, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': wpStoreConfig.nonce
+                        },
+                        body: JSON.stringify({
+                            custom_shipping_rates: this.customShippingRates
+                        })
+                    });
+                    const result = await response.json();
+                    if (response.ok && result && result.success) {
+                        this.showNotification('Tarif custom disimpan!', 'success');
+                    } else {
+                        this.showNotification((result && result.message) ? result.message : 'Gagal menyimpan tarif custom.', 'error');
+                    }
+                } catch (e) {
+                    this.showNotification('Terjadi kesalahan jaringan.', 'error');
+                }
             },
 
             removeRate(index) {
@@ -1124,9 +1144,9 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 });
 
                 // Add bank accounts manually to data
-                data.store_bank_accounts = this.bankAccounts;
+                data.store_bank_accounts = JSON.parse(JSON.stringify(this.bankAccounts));
                 // Add custom shipping rates manually to data
-                data.custom_shipping_rates = this.customShippingRates;
+                data.custom_shipping_rates = JSON.parse(JSON.stringify(this.customShippingRates));
 
                 try {
                     const response = await fetch(`${wpStoreConfig.apiUrl}/settings`, {

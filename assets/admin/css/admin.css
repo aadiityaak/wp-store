@@ -46,7 +46,7 @@
 .wp-store-dashboard-sections {
   margin-top: 24px;
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 300px 1fr;
   gap: 16px;
 }
 @media (max-width: 960px) {
@@ -65,16 +65,11 @@
   font-weight: 600;
   color: #1d2327;
 }
-.wp-store-status-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.wp-store-status {
   gap: 10px;
   padding: 16px;
-}
-@media (max-width: 640px) {
-  .wp-store-status-grid {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
 }
 .wp-store-status-item {
   display: flex;
@@ -127,7 +122,9 @@
 
 /* Settings page styles */
 .wp-store-wrapper {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu,
+    Cantarell, "Helvetica Neue", sans-serif;
   max-width: 1000px;
   margin: 20px auto;
 }
@@ -148,7 +145,7 @@
 .wp-store-card {
   background: #fff;
   border: 1px solid #c3c4c7;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -183,6 +180,9 @@
 .wp-store-tab-content {
   padding: 30px;
 }
+.wp-store-p-0 {
+  padding: 0;
+}
 .wp-store-form-grid {
   display: flex;
   flex-direction: column;
@@ -212,16 +212,39 @@
 .wp-store-input,
 .wp-store-textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #8c8f94;
-  border-radius: 4px;
+  padding: 8px 12px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
   font-size: 14px;
+  background: #fff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 .wp-store-input:focus,
 .wp-store-textarea:focus {
   border-color: #2271b1;
   box-shadow: 0 0 0 1px #2271b1;
   outline: none;
+}
+.wp-store-input:hover,
+.wp-store-textarea:hover {
+  border-color: #70757a;
+}
+.wp-store-input::placeholder,
+.wp-store-textarea::placeholder {
+  color: #9aa0a6;
+}
+.wp-store-input:disabled,
+.wp-store-textarea:disabled {
+  background: #f0f0f1;
+  color: #7a7f86;
+}
+.wp-store-flex-gap {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
 }
 .wp-store-input[type="color"] {
   padding: 0;
@@ -270,6 +293,11 @@
   border: 1px solid transparent;
   text-decoration: none;
   font-size: 13px;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
 }
 .wp-store-btn-primary {
   background: #2271b1;
@@ -279,6 +307,10 @@
 .wp-store-btn-primary:hover {
   background: #135e96;
   border-color: #135e96;
+}
+.wp-store-btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.25);
 }
 .wp-store-btn-secondary {
   background: #f6f7f7;
@@ -290,9 +322,51 @@
   border-color: #135e96;
   color: #135e96;
 }
+.wp-store-btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.18);
+}
 .wp-store-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+.wp-store-btn-small {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.wp-store-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+  color: #3c434a;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.wp-store-icon-btn:hover {
+  background: #f6f7f7;
+  border-color: #c3c4c7;
+}
+.wp-store-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.18);
+}
+.wp-store-text-red {
+  color: #d63638;
+  border-color: #f3a3a5;
+}
+.wp-store-text-red:hover {
+  color: #b32d2e;
+  border-color: #e98b8d;
+  background: #fff5f5;
 }
 /* Toast Notification */
 .wp-store-toast {
@@ -374,4 +448,35 @@
   justify-content: flex-end;
   gap: 10px;
   background: #f9fafb;
+}
+.wp-store-table-wrapper {
+  overflow-x: auto;
+}
+.wp-store-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+.wp-store-table thead th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: #1d2327;
+  background: #f6f7f7;
+  border-bottom: 1px solid #dcdcde;
+}
+.wp-store-table tbody td {
+  padding: 10px 12px;
+  color: #3c434a;
+  border-top: 1px solid #e5e7eb;
+}
+.wp-store-table tbody tr:hover {
+  background: #f9fafb;
+}
+@media (max-width: 640px) {
+  .wp-store-table thead th,
+  .wp-store-table tbody td {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
 }

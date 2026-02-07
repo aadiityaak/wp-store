@@ -24,6 +24,13 @@ class SettingsController
                 'permission_callback' => [$this, 'check_admin_auth'],
             ],
         ]);
+        register_rest_route('wp-store/v1', '/settings/custom-shipping-rates', [
+            [
+                'methods' => 'POST',
+                'callback' => [$this, 'save_custom_shipping_rates'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
     }
 
     public function check_admin_auth()
@@ -79,12 +86,13 @@ class SettingsController
         if (isset($params['custom_shipping_rates']) && is_array($params['custom_shipping_rates'])) {
             $rates = [];
             foreach ($params['custom_shipping_rates'] as $rate) {
-                if (isset($rate['type']) && isset($rate['id']) && isset($rate['price'])) {
+                // Ensure type and id are present. Price defaults to 0 if missing/null.
+                if (!empty($rate['type']) && !empty($rate['id'])) {
                     $rates[] = [
                         'type' => sanitize_text_field($rate['type']),
                         'id' => sanitize_text_field($rate['id']),
                         'name' => isset($rate['name']) ? sanitize_text_field($rate['name']) : '',
-                        'price' => floatval($rate['price']),
+                        'price' => isset($rate['price']) ? floatval($rate['price']) : 0,
                         'label' => isset($rate['label']) ? sanitize_text_field($rate['label']) : '',
                     ];
                 }
@@ -174,6 +182,33 @@ class SettingsController
             'success' => true,
             'message' => 'Pengaturan berhasil disimpan',
             'settings' => $settings
+        ], 200);
+    }
+
+    public function save_custom_shipping_rates(WP_REST_Request $request)
+    {
+        $params = $request->get_json_params();
+        $settings = get_option('wp_store_settings', []);
+        $rates = [];
+        if (isset($params['custom_shipping_rates']) && is_array($params['custom_shipping_rates'])) {
+            foreach ($params['custom_shipping_rates'] as $rate) {
+                if (!empty($rate['type']) && !empty($rate['id'])) {
+                    $rates[] = [
+                        'type' => sanitize_text_field($rate['type']),
+                        'id' => sanitize_text_field($rate['id']),
+                        'name' => isset($rate['name']) ? sanitize_text_field($rate['name']) : '',
+                        'price' => isset($rate['price']) ? floatval($rate['price']) : 0,
+                        'label' => isset($rate['label']) ? sanitize_text_field($rate['label']) : '',
+                    ];
+                }
+            }
+        }
+        $settings['custom_shipping_rates'] = $rates;
+        update_option('wp_store_settings', $settings);
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => 'Tarif custom disimpan',
+            'settings' => ['custom_shipping_rates' => $rates]
         ], 200);
     }
 
