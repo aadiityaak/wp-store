@@ -104,5 +104,8 @@ class Plugin
 
         $public_actions = new \WpStore\Frontend\OrderPublicActions();
         $public_actions->register();
+
+        $branding = new \WpStore\Frontend\LoginBranding();
+        $branding->register();
     }
 }
