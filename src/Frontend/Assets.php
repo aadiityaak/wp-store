@@ -44,7 +44,7 @@ class Assets
         );
         wp_register_style(
             'wp-store-flickity',
-            WP_STORE_URL . 'assets/frontend/css/vendor/flickity.css',
+            WP_STORE_URL . 'assets/frontend/css/flickity.css',
             [],
             WP_STORE_VERSION
         );
