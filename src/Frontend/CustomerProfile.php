@@ -142,6 +142,7 @@ class CustomerProfile
                     <button @click="tab = 'orders'" :class="{ 'active': tab === 'orders' }" class="wps-tab">
                         <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Pesanan
                     </button>
+                    <?php do_action('wp_store_profile_additional_tabs'); ?>
                     <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto"><?php echo wps_icon(['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?>Keluar</a>
                 </div>
                 <script>
@@ -238,6 +239,7 @@ class CustomerProfile
                         </form>
                     </div>
                 </div>
+                <?php do_action('wp_store_profile_after_profile_tab'); ?>
             </div>
 
             <!-- Addresses Tab -->
@@ -427,6 +429,7 @@ class CustomerProfile
                     </div>
                 </div>
             </div>
+            <?php do_action('wp_store_profile_additional_panels'); ?>
         </div>
 
         <script>
