@@ -478,7 +478,7 @@ class CustomerProfile
                     init() {
                         const urlParams = new URLSearchParams(window.location.search);
                         const tabParam = urlParams.get('tab');
-                        if (tabParam && ['profile', 'addresses', 'wishlist', 'orders'].includes(tabParam)) {
+                        if (tabParam && ['profile', 'addresses', 'wishlist', 'orders', 'vendor'].includes(tabParam)) {
                             this.tab = tabParam;
                         }
 
