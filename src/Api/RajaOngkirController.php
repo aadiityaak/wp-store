@@ -44,7 +44,7 @@ class RajaOngkirController
 
     public static function get_rajaongkir_base_url()
     {
-        $base_url = 'https://rajaongkir.komerce.id/api/v1';
+        $base_url = 'https://ongkir.velocitydeveloper.id/api/v2';
         return $base_url;
     }
 
@@ -114,7 +114,7 @@ class RajaOngkirController
             if ($type === 'subdistrict' && (string)$id === (string)$destination_subdistrict) $match = true;
             elseif ($type === 'city' && (string)$id === (string)$destination_city) $match = true;
             elseif ($type === 'province' && (string)$id === (string)$destination_province) $match = true;
-            
+
             if ($match) {
                 $custom_services[] = [
                     'courier' => 'custom',

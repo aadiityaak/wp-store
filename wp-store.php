@@ -4,9 +4,9 @@
  * Plugin Name: VD Store
  * Description: Plugin ecommerce VD Store berbasis REST API dan Alpine.js
  * Version:     0.1.0
- * Author:      Aditya Kristyanto
- * Author URI:  https://websweetstudio.com
- * Text Domain: wp-store
+ * Author:      Dev Team Velocitydeveloper.com
+ * Author URI:  https://velocitydeveloper.com
+ * Text Domain: vd-store
  */
 
 if (!defined('ABSPATH')) {
