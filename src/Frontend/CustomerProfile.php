@@ -467,7 +467,7 @@ class CustomerProfile
                         postal_code: ''
                     },
 
-                    // Raja Ongkir Data
+                    // VD Ongkir Data
                     provinces: [],
                     cities: [],
                     subdistricts: [],
@@ -659,7 +659,7 @@ class CustomerProfile
                         }
                     },
 
-                    // --- Raja Ongkir Methods ---
+                    // --- VD Ongkir Methods ---
 
                     async loadProvinces() {
                         if (this.provinces.length > 0) return;

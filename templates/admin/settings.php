@@ -270,10 +270,10 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             <div x-show="activeTab === 'shipping'" class="wp-store-tab-content" x-cloak>
                 <div class="wp-store-form-grid">
                     <h3 class="wp-store-subtitle">Pengaturan Pengiriman</h3>
-                    <p class="wp-store-helper">Konfigurasi API Raja Ongkir dan metode pengiriman.</p>
+                    <p class="wp-store-helper">Konfigurasi API VD Ongkir dan metode pengiriman.</p>
 
                     <div class="wp-store-box-gray wp-store-mt-4">
-                        <h4 class="wp-store-subtitle-small">API Raja Ongkir</h4>
+                        <h4 class="wp-store-subtitle-small">API VD Ongkir</h4>
                         <div class="wp-store-mt-2">
                             <label class="wp-store-label" for="rajaongkir_api_key">API Key</label>
                             <input name="rajaongkir_api_key" type="text" id="rajaongkir_api_key" value="<?php echo esc_attr($settings['rajaongkir_api_key'] ?? ''); ?>" class="wp-store-input" placeholder="Masukkan API Key Starter/Basic/Pro Anda">

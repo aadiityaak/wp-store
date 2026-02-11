@@ -44,7 +44,7 @@ class RajaOngkirController
 
     public static function get_rajaongkir_base_url()
     {
-        $base_url = 'https://ongkir.velocitydeveloper.id/api/v2';
+        $base_url = 'https://ongkir.velocitydeveloper.id/api/v3';
         return $base_url;
     }
 
@@ -322,7 +322,7 @@ class RajaOngkirController
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
-                'message' => 'API Key Raja Ongkir belum diatur.'
+                'message' => 'API Key VD Ongkir belum diatur.'
             ], 400);
         }
 
@@ -391,7 +391,7 @@ class RajaOngkirController
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
-                'message' => 'API Key Raja Ongkir belum diatur.'
+                'message' => 'API Key VD Ongkir belum diatur.'
             ], 400);
         }
 
@@ -471,7 +471,7 @@ class RajaOngkirController
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
-                'message' => 'API Key Raja Ongkir belum diatur.'
+                'message' => 'API Key VD Ongkir belum diatur.'
             ], 400);
         }
 

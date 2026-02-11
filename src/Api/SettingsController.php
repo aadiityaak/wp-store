@@ -443,7 +443,7 @@ class SettingsController
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
-                'message' => 'API Key Raja Ongkir belum diatur.'
+                'message' => 'API Key VD Ongkir belum diatur.'
             ], 400);
         }
 
@@ -515,7 +515,7 @@ class SettingsController
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
-                'message' => 'API Key Raja Ongkir belum diatur.'
+                'message' => 'API Key VD Ongkir belum diatur.'
             ], 400);
         }
 
@@ -600,7 +600,7 @@ class SettingsController
         if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
-                'message' => 'API Key Raja Ongkir belum diatur.'
+                'message' => 'API Key VD Ongkir belum diatur.'
             ], 400);
         }
 
