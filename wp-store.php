@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Plugin Name: WP Store
- * Description: Plugin ecommerce sederhana berbasis REST API dan Alpine.js
+ * Plugin Name: VD Store
+ * Description: Plugin ecommerce VD Store berbasis REST API dan Alpine.js
  * Version:     0.1.0
  * Author:      Aditya Kristyanto
  * Author URI:  https://websweetstudio.com
