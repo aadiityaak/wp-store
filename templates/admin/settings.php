@@ -279,15 +279,6 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <input name="rajaongkir_api_key" type="text" id="rajaongkir_api_key" value="<?php echo esc_attr($settings['rajaongkir_api_key'] ?? ''); ?>" class="wp-store-input" placeholder="Masukkan API Key Starter/Basic/Pro Anda">
                             <p class="wp-store-helper">Dapatkan API Key di <a href="https://rajaongkir.com/" target="_blank">RajaOngkir.com</a>.</p>
                         </div>
-
-                        <div class="wp-store-mt-4">
-                            <label class="wp-store-label" for="rajaongkir_account_type">Tipe Akun</label>
-                            <select name="rajaongkir_account_type" id="rajaongkir_account_type" class="wp-store-input" style="width: 200px;">
-                                <option value="starter" <?php selected($settings['rajaongkir_account_type'] ?? 'starter', 'starter'); ?>>Starter (Free)</option>
-                                <option value="basic" <?php selected($settings['rajaongkir_account_type'] ?? 'starter', 'basic'); ?>>Basic</option>
-                                <option value="pro" <?php selected($settings['rajaongkir_account_type'] ?? 'starter', 'pro'); ?>>Pro</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div class="wp-store-box-gray wp-store-mt-4">
@@ -486,6 +477,21 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <option value="Rp" <?php selected($settings['currency_symbol'] ?? 'Rp', 'Rp'); ?>>Rp (Rupiah)</option>
                             <option value="USD" <?php selected($settings['currency_symbol'] ?? 'Rp', 'USD'); ?>>USD (Dollar)</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="wp-store-label" for="product_editor_mode">Mode Editor Produk</label>
+                        <select name="product_editor_mode" id="product_editor_mode" class="wp-store-input" style="width: 260px;">
+                            <option value="classic" <?php selected($settings['product_editor_mode'] ?? 'classic', 'classic'); ?>>Classic Editor</option>
+                            <option value="gutenberg" <?php selected($settings['product_editor_mode'] ?? 'classic', 'gutenberg'); ?>>Gutenberg</option>
+                            <!-- <option value="fse"  -->
+                            <?php
+                            //selected($settings['product_editor_mode'] ?? 'classic', 'fse'); 
+                            // 
+                            ?>
+                            <!-- >
+                            Full Site Editor</option> -->
+                        </select>
+                        <p class="wp-store-helper">Mengatur apakah halaman edit produk memakai Classic Editor atau Gutenberg/FSE.</p>
                     </div>
                     <div class="wp-store-grid-2">
                         <div>
@@ -729,7 +735,6 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 shipping_origin_province: '<?php echo esc_js($settings['shipping_origin_province'] ?? ''); ?>',
                 shipping_origin_city: '<?php echo esc_js($settings['shipping_origin_city'] ?? ''); ?>',
                 shipping_origin_subdistrict: '<?php echo esc_js($settings['shipping_origin_subdistrict'] ?? ''); ?>',
-                rajaongkir_account_type: '<?php echo esc_js($settings['rajaongkir_account_type'] ?? 'starter'); ?>',
                 qris_image_id: '<?php echo esc_js($settings['qris_image_id'] ?? ''); ?>'
             },
 

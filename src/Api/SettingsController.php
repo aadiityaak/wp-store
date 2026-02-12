@@ -73,7 +73,6 @@ class SettingsController
         if (isset($params['bank_holder'])) $settings['bank_holder'] = sanitize_text_field($params['bank_holder']);
 
         if (isset($params['rajaongkir_api_key'])) $settings['rajaongkir_api_key'] = sanitize_text_field($params['rajaongkir_api_key']);
-        if (isset($params['rajaongkir_account_type'])) $settings['rajaongkir_account_type'] = sanitize_text_field($params['rajaongkir_account_type']);
 
         if (isset($params['shipping_origin_province'])) $settings['shipping_origin_province'] = sanitize_text_field($params['shipping_origin_province']);
         if (isset($params['shipping_origin_city'])) $settings['shipping_origin_city'] = sanitize_text_field($params['shipping_origin_city']);
@@ -109,6 +108,14 @@ class SettingsController
         if (isset($params['page_tracking'])) $settings['page_tracking'] = absint($params['page_tracking']);
 
         if (isset($params['currency_symbol'])) $settings['currency_symbol'] = sanitize_text_field($params['currency_symbol']);
+        if (isset($params['product_editor_mode'])) {
+            $mode = sanitize_text_field($params['product_editor_mode']);
+            $allowed = ['classic', 'gutenberg', 'fse'];
+            if (!in_array($mode, $allowed, true)) {
+                $mode = 'classic';
+            }
+            $settings['product_editor_mode'] = $mode;
+        }
         if (isset($params['qris_image_id'])) $settings['qris_image_id'] = absint($params['qris_image_id']);
         if (isset($params['qris_label'])) $settings['qris_label'] = sanitize_text_field($params['qris_label']);
         if (isset($params['recaptcha_site_key'])) $settings['recaptcha_site_key'] = sanitize_text_field($params['recaptcha_site_key']);
