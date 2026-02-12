@@ -29,6 +29,7 @@ class Shortcode
         add_shortcode('wp_store_filters', [$this, 'render_filters']);
         add_shortcode('wp_store_shop_with_filters', [$this, 'render_shop_with_filters']);
         add_filter('the_content', [$this, 'filter_single_content']);
+        add_filter('the_content', [$this, 'filter_cart_page_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
         add_action('pre_get_posts', [$this, 'adjust_archive_query']);
         add_action('template_redirect', [$this, 'redirect_page_conflict']);
@@ -927,13 +928,35 @@ class Shortcode
         $settings = get_option('wp_store_settings', []);
         $checkout_page_id = isset($settings['page_checkout']) ? absint($settings['page_checkout']) : 0;
         $checkout_url = $checkout_page_id ? get_permalink($checkout_page_id) : '';
+        $cart_page_id = isset($settings['page_cart']) ? absint($settings['page_cart']) : 0;
+        $cart_url = $cart_page_id ? get_permalink($cart_page_id) : site_url('/keranjang/');
         $currency = ($settings['currency_symbol'] ?? 'Rp');
         $nonce = wp_create_nonce('wp_rest');
         return Template::render('components/cart-widget', [
             'checkout_url' => $checkout_url,
+            'cart_url' => $cart_url,
             'currency' => $currency,
             'nonce' => $nonce
         ]);
+    }
+
+    public function filter_cart_page_content($content)
+    {
+        if (!is_singular('page') || !in_the_loop() || !is_main_query()) {
+            return $content;
+        }
+        $page_id = get_queried_object_id();
+        if (!$page_id) {
+            return $content;
+        }
+        $settings = get_option('wp_store_settings', []);
+        $cart_page_id = isset($settings['page_cart']) ? absint($settings['page_cart']) : 0;
+        if ($cart_page_id && $page_id === $cart_page_id) {
+            if (strpos((string) $content, '[wp_store_cart]') === false) {
+                $content .= "\n\n[wp_store_cart]";
+            }
+        }
+        return $content;
     }
 
     public function render_wishlist($atts = [])
