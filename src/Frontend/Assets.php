@@ -167,8 +167,8 @@ class Assets
             x-on:wp-store:open-options-modal.window="open($event.detail)"
             x-cloak>
             <div class="wps-modal-backdrop" x-show="show" @click.self="show=false"></div>
-            <div class="wps-modal" x-show="show" style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 9999;">
-                <div class="wps-p-4" style="background:#fff; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.2); width: 420px; max-width: 95vw;">
+            <div class="wps-modal" x-show="show">
+                <div class="wps-p-4">
                     <div class="wps-mb-4 wps-text-lg wps-font-medium wps-text-gray-900">Pilih Opsi</div>
                     <div class="wps-mb-4" x-show="basicName && basicOptions.length" x-cloak>
                         <label class="wps-label" x-text="basicName"></label>
