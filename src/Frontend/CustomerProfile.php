@@ -49,9 +49,6 @@ class CustomerProfile
         $settings = get_option('wp_store_settings', []);
         $currency = ($settings['currency_symbol'] ?? 'Rp');
         $nonce = wp_create_nonce('wp_rest');
-        // Preload wishlist items for logged-in user to avoid empty UI in case of fetch issues
-        global $wpdb;
-        $wishlist_table = $wpdb->prefix . 'store_wishlists';
         $initial_items = [];
         $orders = [];
         $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
@@ -60,26 +57,6 @@ class CustomerProfile
             $uid = get_current_user_id();
             $user = get_userdata($uid);
             $email = $user ? $user->user_email : '';
-            $row = $wpdb->get_row($wpdb->prepare("SELECT wishlist FROM {$wishlist_table} WHERE user_id = %d LIMIT 1", $uid));
-            if ($row && isset($row->wishlist)) {
-                $decoded = json_decode($row->wishlist, true);
-                if (is_array($decoded)) {
-                    foreach ($decoded as $entry) {
-                        $pid = isset($entry['id']) ? (int) $entry['id'] : 0;
-                        if ($pid > 0 && get_post_type($pid) === 'store_product') {
-                            $price = (float) get_post_meta($pid, '_store_price', true);
-                            $initial_items[] = [
-                                'id' => $pid,
-                                'title' => get_the_title($pid),
-                                'price' => $price,
-                                'image' => get_the_post_thumbnail_url($pid, 'thumbnail') ?: null,
-                                'link' => get_permalink($pid),
-                                'options' => (isset($entry['opts']) && is_array($entry['opts'])) ? $entry['opts'] : []
-                            ];
-                        }
-                    }
-                }
-            }
             if ($email) {
                 $q = new \WP_Query([
                     'post_type' => 'store_order',
@@ -255,8 +232,15 @@ class CustomerProfile
                                 Tambah Alamat
                             </button>
                         </div>
-                        <div class="wps-grid wps-gap-4" style="display: grid; gap: 1rem;">
-                            <template x-if="addresses.length === 0">
+                        <div x-show="addressesLoading" class="wps-flex wps-justify-center wps-items-center wps-p-12 wps-text-gray-500">
+                            <svg class="wps-animate-spin wps-mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Memuat data...</span>
+                        </div>
+                        <div class="wps-grid wps-gap-4" x-show="!addressesLoading" style="display: none; grid-template-columns: none; gap: 1rem;">
+                            <template x-if="!addressesLoading && addresses.length === 0">
                                 <div class="wps-card wps-p-6 wps-text-center wps-text-gray-500">
                                     Belum ada alamat tersimpan.
                                 </div>
@@ -396,10 +380,17 @@ class CustomerProfile
                     <div class="wps-flex wps-justify-between wps-items-center wps-mb-4">
                         <h2 class="wps-text-lg wps-font-medium wps-text-gray-900">Riwayat Pesanan</h2>
                     </div>
-                    <template x-if="orders.length === 0">
+                    <div x-show="ordersLoading" class="wps-flex wps-justify-center wps-items-center wps-p-12 wps-text-gray-500">
+                        <svg class="wps-animate-spin wps-mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Memuat data...</span>
+                    </div>
+                    <template x-if="!ordersLoading && orders.length === 0">
                         <div class="wps-text-center wps-text-gray-500">Belum ada pesanan.</div>
                     </template>
-                    <div class="wps-grid wps-gap-4" style="display: grid; gap: 1rem;">
+                    <div class="wps-grid wps-gap-4" x-show="!ordersLoading" style="display: none; grid-template-columns: none; gap: 1rem;">
                         <template x-for="order in orders" :key="order.id">
                             <div class="wps-card wps-p-4">
                                 <div class="wps-flex wps-justify-between wps-items-center">
@@ -443,6 +434,7 @@ class CustomerProfile
                     toastMessage: '',
                     wishlistCount: 0,
                     orders: [],
+                    ordersLoading: false,
                     profile: {
                         first_name: '',
                         last_name: '',
@@ -451,6 +443,7 @@ class CustomerProfile
                         avatar_url: ''
                     },
                     addresses: [],
+                    addressesLoading: false,
                     isEditingAddress: false,
 
                     // Address Form Data
@@ -488,6 +481,9 @@ class CustomerProfile
                             window.history.pushState({}, '', url);
                             if (value === 'orders' && this.orders.length === 0) {
                                 this.fetchOrders();
+                            }
+                            if (value === 'addresses' && this.addresses.length === 0) {
+                                this.fetchAddresses();
                             }
                         });
 
@@ -543,6 +539,7 @@ class CustomerProfile
 
                     async fetchOrders() {
                         try {
+                            this.ordersLoading = true;
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/orders', {
                                 credentials: 'same-origin',
                                 headers: {
@@ -553,6 +550,8 @@ class CustomerProfile
                             this.orders = Array.isArray(data) ? data : [];
                         } catch (err) {
                             this.orders = [];
+                        } finally {
+                            this.ordersLoading = false;
                         }
                     },
 
@@ -668,6 +667,7 @@ class CustomerProfile
 
                     async fetchAddresses() {
                         try {
+                            this.addressesLoading = true;
                             const res = await fetch(wpStoreSettings.restUrl + 'customer/addresses', {
                                 credentials: 'same-origin',
                                 headers: {
@@ -677,6 +677,8 @@ class CustomerProfile
                             this.addresses = await res.json();
                         } catch (err) {
                             console.error(err);
+                        } finally {
+                            this.addressesLoading = false;
                         }
                     },
 
