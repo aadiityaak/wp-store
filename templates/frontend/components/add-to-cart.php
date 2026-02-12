@@ -15,7 +15,6 @@
         toastShow: false,
         toastType: 'success',
         toastMessage: '',
-        showModal: false,
         basicName: '<?php echo esc_js($basic_name); ?>',
         basicOptions: JSON.parse('<?php echo esc_js(wp_json_encode($basic_values)); ?>'),
         advName: '<?php echo esc_js($adv_name); ?>',
@@ -66,7 +65,21 @@
         },
         async add() {
             if (this.hasOptions()) {
-                this.showModal = true;
+                const payload = {
+                    basic_name: this.basicName,
+                    basic_values: this.basicOptions,
+                    adv_name: this.advName,
+                    adv_values: this.advOptions
+                };
+                const handler = (e) => {
+                    const d = e.detail || {};
+                    this.selectedBasic = typeof d.basic === 'string' ? d.basic : '';
+                    this.selectedAdv = typeof d.adv === 'string' ? d.adv : '';
+                    window.removeEventListener('wp-store:options-selected', handler);
+                    this.confirmAdd();
+                };
+                window.addEventListener('wp-store:options-selected', handler);
+                window.dispatchEvent(new CustomEvent('wp-store:open-options-modal', { detail: payload }));
                 return;
             }
             await this.confirmAdd();
@@ -106,7 +119,6 @@
                 }
                 document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: data }));
                 this.showToast('Ditambahkan ke keranjang', 'success');
-                this.showModal = false;
             } catch (e) {
                 this.showToast('Kesalahan jaringan', 'error');
             } finally {
@@ -131,38 +143,5 @@
     <div x-show="toastShow" x-transition x-cloak
         :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
         <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
-    </div>
-    <div x-show="showModal" x-cloak class="wps-modal-backdrop" @click.self="showModal = false"></div>
-    <div x-show="showModal" x-cloak class="wps-modal">
-        <div class="wps-p-4">
-            <div class="wps-mb-4 wps-text-lg wps-font-medium wps-text-gray-900">Pilih Opsi</div>
-            <div class="wps-mb-4" x-show="basicName && basicOptions.length" x-cloak>
-                <label class="wps-label" x-text="basicName"></label>
-                <select class="wps-select" x-model="selectedBasic">
-                    <option value="">-- Pilih --</option>
-                    <template x-for="opt in basicOptions" :key="opt">
-                        <option :value="opt" x-text="opt"></option>
-                    </template>
-                </select>
-            </div>
-            <div class="wps-mb-4" x-show="advName && advOptions.length" x-cloak>
-                <label class="wps-label" x-text="advName"></label>
-                <select class="wps-select" x-model="selectedAdv">
-                    <option value="">-- Pilih --</option>
-                    <template x-for="opt in advOptions" :key="opt.label">
-                        <option :value="opt.label" x-text="opt.label"></option>
-                    </template>
-                </select>
-            </div>
-            <div class="wps-flex wps-justify-between wps-items-center">
-                <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="showModal = false">Batal</button>
-                <button type="button" class="wps-btn wps-btn-primary wps-btn-sm" @click="confirmAdd()" :disabled="loading || !canSubmit()" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
-                    <template x-if="loading">
-                        <span><?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?></span>
-                    </template>
-                    <span>Tambah</span>
-                </button>
-            </div>
-        </div>
     </div>
 </div>

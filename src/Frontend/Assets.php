@@ -7,6 +7,7 @@ class Assets
     public function register()
     {
         add_action('wp_enqueue_scripts', [$this, 'enqueue']);
+        add_action('wp_footer', [$this, 'print_global_modal']);
     }
 
     public function enqueue()
@@ -131,5 +132,71 @@ class Assets
         wp_enqueue_style('wp-store-flickity');
         wp_enqueue_script('wp-store-vendor');
         wp_enqueue_script('wp-store-frontend');
+    }
+
+    public function print_global_modal()
+    {
+?>
+        <div x-data="{
+            show: false,
+            basicName: '',
+            basicOptions: [],
+            advName: '',
+            advOptions: [],
+            selectedBasic: '',
+            selectedAdv: '',
+            open(payload) {
+                const p = payload || {};
+                this.basicName = p.basic_name || '';
+                this.basicOptions = Array.isArray(p.basic_values) ? p.basic_values : [];
+                this.advName = p.adv_name || '';
+                this.advOptions = Array.isArray(p.adv_values) ? p.adv_values : [];
+                this.selectedBasic = '';
+                this.selectedAdv = '';
+                this.show = true;
+            },
+            submit() {
+                const detail = {
+                    basic: this.selectedBasic,
+                    adv: this.selectedAdv
+                };
+                window.dispatchEvent(new CustomEvent('wp-store:options-selected', { detail }));
+                this.show = false;
+            }
+        }"
+            x-on:wp-store:open-options-modal.window="open($event.detail)"
+            x-cloak>
+            <div class="wps-modal-backdrop" x-show="show" @click.self="show=false"></div>
+            <div class="wps-modal" x-show="show" style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 9999;">
+                <div class="wps-p-4" style="background:#fff; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.2); width: 420px; max-width: 95vw;">
+                    <div class="wps-mb-4 wps-text-lg wps-font-medium wps-text-gray-900">Pilih Opsi</div>
+                    <div class="wps-mb-4" x-show="basicName && basicOptions.length" x-cloak>
+                        <label class="wps-label" x-text="basicName"></label>
+                        <select class="wps-select" x-model="selectedBasic">
+                            <option value="">-- Pilih --</option>
+                            <template x-for="opt in basicOptions" :key="opt">
+                                <option :value="opt" x-text="opt"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="wps-mb-4" x-show="advName && advOptions.length" x-cloak>
+                        <label class="wps-label" x-text="advName"></label>
+                        <select class="wps-select" x-model="selectedAdv">
+                            <option value="">-- Pilih --</option>
+                            <template x-for="opt in advOptions" :key="opt.label">
+                                <option :value="opt.label" x-text="opt.label"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="wps-flex wps-justify-between wps-items-center">
+                        <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="show=false">Batal</button>
+                        <button type="button" class="wps-btn wps-btn-primary wps-btn-sm" @click="submit()">
+                            <span>Tambah</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+<?php
     }
 }
