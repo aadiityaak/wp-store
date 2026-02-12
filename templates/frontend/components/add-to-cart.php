@@ -8,6 +8,9 @@
 </script>
 <div x-data="{
         loading: false,
+        qtyEnabled: <?php echo isset($show_qty) && $show_qty ? 'true' : 'false'; ?>,
+        minQty: <?php echo isset($default_qty) ? (int) $default_qty : 1; ?>,
+        qty: <?php echo isset($default_qty) ? (int) $default_qty : 1; ?>,
         message: '',
         toastShow: false,
         toastType: 'success',
@@ -44,6 +47,13 @@
             const needAdv = !!(this.advName && this.advOptions.length);
             return (!needBasic || !!this.selectedBasic) && (!needAdv || !!this.selectedAdv);
         },
+        incrementQty() {
+            this.qty = this.qty + 1;
+        },
+        decrementQty() {
+            const m = this.minQty > 0 ? this.minQty : 1;
+            this.qty = this.qty > m ? (this.qty - 1) : m;
+        },
         getOptionsPayload() {
             const opts = {};
             const bName = (this.basicName || '').trim();
@@ -78,7 +88,8 @@
                     });
                     currentQty = item ? (item.qty || 0) : 0;
                 } catch (e) {}
-                const nextQty = currentQty + 1;
+                const addQty = this.qtyEnabled ? (this.qty > 0 ? this.qty : 1) : 1;
+                const nextQty = currentQty + addQty;
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                     method: 'POST',
                     credentials: 'same-origin',
@@ -103,6 +114,11 @@
             }
         }
     }">
+    <div x-show="qtyEnabled" x-cloak class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
+        <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="decrementQty()">-</button>
+        <input type="text" class="wps-input wps-input-sm" :value="qty" readonly style="width:60px; text-align:center;">
+        <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="incrementQty()">+</button>
+    </div>
     <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?>" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
         <template x-if="loading">
             <span><?php echo wps_icon(['name' => 'spinner', 'size' => 18, 'class' => 'wps-mr-2']); ?></span>

@@ -858,7 +858,8 @@ class Shortcode
             'label' => '+',
             'text' => '',
             'size' => '',
-            'class' => 'wps-btn wps-btn-primary'
+            'class' => 'wps-btn wps-btn-primary',
+            'qty' => 0
         ], $atts);
         $size = sanitize_key($atts['size']);
         $base_class = 'wps-btn wps-btn-primary';
@@ -877,6 +878,14 @@ class Shortcode
         $adv_values = get_post_meta($id, '_store_advanced_options', true);
         $nonce = wp_create_nonce('wp_rest');
         $label = (is_string($atts['text']) && $atts['text'] !== '') ? $atts['text'] : $atts['label'];
+        $wantQty = false;
+        if (is_bool($atts['qty'])) {
+            $wantQty = $atts['qty'];
+        } else {
+            $wantQty = in_array(strtolower((string) $atts['qty']), ['1', 'true', 'yes'], true);
+        }
+        $min_order_raw = get_post_meta($id, '_store_min_order', true);
+        $default_qty = is_numeric($min_order_raw) ? max(1, (int) $min_order_raw) : 1;
         return Template::render('components/add-to-cart', [
             'btn_class' => $btn_class,
             'id' => $id,
@@ -885,7 +894,9 @@ class Shortcode
             'basic_values' => (is_array($basic_values) ? array_values($basic_values) : []),
             'adv_name' => $adv_name ?: '',
             'adv_values' => (is_array($adv_values) ? array_values($adv_values) : []),
-            'nonce' => $nonce
+            'nonce' => $nonce,
+            'show_qty' => $wantQty,
+            'default_qty' => $default_qty
         ]);
     }
 
