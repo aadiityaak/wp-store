@@ -25,7 +25,7 @@ if (!$order_number) {
             <?php if ($order_exists) : ?>
                 <div class="wps-mt-1 wps-text-sm wps-text-gray-700">Nomor Pesanan: <span class="wps-font-medium">#<?php echo esc_html($order_number); ?></span></div>
             <?php else : ?>
-                <div class="wps-text-sm wps-text-gray-600 wps-mt-1 wps-mb-2">Masukkan parameter <span class="wps-font-medium">order</span> di URL untuk melihat status.</div>
+                <div class="wps-text-sm wps-text-gray-600 wps-mt-1 wps-mb-2">Masukkan nomor <span class="wps-font-medium">order</span> di form berikut untuk melihat status.</div>
                 <?php
                 $settings = get_option('wp_store_settings', []);
                 $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;

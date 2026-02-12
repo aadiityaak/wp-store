@@ -791,17 +791,17 @@ class Shortcode
         $saleActive = $sale !== null && $sale > 0 && (($price !== null && $sale < $price) || $price === null) && ($untilTs === 0 || $untilTs > $nowTs);
         $html = '<div class="wps-price">';
         if ($saleActive) {
-            $html .= '<div class="wps-flex wps-items-baseline wps-gap-2">';
-            $html .= '<span class="wps-text-lg wps-text-gray-900 wps-font-medium">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($sale, 0, ',', '.')) . '</span>';
+            $html .= '<div class="wps-flex wps-items-baseline wps-gap-2 wps-price-group">';
+            $html .= '<span class="wps-text-lg wps-text-gray-900 wps-font-medium wps-price-text">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($sale, 0, ',', '.')) . '</span>';
             if ($price !== null && $price > 0) {
                 $html .= '<span class="wps-text-sm wps-text-gray-500" style="text-decoration: line-through;">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')) . '</span>';
             }
             $html .= '</div>';
         } else {
             if ($price !== null) {
-                $html .= '<div class="wps-text-lg wps-text-gray-900 wps-font-medium">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')) . '</div>';
+                $html .= '<div class="wps-text-lg wps-text-gray-900 wps-font-medium wps-price-text">' . esc_html(($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')) . '</div>';
             } else {
-                $html .= '<div class="wps-text-sm wps-text-gray-500">Harga belum diatur.</div>';
+                $html .= '<div class="wps-text-sm wps-text-gray-500 ">Harga belum diatur.</div>';
             }
         }
         if ($wantCountdown && $untilTs > $nowTs) {

@@ -88,7 +88,7 @@
     <button type="button"
         :disabled="loading"
         @click="inWishlist ? remove() : add()"
-        class="<?php echo esc_attr($btn_class); ?>"
+        class="<?php echo esc_attr($btn_class); ?> wps-wishlist-btn"
         :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
         <template x-if="loading">
             <span>

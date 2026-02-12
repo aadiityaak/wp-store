@@ -1007,6 +1007,10 @@ tr:not(:last-child) .wps-td {
   display: block;
 }
 
+.wps-align-items-center {
+  align-items: center;
+}
+
 @media (max-width: 768px) {
   .wps-flex.wps-items-start {
     flex-direction: column;

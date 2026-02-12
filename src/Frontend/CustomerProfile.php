@@ -130,20 +130,20 @@ class CustomerProfile
         <div class="wps-profile-wrapper" x-data="storeCustomerProfile()" x-init="init()">
             <div class="wps-card wps-p-4" style="margin-bottom: 1rem;">
                 <div id="wps-profile-tabs" class="wps-tabs">
-                    <button @click="tab = 'profile'" :class="{ 'active': tab === 'profile' }" class="wps-tab">
+                    <button @click="tab = 'profile'" :class="{ 'active': tab === 'profile' }" class="wps-tab wps-flex wps-align-items-center">
                         <?php echo wps_icon(['name' => 'user', 'size' => 16, 'class' => 'wps-mr-2']); ?>Profil Saya
                     </button>
-                    <button @click="tab = 'addresses'" :class="{ 'active': tab === 'addresses' }" class="wps-tab">
+                    <button @click="tab = 'addresses'" :class="{ 'active': tab === 'addresses' }" class="wps-tab wps-flex wps-align-items-center">
                         <?php echo wps_icon(['name' => 'settings', 'size' => 16, 'class' => 'wps-mr-2']); ?>Buku Alamat
                     </button>
-                    <button @click="tab = 'wishlist'" :class="{ 'active': tab === 'wishlist' }" class="wps-tab">
+                    <button @click="tab = 'wishlist'" :class="{ 'active': tab === 'wishlist' }" class="wps-tab wps-flex wps-align-items-center">
                         <?php echo wps_icon(['name' => 'heart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Wishlist <span class="wps-badge" x-text="wishlistCount" x-show="wishlistCount > 0" style="margin-left:6px;"></span>
                     </button>
-                    <button @click="tab = 'orders'" :class="{ 'active': tab === 'orders' }" class="wps-tab">
+                    <button @click="tab = 'orders'" :class="{ 'active': tab === 'orders' }" class="wps-tab wps-flex wps-align-items-center">
                         <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>Pesanan
                     </button>
                     <?php do_action('wp_store_profile_additional_tabs'); ?>
-                    <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto"><?php echo wps_icon(['name' => 'close', 'size' => 16, 'class' => 'wps-mr-2']); ?>Keluar</a>
+                    <a href="<?php echo esc_url(wp_logout_url(site_url('/'))); ?>" class="wps-tab wps-ml-auto wps-flex wps-align-items-center"><?php echo wps_icon(['name' => 'logout', 'size' => 16, 'class' => 'wps-mr-2']); ?>Logout</a>
                 </div>
                 <script>
                     (function() {
