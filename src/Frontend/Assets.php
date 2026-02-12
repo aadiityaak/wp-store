@@ -197,6 +197,27 @@ class Assets
                 </div>
             </div>
         </div>
+        <div x-data="{
+            show: false,
+            type: 'success',
+            message: '',
+            _timer: null,
+            open(payload) {
+                const d = payload || {};
+                this.type = d.type === 'error' ? 'error' : 'success';
+                this.message = d.message || '';
+                this.show = true;
+                clearTimeout(this._timer);
+                this._timer = setTimeout(() => { this.show = false; }, 2000);
+            }
+        }"
+            x-on:wp-store:toast.window="open($event.detail)"
+            x-cloak>
+            <div x-show="show"
+                :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (type === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
+                <span x-text="message" class="wps-text-sm wps-text-gray-900"></span>
+            </div>
+        </div>
 <?php
     }
 }

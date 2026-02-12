@@ -22,11 +22,7 @@
         selectedBasic: '',
         selectedAdv: '',
         showToast(msg, type) {
-            this.toastMessage = msg || '';
-            this.toastType = type === 'error' ? 'error' : 'success';
-            this.toastShow = true;
-            clearTimeout(this._toastTimer);
-            this._toastTimer = setTimeout(() => { this.toastShow = false; }, 2000);
+            window.dispatchEvent(new CustomEvent('wp-store:toast', { detail: { message: msg || '', type: (type === 'error' ? 'error' : 'success') } }));
         },
         normalizeOptions(obj) {
             const o = obj || {};
@@ -140,8 +136,4 @@
         </template>
         <?php echo esc_html($label); ?>
     </button>
-    <div x-show="toastShow" x-transition x-cloak
-        :style="'position:fixed;bottom:30px;right:30px;padding:12px 16px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.1);border-left:4px solid ' + (toastType === 'success' ? '#46b450' : '#d63638') + ';border-radius:4px;z-index:9999;'">
-        <span x-text="toastMessage" class="wps-text-sm wps-text-gray-900"></span>
-    </div>
 </div>
