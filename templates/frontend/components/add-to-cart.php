@@ -115,11 +115,11 @@
         }
     }">
     <div x-show="qtyEnabled" x-cloak class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
-        <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="decrementQty()">-</button>
-        <input type="text" class="wps-input wps-input-sm" :value="qty" readonly style="width:60px; text-align:center;">
-        <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="incrementQty()">+</button>
+        <button type="button" class=" wps-btn wps-btn-secondary wps-btn-sm wps-decrement-qty" @click="decrementQty()">-</button>
+        <input type="text" class=" wps-input wps-input-sm wps-input-qty" :value="qty" readonly style="width:60px; text-align:center;">
+        <button type="button" class=" wps-btn wps-btn-secondary wps-btn-sm wps-increment-qty" @click="incrementQty()">+</button>
     </div>
-    <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?>" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
+    <button type="button" @click="add()" :disabled="loading" class="<?php echo esc_attr($btn_class); ?> wps-add-to-cart" :style="loading ? 'opacity:.7; pointer-events:none;' : ''">
         <template x-if="loading">
             <span><?php echo wps_icon(['name' => 'spinner', 'size' => 18, 'class' => 'wps-mr-2']); ?></span>
         </template>
