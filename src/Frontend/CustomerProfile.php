@@ -442,7 +442,7 @@ class CustomerProfile
                     toastType: 'success',
                     toastMessage: '',
                     wishlistCount: 0,
-                    orders: <?php echo wp_json_encode($orders); ?>,
+                    orders: [],
                     profile: {
                         first_name: '',
                         last_name: '',
@@ -486,6 +486,9 @@ class CustomerProfile
                             const url = new URL(window.location);
                             url.searchParams.set('tab', value);
                             window.history.pushState({}, '', url);
+                            if (value === 'orders' && this.orders.length === 0) {
+                                this.fetchOrders();
+                            }
                         });
 
                         this.$watch('addressForm.city_id', async (val) => {
@@ -509,6 +512,9 @@ class CustomerProfile
                         });
                         this.loadProvinces(); // Load provinces early
                         this.fetchWishlistCount();
+                        if (this.tab === 'orders') {
+                            this.fetchOrders();
+                        }
                         document.addEventListener('wp-store:wishlist-updated', (e) => {
                             const data = e.detail || {};
                             const items = Array.isArray(data.items) ? data.items : [];
@@ -533,6 +539,21 @@ class CustomerProfile
                             cancelled: 'Dibatalkan'
                         };
                         return m[s] || s;
+                    },
+
+                    async fetchOrders() {
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'customer/orders', {
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
+                            });
+                            const data = await res.json();
+                            this.orders = Array.isArray(data) ? data : [];
+                        } catch (err) {
+                            this.orders = [];
+                        }
                     },
 
                     async fetchProfile() {

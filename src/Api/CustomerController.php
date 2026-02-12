@@ -62,6 +62,15 @@ class CustomerController
                 'permission_callback' => [$this, 'check_auth'],
             ],
         ]);
+
+        // Orders list
+        register_rest_route('wp-store/v1', '/customer/orders', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_orders'],
+                'permission_callback' => [$this, 'check_auth'],
+            ],
+        ]);
     }
 
     public function check_auth()
@@ -287,5 +296,51 @@ class CustomerController
 
         update_user_meta($user_id, '_store_addresses', $new_addresses);
         return new WP_REST_Response(['message' => 'Alamat berhasil dihapus'], 200);
+    }
+
+    public function get_orders(WP_REST_Request $request)
+    {
+        $user_id = get_current_user_id();
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return new WP_REST_Response([], 200);
+        }
+        $email = (string) $user->user_email;
+        $settings = get_option('wp_store_settings', []);
+        $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
+        $tracking_base = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
+        $q = new \WP_Query([
+            'post_type' => 'store_order',
+            'post_status' => 'publish',
+            'posts_per_page' => 20,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'meta_query' => [
+                [
+                    'key' => '_store_order_email',
+                    'value' => $email,
+                    'compare' => '='
+                ]
+            ]
+        ]);
+        $orders = [];
+        foreach ($q->posts as $p) {
+            $oid = $p->ID;
+            $order_number = get_post_meta($oid, '_store_order_number', true);
+            if (!$order_number) {
+                $order_number = $oid;
+            }
+            $orders[] = [
+                'id' => $oid,
+                'order_number' => $order_number,
+                'date' => get_the_date('d M Y', $oid),
+                'total' => (float) get_post_meta($oid, '_store_order_total', true),
+                'status' => (string) (get_post_meta($oid, '_store_order_status', true) ?: 'pending'),
+                'tracking_url' => add_query_arg(['order' => $order_number], $tracking_base),
+                'items' => (array) (get_post_meta($oid, '_store_order_items', true) ?: [])
+            ];
+        }
+        wp_reset_postdata();
+        return new WP_REST_Response($orders, 200);
     }
 }
