@@ -170,13 +170,13 @@
                 return Math.max(0, t - (isNaN(d) ? 0 : d)) + (isNaN(s) ? 0 : s);
             },
             getValidationError() {
-                if (!this.name) return 'Nama wajib diisi.';
-                if (!Array.isArray(this.cart) || this.cart.length === 0) return 'Keranjang kosong.';
-                if (!this.cart.find(i => i.selected !== false)) return 'Pilih setidaknya satu produk.';
-                if (!this.selectedProvince) return 'Provinsi wajib dipilih.';
-                if (!this.selectedCity) return 'Kota/Kabupaten wajib dipilih.';
-                if (!this.selectedSubdistrict) return 'Kecamatan wajib dipilih.';
-                if (!this.address || String(this.address).trim() === '') return 'Alamat wajib diisi.';
+                // if (!this.name) return 'Nama wajib diisi.';
+                // if (!Array.isArray(this.cart) || this.cart.length === 0) return 'Keranjang kosong.';
+                // if (!this.cart.find(i => i.selected !== false)) return 'Pilih setidaknya satu produk.';
+                // if (!this.selectedProvince) return 'Provinsi wajib diisi.';
+                // if (!this.selectedCity) return 'Kota/Kabupaten wajib diisi.';
+                // if (!this.selectedSubdistrict) return 'Kecamatan wajib diisi.';
+                // if (!this.address || String(this.address).trim() === '') return 'Alamat wajib diisi.';
                 if (Array.isArray(this.shippingOptions) && this.shippingOptions.length > 0) {
                     if (!this.selectedShippingKey) return 'Wajib pilih ongkir.';
                     const parts = String(this.selectedShippingKey || '').split(':');
@@ -196,13 +196,13 @@
                 if (!this.cart.find(i => i.selected !== false)) {
                     return ['Tidak ada produk yang dipilih.'];
                 }
-                if (!this.name) reasons.push('Nama wajib diisi.');
-                if (!this.email) reasons.push('Email wajib diisi.');
-                if (!this.phone) reasons.push('Telepon wajib diisi.');
-                if (!this.selectedProvince) reasons.push('Provinsi wajib dipilih.');
-                if (!this.selectedCity) reasons.push('Kota/Kabupaten wajib dipilih.');
-                if (!this.selectedSubdistrict) reasons.push('Kecamatan wajib dipilih.');
-                if (!this.address || String(this.address).trim() === '') reasons.push('Alamat wajib diisi.');
+                // if (!this.name) reasons.push('Nama wajib diisi.');
+                // if (!this.email) reasons.push('Email wajib diisi.');
+                // if (!this.phone) reasons.push('Telepon wajib diisi.');
+                // if (!this.selectedProvince) reasons.push('Provinsi wajib diisi.');
+                // if (!this.selectedCity) reasons.push('Kota/Kabupaten wajib diisi.');
+                // if (!this.selectedSubdistrict) reasons.push('Kecamatan wajib diisi.');
+                // if (!this.address || String(this.address).trim() === '') reasons.push('Alamat wajib diisi.');
                 if (Array.isArray(this.shippingOptions) && this.shippingOptions.length > 0) {
                     if (!this.selectedShippingKey) {
                         reasons.push('Wajib pilih ongkir.');
@@ -221,13 +221,20 @@
                 return this.getValidationError() === '';
             },
             recomputeAllow() {
-                this.allowSubmit = this.getBlockingReasons().length === 0;
+                const reasons = this.getBlockingReasons();
+                this.allowSubmit = reasons.length === 0;
                 if (this.captchaRequired && !this.isCaptchaReady()) {
                     this.allowSubmit = false;
+                }
+                if (this.allowSubmit) {
+                    if (this.warnShow) this.warnShow = false;
+                } else if (this.warnShow) {
+                    this.warnMessage = reasons[0] || 'Tidak dapat melanjutkan';
                 }
             },
             trySubmit() {
                 if (this.submitting) return;
+                this.warnShow = false;
                 if (this.captchaRequired && !this.isCaptchaReady()) {
                     this.warnMessage = 'Verifikasi captcha terlebih dahulu.';
                     this.warnShow = true;
@@ -294,6 +301,7 @@
                 await this.loadSubdistricts();
                 this.selectedSubdistrict = addr.subdistrict_id ? String(addr.subdistrict_id) : '';
                 await this.calculateAllShipping();
+                this.recomputeAllow();
             },
             async loadProvinces() {
                 this.isLoadingProvinces = true;
@@ -313,6 +321,7 @@
                 }
             },
             async loadCities() {
+                console.log(this.selectedProvince);
                 if (!this.selectedProvince) {
                     this.cities = [];
                     return;
@@ -773,7 +782,7 @@
                                 </div>
                                 <div class="wps-text-sm wps-text-red-700 wps-mt-2 p-2 wps-bg-red-100 rounded-md wps-mt-2" style="border-left:4px solid #ef4444;" x-show="warnShow" x-text="warnMessage">
                                 </div>
-                                <div class="wps-text-sm wps-text-gray-900 wps-mt-2" x-text="message"></div>
+                                <!-- <div class="wps-text-sm wps-text-gray-900 wps-mt-2" x-text="message"></div> -->
                             </div>
                         </div>
                     </div>
