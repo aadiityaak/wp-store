@@ -77,74 +77,10 @@
             });
         }
     }" x-init="init()" class="wps-rel">
-    <button type="button" @click="open = true" class="wps-btn-icon wps-cart-button wps-rel">
+    <button type="button" @click="window.dispatchEvent(new CustomEvent('wp-store:open-cart'))" class="wps-btn-icon wps-cart-button wps-rel">
         <span class="wps-text-2xl wps-pr-6">
             <?php echo wps_icon(['name' => 'cart', 'size' => 16]); ?>
         </span>
         <span x-text="cart.reduce((sum, item) => sum + (item.qty || 0), 0)" class="wps-absolute wps-top--6 wps-right-0 wps-bg-blue-500 wps-text-white wps-text-xs rounded-full wps-px-2.5 wps-py-0.5"></span>
     </button>
-    <div class="wps-offcanvas-backdrop" x-show="open" @click="open = false" x-transition.opacity x-cloak></div>
-    <div class="wps-offcanvas" x-show="open" x-transition x-cloak>
-        <div class="wps-offcanvas-header">
-            <strong class="wps-text-gray-900">Keranjang</strong>
-            <button type="button" @click="open = false" class="wps-btn-icon">✕</button>
-        </div>
-        <div class="wps-offcanvas-body">
-            <template x-if="cart.length === 0">
-                <div class="wps-text-sm wps-text-gray-500 wps-flex wps-items-center wps-gap-2">
-                    <span><?php echo wps_icon(['name' => 'cart', 'size' => 16]); ?></span>
-                    <span>Keranjang kosong.</span>
-                </div>
-            </template>
-            <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
-                <div class="wps-flex wps-items-center wps-gap-2 wps-divider">
-                    <img :src="item.image ? item.image : '<?php echo esc_url(WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>'" alt="" class="wps-img-40">
-                    <div style="flex: 1;">
-                        <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
-                        <template x-if="item.options && Object.keys(item.options).length">
-                            <div class="wps-text-xs wps-text-gray-500">
-                                <span x-text="Object.entries(item.options).map(([k,v]) => k + ': ' + v).join(' • ')"></span>
-                            </div>
-                        </template>
-                        <div class="wps-text-xs wps-text-gray-500 wps-mb-1">
-                            <span x-text="formatPrice(item.price)"></span>
-                            <span> × </span>
-                            <span x-text="item.qty"></span>
-                            <span> = </span>
-                            <span class="wps-text-gray-900" x-text="formatPrice(item.subtotal)"></span>
-                        </div>
-                        <div class="wps-flex wps-items-center wps-gap-1">
-                            <button type="button" @click="decrement(item)" class="wps-btn wps-btn-secondary wps-btn-sm" style="padding: 2px 8px; font-size: 12px; line-height: 1; min-width: 24px; height: 22px;">-</button>
-                            <span x-text="item.qty" class="wps-badge wps-badge-sm" style="font-size: 12px; padding: 2px 6px; line-height: 1;"></span>
-                            <button type="button" @click="increment(item)" class="wps-btn wps-btn-secondary wps-btn-sm" style="padding: 2px 8px; font-size: 12px; line-height: 1; min-width: 24px; height: 22px;">+</button>
-                            <button type="button" @click="remove(item)" :disabled="loading && updatingKey === getItemKey(item)" class="wps-btn wps-btn-danger wps-btn-sm wps-ml-auto" :style="(loading && updatingKey === getItemKey(item)) ? 'opacity:.7; pointer-events:none;' : ''">
-                                <template x-if="loading && updatingKey === getItemKey(item)">
-                                    <span><?php echo wps_icon(['name' => 'spinner', 'size' => 14]); ?></span>
-                                </template>
-                                <template x-if="!loading || updatingKey !== getItemKey(item)">
-                                    <span><?php echo wps_icon(['name' => 'close', 'size' => 14]); ?></span>
-                                </template>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
-        <div class="wps-offcanvas-footer">
-            <div>
-                <?php if (!empty($cart_url)) : ?>
-                    <a href="<?php echo esc_url($cart_url); ?>" class="wps-btn wps-btn-secondary wps-btn-sm">Lihat Keranjang</a>
-                <?php endif; ?>
-            </div>
-            <div>
-                <div class="wps-total-box">
-                    <div class="wps-total-label">Total</div>
-                    <div class="wps-total-amount" x-text="formatPrice(total)"></div>
-                </div>
-                <?php if (!empty($checkout_url)) : ?>
-                    <a href="<?php echo esc_url($checkout_url); ?>" class="wps-btn wps-btn-primary wps-btn-sm wps-checkout-btn" x-show="cart.length > 0"><?php echo wps_icon(['name' => 'credit-card', 'size' => 16, 'class' => 'wps-mr-2']); ?>Checkout</a>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
 </div>
