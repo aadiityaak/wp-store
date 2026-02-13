@@ -40,14 +40,14 @@ class SettingsController
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'get_payment_methods'],
-                'permission_callback' => [$this, 'check_admin_auth'],
+                'permission_callback' => [$this, '__return_true'],
             ],
         ]);
         register_rest_route('wp-store/v1', '/settings/page-urls', [
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'get_page_urls'],
-                'permission_callback' => [$this, 'check_admin_auth'],
+                'permission_callback' => [$this, '__return_true'],
             ],
         ]);
     }
@@ -64,6 +64,11 @@ class SettingsController
     public function check_admin_auth()
     {
         return current_user_can('manage_options');
+    }
+
+    public function __return_true()
+    {
+        return true;
     }
 
     public function save_settings(WP_REST_Request $request)
