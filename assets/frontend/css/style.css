@@ -394,6 +394,9 @@ button.wps-btn-dark {
   color: var(--white);
   border: none;
 }
+.wps-btn-danger span {
+  color: var(--white);
+}
 .wps-btn-danger svg {
   stroke: var(--blue-50);
 }
