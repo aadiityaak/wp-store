@@ -518,27 +518,82 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <input name="recaptcha_secret_key" type="text" id="recaptcha_secret_key" value="<?php echo esc_attr($settings['recaptcha_secret_key'] ?? ''); ?>" class="wp-store-input" placeholder="Secret Key">
                         </div>
                     </div>
-                    <div class="wp-store-box-gray wp-store-mt-4">
+                    <div class="wp-store-box-gray wp-store-mt-4 wp-store-email-template">
                         <h3 class="wp-store-subtitle">Template Email</h3>
-                        <p class="wp-store-helper">Gunakan placeholder: {{store_name}}, {{order_number}}, {{status_label}}, {{tracking_url}}, {{total}}.</p>
+                        <p class="wp-store-helper wp-store-mb-4">Gunakan placeholder: {{store_name}}, {{order_number}}, {{status_label}}, {{tracking_url}}, {{total}}.</p>
                         <div class="wp-store-grid-2">
-                            <div>
+                            <div class="wp-store-mb-4">
                                 <label class="wp-store-label" for="email_template_user_new_order">User: Pesanan Baru</label>
-                                <textarea name="email_template_user_new_order" id="email_template_user_new_order" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_user_new_order'] ?? ''); ?></textarea>
+                                <?php
+                                $content_user_new = $settings['email_template_user_new_order'] ?? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                                    . '<p>Halo,</p>'
+                                    . '<p>Terima kasih. Pesanan #{{order_number}} telah kami terima.</p>'
+                                    . '<p>Anda dapat memantau status pesanan melalui tautan berikut:</p>'
+                                    . '<p><a href="{{tracking_url}}" target="_blank" rel="noopener">Lihat Status Pesanan</a></p>'
+                                    . '<p>Salam,<br>{{store_name}}</p>'
+                                    . '</div>';
+                                wp_editor($content_user_new, 'email_template_user_new_order', [
+                                    'textarea_name' => 'email_template_user_new_order',
+                                    'textarea_rows' => 8,
+                                    'media_buttons' => false,
+                                    'quicktags' => false,
+                                    'tinymce' => ['menubar' => false, 'toolbar1' => '', 'toolbar2' => '']
+                                ]);
+                                ?>
                             </div>
-                            <div>
+                            <div class="wp-store-mb-4">
                                 <label class="wp-store-label" for="email_template_admin_new_order">Admin: Pesanan Baru</label>
-                                <textarea name="email_template_admin_new_order" id="email_template_admin_new_order" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_admin_new_order'] ?? ''); ?></textarea>
+                                <?php
+                                $content_admin_new = $settings['email_template_admin_new_order'] ?? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                                    . '<p>Order baru #{{order_number}}.</p>'
+                                    . '<p>Total: {{total}}</p>'
+                                    . '<p>Tracking: <a href="{{tracking_url}}" target="_blank" rel="noopener">{{tracking_url}}</a></p>'
+                                    . '</div>';
+                                wp_editor($content_admin_new, 'email_template_admin_new_order', [
+                                    'textarea_name' => 'email_template_admin_new_order',
+                                    'textarea_rows' => 8,
+                                    'media_buttons' => false,
+                                    'quicktags' => false,
+                                    'tinymce' => ['menubar' => false, 'toolbar1' => '', 'toolbar2' => '']
+                                ]);
+                                ?>
                             </div>
                         </div>
                         <div class="wp-store-grid-2">
-                            <div>
+                            <div class="wp-store-mb-4">
                                 <label class="wp-store-label" for="email_template_user_status">User: Status Order</label>
-                                <textarea name="email_template_user_status" id="email_template_user_status" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_user_status'] ?? ''); ?></textarea>
+                                <?php
+                                $content_user_status = $settings['email_template_user_status'] ?? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                                    . '<p>Halo,</p>'
+                                    . '<p>Status pesanan #{{order_number}} Anda kini: <strong>{{status_label}}</strong>.</p>'
+                                    . '<p>Anda dapat melihat detail dan riwayat pengiriman melalui tautan berikut:</p>'
+                                    . '<p><a href="{{tracking_url}}" target="_blank" rel="noopener">Lihat Status Pesanan</a></p>'
+                                    . '<p>Salam,<br>{{store_name}}</p>'
+                                    . '</div>';
+                                wp_editor($content_user_status, 'email_template_user_status', [
+                                    'textarea_name' => 'email_template_user_status',
+                                    'textarea_rows' => 8,
+                                    'media_buttons' => false,
+                                    'quicktags' => false,
+                                    'tinymce' => ['menubar' => false, 'toolbar1' => '', 'toolbar2' => '']
+                                ]);
+                                ?>
                             </div>
-                            <div>
+                            <div class="wp-store-mb-4">
                                 <label class="wp-store-label" for="email_template_admin_status">Admin: Status Order</label>
-                                <textarea name="email_template_admin_status" id="email_template_admin_status" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_admin_status'] ?? ''); ?></textarea>
+                                <?php
+                                $content_admin_status = $settings['email_template_admin_status'] ?? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                                    . '<p>Status order #{{order_number}}: <strong>{{status_label}}</strong>.</p>'
+                                    . '<p>Tracking: <a href="{{tracking_url}}" target="_blank" rel="noopener">{{tracking_url}}</a></p>'
+                                    . '</div>';
+                                wp_editor($content_admin_status, 'email_template_admin_status', [
+                                    'textarea_name' => 'email_template_admin_status',
+                                    'textarea_rows' => 8,
+                                    'media_buttons' => false,
+                                    'quicktags' => false,
+                                    'tinymce' => ['menubar' => false, 'toolbar1' => '', 'toolbar2' => '']
+                                ]);
+                                ?>
                             </div>
                         </div>
                     </div>

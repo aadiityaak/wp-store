@@ -61,7 +61,13 @@ class OrderEmails
 
         $admin_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
         $admin_tmpl = isset($settings['email_template_admin_status']) && is_string($settings['email_template_admin_status']) ? $settings['email_template_admin_status'] : '';
-        if ($admin_tmpl !== '' && is_email($admin_email)) {
+        if ($admin_tmpl === '') {
+            $admin_tmpl = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                . '<p>Status order #{{order_number}}: <strong>{{status_label}}</strong>.</p>'
+                . '<p>Tracking: <a href="{{tracking_url}}" target="_blank" rel="noopener">{{tracking_url}}</a></p>'
+                . '</div>';
+        }
+        if (is_email($admin_email)) {
             $admin_subject = '[' . $store_name . '] Status Order #' . $order_number . ': ' . $status_label;
             $admin_body = $this->render_template($admin_tmpl, $vars);
             wp_mail($admin_email, $admin_subject, $admin_body, $headers);
