@@ -270,19 +270,19 @@ class SettingsController
             ],
             'page_cart' => [
                 'title' => 'Keranjang',
-                'content' => '[wp_store_cart]'
+                'content' => '[store_cart]'
             ],
             'page_checkout' => [
                 'title' => 'Checkout',
-                'content' => '[wp_store_checkout]'
+                'content' => '[store_checkout]'
             ],
             'page_thanks' => [
                 'title' => 'Terima Kasih',
-                'content' => '[wp_store_thanks]'
+                'content' => '[store_thanks]'
             ],
             'page_tracking' => [
                 'title' => 'Tracking Order',
-                'content' => '[wp_store_tracking]'
+                'content' => '[store_tracking]'
             ],
         ];
 

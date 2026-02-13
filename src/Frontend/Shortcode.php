@@ -14,6 +14,8 @@ class Shortcode
         add_shortcode('wp_store_add_to_cart', [$this, 'render_add_to_cart']);
         add_shortcode('wp_store_detail', [$this, 'render_detail']);
         add_shortcode('wp_store_cart', [$this, 'render_cart_widget']);
+        add_shortcode('wp_store_cart_page', [$this, 'render_cart_page']);
+        add_shortcode('store_cart', [$this, 'render_cart_page']);
         add_shortcode('wp_store_checkout', [$this, 'render_checkout']);
         add_shortcode('store_checkout', [$this, 'render_checkout']);
         add_shortcode('wp_store_thanks', [$this, 'render_thanks']);
@@ -936,6 +938,17 @@ class Shortcode
         ]);
     }
 
+    public function render_cart_page($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        wp_enqueue_script('wp-store-frontend');
+        $settings = get_option('wp_store_settings', []);
+        $currency = ($settings['currency_symbol'] ?? 'Rp');
+        return Template::render('pages/cart', [
+            'currency' => $currency
+        ]);
+    }
+
     public function filter_cart_page_content($content)
     {
         if (!is_singular('page') || !in_the_loop() || !is_main_query()) {
@@ -948,9 +961,12 @@ class Shortcode
         $settings = get_option('wp_store_settings', []);
         $cart_page_id = isset($settings['page_cart']) ? absint($settings['page_cart']) : 0;
         if ($cart_page_id && $page_id === $cart_page_id) {
-            if (strpos((string) $content, '[wp_store_cart]') === false) {
-                $content .= "\n\n[wp_store_cart]";
-            }
+            wp_enqueue_script('alpinejs');
+            wp_enqueue_script('wp-store-frontend');
+            $currency = ($settings['currency_symbol'] ?? 'Rp');
+            return Template::render('pages/cart', [
+                'currency' => $currency
+            ]);
         }
         return $content;
     }
