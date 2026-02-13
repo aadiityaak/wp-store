@@ -40,6 +40,14 @@ class RajaOngkirController
                 'permission_callback' => '__return_true',
             ],
         ]);
+
+        register_rest_route('wp-store/v1', '/rajaongkir/waybill', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_rajaongkir_waybill'],
+                'permission_callback' => '__return_true',
+            ],
+        ]);
     }
 
     public static function get_rajaongkir_base_url()
@@ -538,5 +546,68 @@ class RajaOngkirController
             'message' => 'Gagal mengambil data kecamatan.',
             'raw' => $data
         ], 500);
+    }
+
+    public function get_rajaongkir_waybill(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $api_key = $settings['rajaongkir_api_key'] ?? '';
+
+        if (empty($api_key)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'API Key VD Ongkir belum diatur.'
+            ], 400);
+        }
+
+        $awb = sanitize_text_field($request->get_param('awb'));
+        $courier = sanitize_text_field($request->get_param('courier'));
+        if ($awb === '' || $courier === '') {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Parameter awb dan courier diperlukan.'
+            ], 400);
+        }
+
+        $cache_key = 'wp_store_waybill_' . md5($awb . '|' . strtolower($courier));
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => $cached
+            ], 200);
+        }
+
+        $base = self::get_rajaongkir_base_url() . '/waybill';
+        $url = add_query_arg([
+            'awb' => $awb,
+            'courier' => strtolower($courier)
+        ], $base);
+
+        $response = wp_remote_post($url, [
+            'headers' => ['key' => $api_key],
+            'timeout' => 12,
+        ]);
+        // return $response;
+        if (is_wp_error($response)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => $response->get_error_message()
+            ], 500);
+        }
+        $code = wp_remote_retrieve_response_code($response);
+        $body = $code === 200 ? wp_remote_retrieve_body($response) : '';
+        $data = $body !== '' ? json_decode($body, true) : null;
+        if (!is_array($data)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Gagal mengambil tracking waybill.'
+            ], 500);
+        }
+        set_transient($cache_key, $data, HOUR_IN_SECONDS);
+        return new WP_REST_Response([
+            'success' => true,
+            'data' => $data
+        ], 200);
     }
 }
