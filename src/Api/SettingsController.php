@@ -709,6 +709,12 @@ class SettingsController
     {
         $settings = get_option('wp_store_settings', []);
         $payment_methods = $settings['payment_methods'] ?? [];
+
+        $payment_methods = array_map(function ($method) {
+            $nama = str_replace('_', ' ', $method);
+            $nama = ucwords($nama);
+            return ['id' => $method, 'name' => $nama];
+        }, $payment_methods);
         return new WP_REST_Response([
             'success' => true,
             'data' => $payment_methods

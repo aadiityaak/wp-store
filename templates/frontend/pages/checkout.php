@@ -116,10 +116,11 @@
                         }
                     });
                     const data = await res.json();
-                    if (res.ok && data && data.success && Array.isArray(data.methods)) {
-                        this.paymentMethods = data.methods;
+                    // {"success":true,"data":[{"id":"bank_transfer","name":"Bank transfer"}]}
+                    if (res.ok && data && data.success && Array.isArray(data.data)) {
+                        this.paymentMethods = data.data;
+
                     }
-                    console.log(this.paymentMethods);
                 } catch (e) {
                     console.error(e);
                 }
@@ -644,10 +645,10 @@
                                             class="wps-btn wps-btn-sm"
                                             :class="String(selectedAddressId) === String(addr.id) ? 'wps-btn-dark' : 'wps-btn-primary'">
                                             <span x-show="importingAddresses !== String(addr.id) ">
-                                            <?php echo wps_icon(['name' => 'map-pin', 'size' => 16, 'class' => 'wps-mr-2', 'border-color' => '#fff']); ?>
+                                                <?php echo wps_icon(['name' => 'map-pin', 'size' => 16, 'class' => 'wps-mr-2', 'border-color' => '#fff']); ?>
                                             </span>
                                             <span x-show="importingAddresses === String(addr.id) ">
-                                            <?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                                <?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                             </span>
                                             <span
                                                 :style="String(selectedAddressId) === String(addr.id) ? 'color:#fff;' : 'color:#1f2937;'"
@@ -797,18 +798,7 @@
                             <div class="wps-mt-4">
                                 <div class="wps-text-lg wps-font-medium wps-mb-2 wps-text-bold">Metode Pembayaran</div>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2 wps-flex-wrap">
-                                    <!-- <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
-                                        :style="paymentMethod === 'transfer_bank' ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
-                                        @click="paymentMethod = 'transfer_bank'">
-                                        <span class="wps-text-sm wps-text-gray-900">Transfer Bank</span>
-                                    </button>
-                                    <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
-                                        :style="paymentMethod === 'qris' ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
-                                        @click="paymentMethod = 'qris'">
-                                        <span class="wps-text-sm wps-text-gray-900">QRIS</span>
-                                    </button> -->
-                                    
-                                    <template x-for="method in paymentMethods" :key="method.value">
+                                    <template x-for="method in paymentMethods" :key="method.id">
                                         <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
                                             :style="paymentMethod === method.id ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
                                             @click="paymentMethod = method.id">
