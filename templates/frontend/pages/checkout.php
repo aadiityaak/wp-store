@@ -12,6 +12,7 @@
             loading: true,
             submitting: false,
             allowSubmit: false,
+            importing: false,
             warnShow: false,
             warnMessage: '',
             _warnTimer: null,
@@ -430,6 +431,7 @@
                 }
             },
             async importFromProfile() {
+                this.importing = true;
                 await this.fetchProfile();
                 if (!this.profile || !this.profile.email) {
                     window.location.href = '<?php echo esc_js(site_url('/profil-saya/?tab=profile')); ?>';
@@ -580,7 +582,15 @@
                             <div class="wps-text-lg wps-font-medium wps-mb-4 wps-text-bold">Informasi Pemesan</div>
                             <?php if (is_user_logged_in()) : ?>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
-                                    <button type="button" class="wps-btn wps-btn-sm wps-btn-primary" @click="importFromProfile()"><?php echo wps_icon(['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>Impor Profil</button>
+                                    <button type="button" class="wps-btn wps-btn-sm wps-btn-primary" @click="importFromProfile()">
+                                        <span x-show="!importing">
+                                            <?php echo wps_icon(['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                        </span>
+                                        <span x-show="importing">
+                                            <?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                        </span>
+                                        Impor Profil
+                                    </button>
                                     <a href="<?php echo esc_url(site_url('/profil-saya/?tab=profile')); ?>" class="wps-btn wps-btn-sm wps-btn-secondary"><?php echo wps_icon(['name' => 'sliders2', 'size' => 16, 'class' => 'wps-mr-2']); ?>Kelola</a>
                                 </div>
                             <?php endif; ?>
