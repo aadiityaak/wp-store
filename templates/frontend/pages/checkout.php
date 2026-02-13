@@ -11,6 +11,7 @@
         return {
             loading: true,
             submitting: false,
+            requestId: '',
             allowSubmit: false,
             importingProfile: false,
             importingAddresses: '',
@@ -276,6 +277,7 @@
                     }, 3000);
                     return;
                 }
+                this.submitting = true;
                 this.submit();
             },
             async fetchProfile() {
@@ -470,7 +472,9 @@
                     this.showToast(err, 'error');
                     return;
                 }
-                this.submitting = true;
+                if (!this.requestId) {
+                    this.requestId = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+                }
                 this.message = '';
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'checkout', {
@@ -481,6 +485,7 @@
                             'X-WP-Nonce': wpStoreSettings.nonce
                         },
                         body: JSON.stringify({
+                            request_id: this.requestId,
                             name: this.name,
                             email: this.email,
                             phone: this.phone,

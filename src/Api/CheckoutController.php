@@ -42,6 +42,31 @@ class CheckoutController
             return new WP_REST_Response(['message' => 'Data tidak lengkap'], 400);
         }
 
+        $request_id = isset($data['request_id']) ? sanitize_text_field($data['request_id']) : '';
+        if ($request_id !== '') {
+            $existing = get_posts([
+                'post_type' => 'store_order',
+                'post_status' => 'any',
+                'meta_key' => '_store_order_request_id',
+                'meta_value' => $request_id,
+                'posts_per_page' => 1,
+                'fields' => 'ids',
+            ]);
+            if (!empty($existing)) {
+                $order_id = (int) $existing[0];
+                $order_number = get_post_meta($order_id, '_store_order_number', true) ?: (string) $order_id;
+                $order_total = floatval(get_post_meta($order_id, '_store_order_total', true));
+                $resp = [
+                    'id' => $order_id,
+                    'order_number' => $order_number,
+                    'total' => $order_total,
+                    'message' => 'Pesanan berhasil dibuat',
+                ];
+                $resp = apply_filters('wp_store_payment_response', $resp, $order_id, null, $data);
+                return new WP_REST_Response($resp, 200);
+            }
+        }
+
         $lines = [];
         $total = 0;
         $coupon_code = isset($data['coupon_code']) ? sanitize_text_field($data['coupon_code']) : '';
@@ -132,6 +157,9 @@ class CheckoutController
             update_post_meta($order_id, '_store_order_discount_type', $discount_type);
             update_post_meta($order_id, '_store_order_discount_value', $discount_value);
             update_post_meta($order_id, '_store_order_discount_amount', $discount_amount);
+        }
+        if ($request_id !== '') {
+            update_post_meta($order_id, '_store_order_request_id', $request_id);
         }
         $payment_method = isset($data['payment_method']) ? sanitize_key($data['payment_method']) : 'bank_transfer';
         if (!in_array($payment_method, ['bank_transfer', 'qris'], true)) {
