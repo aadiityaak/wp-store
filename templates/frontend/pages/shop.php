@@ -1,6 +1,6 @@
 <?php if (!empty($items)) : ?>
     <div id="wps-shop" class="">
-        <div class="wps-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));<?php echo (count($items) === 1) ? ' max-width: 360px;' : ''; ?>">
+        <div class="wps-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));<?php echo (count($items) === 1) ? ' max-width: 300px;' : ''; ?>">
             <?php foreach ($items as $item) : ?>
                 <?php echo \WpStore\Frontend\Template::render('components/product-card', ['item' => $item, 'currency' => $currency, 'view_label' => 'Detail']); ?>
             <?php endforeach; ?>
