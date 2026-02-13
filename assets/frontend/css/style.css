@@ -390,15 +390,15 @@ button.wps-btn-dark {
   margin-bottom: 0.5rem;
 }
 .wps-btn-danger {
-  background-color: var(--amber-500);
-  color: var(--danger-text-color);
+  background-color: var(--danger-text-color);
+  color: var(--white);
   border: none;
 }
 .wps-btn-danger svg {
   stroke: var(--blue-50);
 }
 .wps-btn-danger:hover {
-  background-color: var(--amber-600);
+  background-color: var(--gray-900);
 }
 .wps-nav-item {
   display: flex;

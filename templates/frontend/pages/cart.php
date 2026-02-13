@@ -82,7 +82,7 @@
                 <template x-if="loading">
                     <div class="wps-skeleton" style="width:220px; height:36px; border-radius:4px;"></div>
                 </template>
-                <a :href="wpStoreSettings.checkoutUrl" class="wps-btn wps-btn-primary" x-show="!loading && cart.length > 0"><?php echo wps_icon(['name' => 'credit-card', 'size' => 16, 'class' => 'wps-mr-2']); ?>Lanjut ke Pembayaran</a>
+                <a :href="urlCheckout" class="wps-btn wps-btn-primary" x-show="!loading && cart.length > 0"><?php echo wps_icon(['name' => 'credit-card', 'size' => 16, 'class' => 'wps-mr-2']); ?>Lanjut ke Pembayaran</a>
             </div>
         </div>
     </div>
@@ -92,6 +92,7 @@
         Alpine.data('wpStoreCartPage', () => ({
             loading: false,
             updatingKey: '',
+            urlCheckout: '',
             cart: [],
             total: 0,
             currency: '<?php echo esc_js(($currency ?? 'Rp')); ?>',
@@ -119,6 +120,23 @@
                     s = '';
                 }
                 return String(i.id) + ':' + s;
+            },
+            async fetchPage() {
+                try {
+                    const res = await fetch(wpStoreSettings.restUrl + 'settings/page-urls', {
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        return;
+                    }
+                    this.urlCheckout = data.data.page_checkout || '';
+                } catch (e) {
+                    this.urlCheckout = '';
+                }
             },
             async fetchCart() {
                 this.loading = true;
@@ -182,6 +200,7 @@
             },
             init() {
                 this.fetchCart();
+                this.fetchPage();
                 document.addEventListener('wp-store:cart-updated', (e) => {
                     const data = e.detail || {};
                     this.cart = data.items || [];
