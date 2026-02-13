@@ -8,15 +8,13 @@
   --border-color: #e5e7eb;
   --muted-bg: #f9fafb;
   --light-bg: #f3f4f6;
-  --bg-white: #ffffff;
-  --white-color: #ffffff;
+  --white: #ffffff;
   --gray-900: #111827;
   --gray-500: #6b7280;
   --gray-400: #9ca3af;
-  --callout-bg-color: #eff6ff;
+  --light: #eff6ff;
   --callout-border-color: #bfdbfe;
   --callout-title-color: #1d4ed8;
-  --danger-text-color: #ef4444;
   --danger-border-color: #fca5a5;
   --danger-bg-light: #fef2f2;
   --alert-success-bg: #d1fae5;
@@ -89,7 +87,7 @@
   grid-column: span 2 / span 2;
 }
 .wps-card {
-  background-color: var(--bg-white);
+  background-color: var(--white);
   border-radius: 0.5rem;
   box-shadow:
     0 1px 3px 0 rgba(0, 0, 0, 0.1),
@@ -236,7 +234,7 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   color: var(--gray-900);
-  background-color: var(--bg-white);
+  background-color: var(--white);
   transition:
     border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
@@ -295,7 +293,7 @@ button.wps-btn-dark {
   background-color: var(--gray-900);
 }
 .wps-btn-secondary {
-  background-color: var(--bg-white);
+  background-color: var(--white);
   border-color: var(--secondary-border-color);
   color: var(--secondary-text-color);
 }
@@ -317,7 +315,7 @@ button.wps-btn-dark {
   cursor: not-allowed;
 }
 .wps-btn-outline {
-  background-color: var(--bg-white);
+  background-color: var(--white);
   border-color: var(--secondary-border-color);
   color: var(--secondary-text-color);
 }
@@ -325,7 +323,7 @@ button.wps-btn-dark {
   background-color: var(--muted-bg);
 }
 .wps-btn-outline-primary {
-  background-color: var(--bg-white);
+  background-color: var(--white);
   border-color: var(--primary-color);
   color: var(--primary-color);
 }
@@ -341,7 +339,7 @@ button.wps-btn-dark {
   stroke: var(--light-bg);
 }
 .wps-btn-outline-success {
-  background-color: var(--bg-white);
+  background-color: var(--white);
   border-color: var(--success-color);
   color: var(--success-color);
 }
@@ -356,7 +354,7 @@ button.wps-btn-dark {
   position: relative;
 }
 .wps-callout {
-  background-color: var(--callout-bg-color);
+  background-color: var(--light);
   border: 1px solid var(--callout-border-color);
   border-radius: 0.5rem;
   padding: 1rem;
@@ -368,7 +366,7 @@ button.wps-btn-dark {
   margin-bottom: 0.5rem;
 }
 .wps-btn-danger {
-  background-color: var(--bg-white);
+  background-color: var(--bg-danger);
   border-color: var(--danger-border-color);
   color: var(--danger-text-color);
 }
@@ -395,7 +393,7 @@ button.wps-btn-dark {
   color: var(--gray-900);
 }
 .wps-nav-item.active {
-  background-color: var(--callout-bg-color);
+  background-color: var(--light);
   color: var(--primary-color);
 }
 .wps-flex {
@@ -507,7 +505,7 @@ button.wps-btn-dark {
   background-color: var(--red-100);
 }
 .wps-text-white {
-  color: var(--white-color) !important;
+  color: var(--white) !important;
 }
 .wps-text-xs {
   font-size: 0.75rem !important;
@@ -967,6 +965,41 @@ tr:not(:last-child) .wps-td {
 }
 .wps-table-striped tbody tr:nth-child(odd) {
   background: #fcfcfd;
+}
+
+.wps-skeleton {
+  position: relative;
+  background-color: #e5e7eb;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.wps-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%);
+  animation: wps-skeleton-shimmer 1.2s infinite;
+}
+.wps-skeleton-text {
+  height: 12px;
+}
+.wps-skeleton-img {
+  width: 40px;
+  height: 40px;
+}
+@keyframes wps-skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .wps-summary-box {
