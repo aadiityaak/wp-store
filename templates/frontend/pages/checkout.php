@@ -625,15 +625,15 @@
                             <?php endif; ?>
                             <div class="wps-form-group">
                                 <label class="wps-label">Nama</label>
-                                <input class="wps-input" type="text" x-model="name" placeholder="Nama lengkap">
+                                <input class="wps-input" type="text" x-model="name" placeholder="Nama lengkap" id="checkout-name" name="name">
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Email</label>
-                                <input class="wps-input" type="email" x-model="email" placeholder="email@contoh.com">
+                                <input class="wps-input" type="email" x-model="email" placeholder="email@contoh.com" id="checkout-email" name="email">
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Telepon/WA</label>
-                                <input class="wps-input" type="text" x-model="phone" placeholder="08xxxxxxxxxx">
+                                <input class="wps-input" type="text" x-model="phone" placeholder="08xxxxxxxxxx" id="checkout-phone" name="phone">
                             </div>
                         </div>
                     </div>
@@ -663,7 +663,7 @@
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Provinsi</label>
-                                <select class="wps-select" x-model="selectedProvince" @change="selectedCity=''; selectedSubdistrict=''; postalCode=''; loadCities()">
+                                <select class="wps-select" x-model="selectedProvince" @change="selectedCity=''; selectedSubdistrict=''; postalCode=''; loadCities()" id="checkout-province" name="province_id">
                                     <option value="">-- Pilih Provinsi --</option>
                                     <template x-for="prov in provinces" :key="prov.province_id">
                                         <option :value="prov.province_id" x-text="prov.province"></option>
@@ -673,7 +673,7 @@
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Kota/Kabupaten</label>
-                                <select class="wps-select" x-model="selectedCity" @change="selectedSubdistrict=''; postalCode=(cities.find(c => String(c.city_id) === String(selectedCity)) || {}).postal_code || ''; loadSubdistricts()" :disabled="!selectedProvince">
+                                <select class="wps-select" x-model="selectedCity" @change="selectedSubdistrict=''; postalCode=(cities.find(c => String(c.city_id) === String(selectedCity)) || {}).postal_code || ''; loadSubdistricts()" :disabled="!selectedProvince" id="checkout-city" name="city_id">
                                     <option value="">-- Pilih Kota/Kabupaten --</option>
                                     <template x-for="c in cities" :key="c.city_id">
                                         <option :value="c.city_id" x-text="c.city_name"></option>
@@ -683,7 +683,7 @@
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Kecamatan</label>
-                                <select class="wps-select" x-model="selectedSubdistrict" :disabled="!selectedCity" @change="calculateAllShipping()">
+                                <select class="wps-select" x-model="selectedSubdistrict" :disabled="!selectedCity" @change="calculateAllShipping()" id="checkout-subdistrict" name="subdistrict_id">
                                     <option value="">-- Pilih Kecamatan --</option>
                                     <template x-for="s in subdistricts" :key="s.subdistrict_id">
                                         <option :value="s.subdistrict_id" x-text="s.subdistrict_name"></option>
@@ -693,15 +693,15 @@
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Alamat Lengkap</label>
-                                <textarea class="wps-textarea" rows="3" x-model="address"></textarea>
+                                <textarea class="wps-textarea" rows="3" x-model="address" id="checkout-address" name="address"></textarea>
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Kode Pos</label>
-                                <input class="wps-input" type="text" x-model="postalCode" placeholder="">
+                                <input class="wps-input" type="text" x-model="postalCode" placeholder="" id="checkout-postal-code" name="postal_code">
                             </div>
                             <div class="wps-form-group">
                                 <label class="wps-label">Catatan</label>
-                                <textarea class="wps-textarea" rows="3" x-model="notes" placeholder="Catatan tambahan untuk pesanan"></textarea>
+                                <textarea class="wps-textarea" rows="3" x-model="notes" placeholder="Catatan tambahan untuk pesanan" id="checkout-notes" name="notes"></textarea>
                             </div>
                         </div>
                     </div>
@@ -744,7 +744,7 @@
                             </template>
                             <template x-for="item in cart" :key="item.id + ':' + (item.options ? JSON.stringify(item.options) : '')">
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-divider">
-                                    <input type="checkbox" x-model="item.selected" class="wps-checkbox" @change="calculateAllShipping(); if (couponCode) applyCoupon();">
+                                    <input type="checkbox" x-model="item.selected" class="wps-checkbox" @change="calculateAllShipping(); if (couponCode) applyCoupon();" :id="'item-selected-' + item.id" :name="'item_selected_' + item.id">
                                     <img :src="item.image ? item.image : '<?php echo esc_url(WP_STORE_URL . 'assets/frontend/img/noimg.webp'); ?>'" alt="" class="wps-img-40">
                                     <div style="flex: 1;">
                                         <div x-text="item.title" class="wps-text-sm wps-text-gray-900"></div>
@@ -769,7 +769,7 @@
                                     <span class="wps-text-sm wps-text-gray-900" x-text="formatPrice(totalSelected())"></span>
                                 </div>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mt-2">
-                                    <input class="wps-input wps-flex-1" type="text" x-model="couponCode" placeholder="Masukkan kode kupon">
+                                    <input class="wps-input wps-flex-1" type="text" x-model="couponCode" placeholder="Masukkan kode kupon" id="checkout-coupon-code" name="coupon_code">
                                     <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm" @click="applyCoupon()">
                                         <?php echo wps_icon(['name' => 'coupon', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                         Terapkan
