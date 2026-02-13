@@ -241,10 +241,18 @@
   background: #f0f0f1;
   color: #7a7f86;
 }
+.wp-store-flex {
+  display: flex;
+  align-items: center;
+}
 .wp-store-flex-gap {
   display: inline-flex;
   gap: 8px;
   align-items: center;
+}
+select.wp-store-input {
+  background-repeat: no-repeat !important;
+  background-position: calc(100% - 4px) 12px !important;
 }
 .wp-store-input[type="color"] {
   padding: 0;

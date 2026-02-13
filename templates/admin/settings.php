@@ -288,14 +288,15 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
 
                     <div class="wp-store-box-gray wp-store-mt-4">
                         <h4 class="wp-store-subtitle-small">API VD Ongkir</h4>
-                        <div class="wp-store-mt-2">
-                            <label class="wp-store-label" for="rajaongkir_api_key">API Key</label>
-                            <input name="rajaongkir_api_key" type="text" id="rajaongkir_api_key" value="<?php echo esc_attr($settings['rajaongkir_api_key'] ?? ''); ?>" class="wp-store-input" placeholder="Masukkan API Key Starter/Basic/Pro Anda">
-                            <p class="wp-store-helper">Dapatkan API Key di <a href="https://rajaongkir.com/" target="_blank">RajaOngkir.com</a>.</p>
+                        <div class="wp-store-mt-2 wp-store-flex wp-store-items-center">
+                            <input name="rajaongkir_api_key" type="text" id="rajaongkir_api_key" x-ref="apiKeyInput" value="<?php echo esc_attr($settings['rajaongkir_api_key'] ?? ''); ?>" class="wp-store-input" placeholder="Masukkan API Key Starter/Basic/Pro Anda">
+                            <div class="wp-store-mt-2" style="margin-left:8px; width:120px;">
+                                <button type="button" class="wp-store-btn wp-store-btn-primary" @click="saveApiKey" :disabled="isSavingApi">Simpan API</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="wp-store-box-gray wp-store-mt-4">
+                    <div class="wp-store-box-gray wp-store-mt-4" x-show="isApiValid">
                         <h4 class="wp-store-subtitle-small">Asal Pengiriman</h4>
                         <p class="wp-store-helper">Lokasi toko Anda untuk perhitungan ongkos kirim.</p>
 
@@ -340,7 +341,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         </div>
                     </div>
 
-                    <div class="wp-store-box-gray wp-store-mt-4">
+                    <div class="wp-store-box-gray wp-store-mt-4" x-show="isApiValid">
                         <h4 class="wp-store-subtitle-small">Kurir Aktif</h4>
                         <p class="wp-store-helper">Pilih kurir yang ingin Anda gunakan.</p>
 
@@ -693,6 +694,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
         Alpine.data('storeSettingsManager', () => ({
             activeTab: '<?php echo esc_js($active_tab); ?>',
             isSaving: false,
+            isSavingApi: false,
             isGenerating: false,
             isSeeding: false,
             isClearing: false,
@@ -746,6 +748,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
             isLoadingProvinces: false,
             isLoadingCities: false,
             isLoadingSubdistricts: false,
+            isApiValid: false,
             settings: {
                 shipping_origin_province: '<?php echo esc_js($settings['shipping_origin_province'] ?? ''); ?>',
                 shipping_origin_city: '<?php echo esc_js($settings['shipping_origin_city'] ?? ''); ?>',
@@ -765,15 +768,17 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 this.updateUrl(this.activeTab);
 
                 this.loadSettings().then(() => {
-                    this.loadProvinces().then(() => {
-                        if (this.settings.shipping_origin_province) {
-                            this.loadCities(this.settings.shipping_origin_province).then(() => {
-                                if (this.settings.shipping_origin_city) {
-                                    this.loadSubdistricts(this.settings.shipping_origin_city);
-                                }
-                            });
-                        }
-                    });
+                    if (this.isApiValid) {
+                        this.loadProvinces().then(() => {
+                            if (this.settings.shipping_origin_province) {
+                                this.loadCities(this.settings.shipping_origin_province).then(() => {
+                                    if (this.settings.shipping_origin_city) {
+                                        this.loadSubdistricts(this.settings.shipping_origin_city);
+                                    }
+                                });
+                            }
+                        });
+                    }
                 });
 
                 this.loadCacheStats();
@@ -814,6 +819,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         } else if (this.bankAccounts.length === 0) {
                             this.addBankAccount();
                         }
+                        this.isApiValid = !!(s.rajaongkir_api_key);
                     }
                 } catch (e) {
                     console.error('Gagal memuat settings:', e);
@@ -1060,9 +1066,13 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     const result = await response.json();
                     if (response.ok && result.success) {
                         this.provinces = result.data;
+                        this.isApiValid = true;
+                    } else {
+                        this.isApiValid = false;
                     }
                 } catch (error) {
                     console.error('Error loading provinces:', error);
+                    this.isApiValid = false;
                 } finally {
                     this.isLoadingProvinces = false;
                 }
@@ -1115,6 +1125,36 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     console.error('Error loading subdistricts:', error);
                 } finally {
                     this.isLoadingSubdistricts = false;
+                }
+            },
+            async saveApiKey() {
+                const key = this.$refs.apiKeyInput ? this.$refs.apiKeyInput.value.trim() : '';
+                this.isSavingApi = true;
+                try {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/settings`, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': wpStoreConfig.nonce
+                        },
+                        body: JSON.stringify({
+                            rajaongkir_api_key: key
+                        })
+                    });
+                    const result = await response.json();
+                    if (response.ok && result && result.success) {
+                        this.showNotification('API Key disimpan!', 'success');
+                        await this.loadProvinces();
+                    } else {
+                        this.showNotification(result.message || 'Gagal menyimpan API Key.', 'error');
+                        this.isApiValid = false;
+                    }
+                } catch (e) {
+                    this.showNotification('Terjadi kesalahan jaringan.', 'error');
+                    this.isApiValid = false;
+                } finally {
+                    this.isSavingApi = false;
                 }
             },
 
