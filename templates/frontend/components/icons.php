@@ -65,6 +65,10 @@ if ($name === 'cart') {
     echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><path d="M20 6 9 17l-5-5"></path></svg>';
 } elseif ($name === 'logout') {
     echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>';
+} elseif ($name === 'bank-transfer') {
+    echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><path d="M10 18v-7"/><path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/></svg>';
+} elseif ($name === 'qr') {
+    echo '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" viewBox="0 0 24 24" fill="none" stroke="' . esc_attr($stroke) . '" stroke-width="' . esc_attr($sw) . '" stroke-linecap="round" stroke-linejoin="round" class="' . esc_attr($class) . '"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>';
 } else {
     echo '';
 }

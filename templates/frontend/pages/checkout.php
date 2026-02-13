@@ -29,7 +29,7 @@
                 }, 0);
             },
             paymentMethods: [],
-            paymentMethod: 'transfer_bank',
+            paymentMethod: 'bank_transfer',
             name: '',
             email: '',
             phone: '',
@@ -116,7 +116,6 @@
                         }
                     });
                     const data = await res.json();
-                    // {"success":true,"data":[{"id":"bank_transfer","name":"Bank transfer"}]}
                     if (res.ok && data && data.success && Array.isArray(data.data)) {
                         this.paymentMethods = data.data;
 
@@ -497,7 +496,7 @@
                             shipping_courier: this.shippingCourier || '',
                             shipping_service: this.shippingService || '',
                             shipping_cost: this.shippingCost || 0,
-                            payment_method: this.paymentMethod || 'transfer_bank',
+                            payment_method: this.paymentMethod || 'bank_transfer',
                             coupon_code: this.couponCode || '',
                             items: this.cart.filter(i => i.selected !== false).map(i => ({
                                 id: i.id,
@@ -802,6 +801,12 @@
                                         <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
                                             :style="paymentMethod === method.id ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
                                             @click="paymentMethod = method.id">
+                                            <span x-show="'bank_transfer' === method.id">
+                                                <?php echo wps_icon(['name' => 'bank-transfer', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                            </span>
+                                            <span x-show="'qris' === method.id">
+                                                <?php echo wps_icon(['name' => 'qr', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                            </span>
                                             <span class="wps-text-sm wps-text-gray-900" x-text="method.name"></span>
                                         </button>
                                     </template>

@@ -133,9 +133,9 @@ class CheckoutController
             update_post_meta($order_id, '_store_order_discount_value', $discount_value);
             update_post_meta($order_id, '_store_order_discount_amount', $discount_amount);
         }
-        $payment_method = isset($data['payment_method']) ? sanitize_key($data['payment_method']) : 'transfer_bank';
-        if (!in_array($payment_method, ['transfer_bank', 'qris'], true)) {
-            $payment_method = 'transfer_bank';
+        $payment_method = isset($data['payment_method']) ? sanitize_key($data['payment_method']) : 'bank_transfer';
+        if (!in_array($payment_method, ['bank_transfer', 'qris'], true)) {
+            $payment_method = 'bank_transfer';
         }
         $payment_method = apply_filters('wp_store_payment_method', $payment_method, $data, $order_id);
         update_post_meta($order_id, '_store_order_payment_method', $payment_method);
