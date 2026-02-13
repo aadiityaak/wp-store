@@ -53,6 +53,7 @@ class Assets
         wp_enqueue_style('wp-store-frontend-css');
         $settings = get_option('wp_store_settings', []);
         $css = '';
+        $vars = '';
         $primary = isset($settings['theme_primary']) ? sanitize_hex_color($settings['theme_primary']) : '';
         $primary_hover = isset($settings['theme_primary_hover']) ? sanitize_hex_color($settings['theme_primary_hover']) : '';
         $secondary_text = isset($settings['theme_secondary_text']) ? sanitize_hex_color($settings['theme_secondary_text']) : '';
@@ -62,6 +63,20 @@ class Assets
         $callout_title = isset($settings['theme_callout_title']) ? sanitize_hex_color($settings['theme_callout_title']) : '';
         $danger_text = isset($settings['theme_danger_text']) ? sanitize_hex_color($settings['theme_danger_text']) : '';
         $danger_border = isset($settings['theme_danger_border']) ? sanitize_hex_color($settings['theme_danger_border']) : '';
+
+        $root = [];
+        if ($primary) $root[] = "--primary-color:{$primary}";
+        if ($primary_hover) $root[] = "--primary-color-hover:{$primary_hover}";
+        if ($secondary_text) $root[] = "--secondary-text-color:{$secondary_text}";
+        if ($secondary_border) $root[] = "--secondary-border-color:{$secondary_border}";
+        if ($callout_bg) $root[] = "--callout-bg-color:{$callout_bg}";
+        if ($callout_border) $root[] = "--callout-border-color:{$callout_border}";
+        if ($callout_title) $root[] = "--callout-title-color:{$callout_title}";
+        if ($danger_text) $root[] = "--danger-text-color:{$danger_text}";
+        if ($danger_border) $root[] = "--danger-border-color:{$danger_border}";
+        if (!empty($root)) {
+            $vars .= ":root{" . implode(';', $root) . ";}\n";
+        }
 
         if ($primary) {
             $css .= ".wps-btn-primary,button.wps-btn-primary{background-color:{$primary};}\n";
@@ -99,8 +114,8 @@ class Assets
         if ($container_max > 0) {
             $css .= ".wps-container{max-width:{$container_max}px;margin-left:auto;margin-right:auto;}\n";
         }
-        if (!empty($css)) {
-            wp_add_inline_style('wp-store-frontend-css', $css);
+        if (!empty($vars) || !empty($css)) {
+            wp_add_inline_style('wp-store-frontend-css', $vars . $css);
         }
 
         wp_localize_script(

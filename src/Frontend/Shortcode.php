@@ -858,14 +858,10 @@ class Shortcode
             'id' => 0,
             'label' => '+',
             'text' => '',
-            'size' => '',
             'class' => 'wps-btn wps-btn-primary',
             'qty' => 0
         ], $atts);
-        $size = sanitize_key($atts['size']);
-        $base_class = 'wps-btn wps-btn-primary';
-        $extra_class = is_string($atts['class']) ? trim($atts['class']) : '';
-        $btn_class = trim($base_class . ($size === 'sm' ? ' wps-btn-sm' : '') . ($extra_class ? ' ' . $extra_class : ''));
+        $btn_class = $atts['class'] ?? 'wps-btn wps-btn-primary';
         $id = $this->resolve_product_id((int) $atts['id']);
         if ($id > 0 && get_post_type($id) !== 'store_product') {
             return '';
