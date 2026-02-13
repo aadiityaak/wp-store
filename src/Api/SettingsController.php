@@ -11,6 +11,11 @@ class SettingsController
     {
         register_rest_route('wp-store/v1', '/settings', [
             [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_settings'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+            [
                 'methods' => 'POST',
                 'callback' => [$this, 'save_settings'],
                 'permission_callback' => [$this, 'check_admin_auth'],
@@ -40,6 +45,15 @@ class SettingsController
         ]);
     }
 
+    public function get_settings(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        return new WP_REST_Response([
+            'success' => true,
+            'settings' => $settings
+        ], 200);
+    }
+
     public function check_admin_auth()
     {
         return current_user_can('manage_options');
@@ -58,6 +72,11 @@ class SettingsController
         if (isset($params['store_address'])) $settings['store_address'] = sanitize_textarea_field($params['store_address']);
         if (isset($params['store_email'])) $settings['store_email'] = sanitize_email($params['store_email']);
         if (isset($params['store_phone'])) $settings['store_phone'] = sanitize_text_field($params['store_phone']);
+
+        // Handle payment methods
+        if (isset($params['payment_methods']) && is_array($params['payment_methods'])) {
+            $settings['payment_methods'] = array_map('sanitize_text_field', $params['payment_methods']);
+        }
 
         // Handle multiple bank accounts
         if (isset($params['store_bank_accounts']) && is_array($params['store_bank_accounts'])) {

@@ -202,41 +202,49 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     <h3 class="wp-store-subtitle">Transfer Bank</h3>
                     <p class="wp-store-helper">Kelola daftar rekening bank untuk pembayaran manual.</p>
 
-                    <template x-for="(account, index) in bankAccounts" :key="index">
-                        <div class="wp-store-box-gray wp-store-mt-4" style="position: relative; padding-top: 30px;">
-                            <!-- Remove Button -->
-                            <button type="button" @click="removeBankAccount(index)" class="button-link-delete" style="position: absolute; top: 10px; right: 10px; text-decoration: none;" title="Hapus Rekening" x-show="bankAccounts.length > 0">
-                                <span class="dashicons dashicons-trash"></span> Hapus
-                            </button>
+                    <!-- add payment_methods bisa pilih beberapa metode pembayaran -->
+                    <div class="wp-store-grid-2">
+                        <div>
+                            <button type="button" class="wp-store-btn" :class="{'wp-store-btn-primary': paymentMethods.includes('bank_transfer')}" x-model="paymentMethods" @click="updatePaymentMethods('bank_transfer')">Transfer Bank</button>
+                            <button type="button" class="wp-store-btn" :class="{'wp-store-btn-primary': paymentMethods.includes('qris')}" x-model="paymentMethods" @click="updatePaymentMethods('qris')">QRIS</button>
+                        </div>
+                    </div>
+                    <div x-show="paymentMethods.includes('bank_transfer')">
+                        <template x-for="(account, index) in bankAccounts" :key="index">
+                            <div class="wp-store-box-gray wp-store-mt-4" style="position: relative; padding-top: 30px;">
+                                <!-- Remove Button -->
+                                <button type="button" @click="removeBankAccount(index)" class="button-link-delete" style="position: absolute; top: 10px; right: 10px; text-decoration: none;" title="Hapus Rekening" x-show="bankAccounts.length > 0">
+                                    <span class="dashicons dashicons-trash"></span> Hapus
+                                </button>
 
-                            <div class="wp-store-grid-3">
-                                <div>
-                                    <label class="wp-store-label">Nama Bank</label>
-                                    <select x-model="account.bank_name" class="wp-store-input">
-                                        <template x-for="bank in indonesianBanks" :key="bank">
-                                            <option :value="bank" x-text="bank" :selected="account.bank_name === bank"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="wp-store-label">Nomor Rekening</label>
-                                    <input type="text" x-model="account.bank_account" class="wp-store-input" placeholder="Contoh: 1234567890">
-                                </div>
-                                <div>
-                                    <label class="wp-store-label">Atas Nama</label>
-                                    <input type="text" x-model="account.bank_holder" class="wp-store-input" placeholder="Contoh: Nama Pemilik">
+                                <div class="wp-store-grid-3">
+                                    <div>
+                                        <label class="wp-store-label">Nama Bank</label>
+                                        <select x-model="account.bank_name" class="wp-store-input">
+                                            <template x-for="bank in indonesianBanks" :key="bank">
+                                                <option :value="bank" x-text="bank" :selected="account.bank_name === bank"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="wp-store-label">Nomor Rekening</label>
+                                        <input type="text" x-model="account.bank_account" class="wp-store-input" placeholder="Contoh: 1234567890">
+                                    </div>
+                                    <div>
+                                        <label class="wp-store-label">Atas Nama</label>
+                                        <input type="text" x-model="account.bank_holder" class="wp-store-input" placeholder="Contoh: Nama Pemilik">
+                                    </div>
                                 </div>
                             </div>
+                        </template>
+                        <div class="wp-store-mt-4">
+                            <button type="button" @click="addBankAccount" class="wp-store-btn wp-store-btn-secondary">
+                                <span class="dashicons dashicons-plus-alt2"></span> Tambah Rekening
+                            </button>
                         </div>
-                    </template>
-
-                    <div class="wp-store-mt-4">
-                        <button type="button" @click="addBankAccount" class="wp-store-btn wp-store-btn-secondary">
-                            <span class="dashicons dashicons-plus-alt2"></span> Tambah Rekening
-                        </button>
                     </div>
 
-                    <div class="wp-store-box-gray wp-store-mt-4">
+                    <div x-show="paymentMethods.includes('qris')" class="wp-store-box-gray wp-store-mt-4">
                         <h3 class="wp-store-subtitle">QRIS</h3>
                         <p class="wp-store-helper">Unggah gambar QRIS untuk pembayaran cepat.</p>
                         <div class="wp-store-grid-2">
@@ -695,6 +703,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 entries: 0,
                 approx_mb: 0
             },
+            paymentMethods: ['bank_transfer', 'qris'],
             bankAccounts: [],
             customShippingRates: [],
             isRateModalOpen: false,
@@ -737,45 +746,71 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                 shipping_origin_subdistrict: '<?php echo esc_js($settings['shipping_origin_subdistrict'] ?? ''); ?>',
                 qris_image_id: '<?php echo esc_js($settings['qris_image_id'] ?? ''); ?>'
             },
-
+            updatePaymentMethods(method) {
+                if (this.paymentMethods.includes(method)) {
+                    this.paymentMethods = this.paymentMethods.filter(m => m !== method);
+                } else {
+                    this.paymentMethods.push(method);
+                }
+                console.log('Updated payment methods:', this.paymentMethods);
+            },
             init() {
                 // Initialize history state if needed
                 this.updateUrl(this.activeTab);
 
-                this.loadProvinces().then(() => {
-                    if (this.settings.shipping_origin_province) {
-                        this.loadCities(this.settings.shipping_origin_province).then(() => {
-                            if (this.settings.shipping_origin_city) {
-                                this.loadSubdistricts(this.settings.shipping_origin_city);
-                            }
-                        });
-                    }
+                this.loadSettings().then(() => {
+                    this.loadProvinces().then(() => {
+                        if (this.settings.shipping_origin_province) {
+                            this.loadCities(this.settings.shipping_origin_province).then(() => {
+                                if (this.settings.shipping_origin_city) {
+                                    this.loadSubdistricts(this.settings.shipping_origin_city);
+                                }
+                            });
+                        }
+                    });
                 });
 
                 this.loadCacheStats();
 
-                const savedRates = <?php echo json_encode($settings['custom_shipping_rates'] ?? []); ?>;
-                if (Array.isArray(savedRates)) {
-                    this.customShippingRates = savedRates;
-                }
-
-                const savedAccounts = <?php echo json_encode($settings['store_bank_accounts'] ?? []); ?>;
-                if (Array.isArray(savedAccounts) && savedAccounts.length > 0) {
-                    this.bankAccounts = savedAccounts;
-                } else {
-                    const legacyName = '<?php echo esc_js($settings['bank_name'] ?? ''); ?>';
-                    const legacyAccount = '<?php echo esc_js($settings['bank_account'] ?? ''); ?>';
-                    const legacyHolder = '<?php echo esc_js($settings['bank_holder'] ?? ''); ?>';
-
-                    if (legacyName || legacyAccount || legacyHolder) {
-                        this.bankAccounts.push({
-                            bank_name: legacyName,
-                            bank_account: legacyAccount,
-                            bank_holder: legacyHolder
-                        });
-                    } else {
-                        this.addBankAccount();
+            },
+            async loadSettings() {
+                try {
+                    const response = await fetch(`${wpStoreConfig.apiUrl}/settings`, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-WP-Nonce': wpStoreConfig.nonce
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok && result && result.success) {
+                        const s = result.settings || {};
+                        // Payment methods
+                        if (Array.isArray(s.payment_methods) && s.payment_methods.length) {
+                            this.paymentMethods = s.payment_methods;
+                        }
+                        // Shipping origin & QRIS
+                        this.settings.shipping_origin_province = s.shipping_origin_province || '';
+                        this.settings.shipping_origin_city = s.shipping_origin_city || '';
+                        this.settings.shipping_origin_subdistrict = s.shipping_origin_subdistrict || '';
+                        this.settings.qris_image_id = s.qris_image_id || '';
+                        // Custom shipping rates
+                        this.customShippingRates = Array.isArray(s.custom_shipping_rates) ? s.custom_shipping_rates : [];
+                        // Bank accounts (with legacy fallback if present)
+                        if (Array.isArray(s.store_bank_accounts) && s.store_bank_accounts.length > 0) {
+                            this.bankAccounts = s.store_bank_accounts;
+                        } else if (s.bank_name || s.bank_account || s.bank_holder) {
+                            this.bankAccounts = [{
+                                bank_name: s.bank_name || '',
+                                bank_account: s.bank_account || '',
+                                bank_holder: s.bank_holder || ''
+                            }];
+                        } else if (this.bankAccounts.length === 0) {
+                            this.addBankAccount();
+                        }
                     }
+                } catch (e) {
+                    console.error('Gagal memuat settings:', e);
                 }
             },
 
@@ -1147,6 +1182,8 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         data[key] = value;
                     }
                 });
+                // Handle payment methods
+                data.payment_methods = data.payment_methods.filter(method => method !== '');
 
                 // Add bank accounts manually to data
                 data.store_bank_accounts = JSON.parse(JSON.stringify(this.bankAccounts));
