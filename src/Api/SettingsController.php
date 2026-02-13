@@ -31,6 +31,13 @@ class SettingsController
                 'permission_callback' => [$this, 'check_admin_auth'],
             ],
         ]);
+        register_rest_route('wp-store/v1', '/settings/payment-methods', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_payment_methods'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
     }
 
     public function check_admin_auth()
@@ -678,5 +685,14 @@ class SettingsController
             'message' => 'Gagal mengambil data kecamatan.',
             'raw' => $data
         ], 500);
+    }
+    public function get_payment_methods(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $payment_methods = $settings['payment_methods'] ?? [];
+        return new WP_REST_Response([
+            'success' => true,
+            'data' => $payment_methods
+        ], 200);
     }
 }

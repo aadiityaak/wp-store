@@ -334,7 +334,12 @@ button.wps-btn-dark {
   color: var(--primary-color) !important;
 }
 .wps-btn-outline-primary:hover {
-  background-color: var(--primary-bg-light);
+  background-color: var(--gray-900);
+  color: var(--light-bg) !important;
+}
+.wps-btn-outline-primary:hover svg
+ {
+  stroke: var(--light-bg);
 }
 .wps-btn-outline-success {
   background-color: var(--bg-white);

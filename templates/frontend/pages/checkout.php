@@ -12,7 +12,8 @@
             loading: true,
             submitting: false,
             allowSubmit: false,
-            importing: false,
+            importingProfile: false,
+            importingAddresses: '',
             warnShow: false,
             warnMessage: '',
             _warnTimer: null,
@@ -27,6 +28,7 @@
                     return sel ? (sum + (isNaN(sub) ? 0 : sub)) : sum;
                 }, 0);
             },
+            paymentMethods: [],
             paymentMethod: 'transfer_bank',
             name: '',
             email: '',
@@ -102,6 +104,25 @@
                     currency: 'IDR',
                     minimumFractionDigits: 0
                 }).format(v);
+            },
+            async getPaymentMethods() {
+                try {
+                    const res = await fetch(wpStoreSettings.restUrl + 'settings/payment-methods', {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': wpStoreSettings.nonce
+                        }
+                    });
+                    const data = await res.json();
+                    if (res.ok && data && data.success && Array.isArray(data.methods)) {
+                        this.paymentMethods = data.methods;
+                    }
+                    console.log(this.paymentMethods);
+                } catch (e) {
+                    console.error(e);
+                }
             },
             async calculateAllShipping() {
                 if (!this.selectedSubdistrict || !Array.isArray(this.shippingCouriers) || this.shippingCouriers.length === 0) {
@@ -289,9 +310,11 @@
                 this.phone = this.profile.phone || this.phone;
             },
             async useAddressById() {
+                this.importingAddresses = this.selectedAddressId;
                 const addr = this.addresses.find(a => String(a.id) === String(this.selectedAddressId));
                 if (!addr) return;
                 await this.applyAddress(addr);
+                this.importingAddresses = '';
             },
             async applyAddress(addr) {
                 this.address = addr.address || '';
@@ -431,13 +454,14 @@
                 }
             },
             async importFromProfile() {
-                this.importing = true;
+                this.importingProfile = true;
                 await this.fetchProfile();
                 if (!this.profile || !this.profile.email) {
                     window.location.href = '<?php echo esc_js(site_url('/profil-saya/?tab=profile')); ?>';
                     return;
                 }
                 this.useProfile();
+                this.importingProfile = false;
             },
             async submit() {
                 const err = this.getValidationError();
@@ -533,6 +557,7 @@
                 this.loading = true;
                 try {
                     await this.fetchCart();
+                    await this.getPaymentMethods();
                     if (this.loggedIn) {
                         await this.fetchProfile();
                         await this.fetchAddresses();
@@ -583,10 +608,10 @@
                             <?php if (is_user_logged_in()) : ?>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mb-4">
                                     <button type="button" class="wps-btn wps-btn-sm wps-btn-primary" @click="importFromProfile()">
-                                        <span x-show="!importing">
+                                        <span x-show="!importingProfile">
                                             <?php echo wps_icon(['name' => 'cloud-arrow-down', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                         </span>
-                                        <span x-show="importing">
+                                        <span x-show="importingProfile">
                                             <?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                         </span>
                                         Impor Profil
@@ -618,7 +643,12 @@
                                             @click="selectedAddressId = addr.id; useAddressById()"
                                             class="wps-btn wps-btn-sm"
                                             :class="String(selectedAddressId) === String(addr.id) ? 'wps-btn-dark' : 'wps-btn-primary'">
+                                            <span x-show="importingAddresses !== String(addr.id) ">
                                             <?php echo wps_icon(['name' => 'map-pin', 'size' => 16, 'class' => 'wps-mr-2', 'border-color' => '#fff']); ?>
+                                            </span>
+                                            <span x-show="importingAddresses === String(addr.id) ">
+                                            <?php echo wps_icon(['name' => 'spinner', 'size' => 16, 'class' => 'wps-mr-2']); ?>
+                                            </span>
                                             <span
                                                 :style="String(selectedAddressId) === String(addr.id) ? 'color:#fff;' : 'color:#1f2937;'"
                                                 x-text="(addr.label ? addr.label + ' - ' : '') + (addr.city_name || '')"></span>
@@ -767,7 +797,7 @@
                             <div class="wps-mt-4">
                                 <div class="wps-text-lg wps-font-medium wps-mb-2 wps-text-bold">Metode Pembayaran</div>
                                 <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2 wps-flex-wrap">
-                                    <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
+                                    <!-- <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
                                         :style="paymentMethod === 'transfer_bank' ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
                                         @click="paymentMethod = 'transfer_bank'">
                                         <span class="wps-text-sm wps-text-gray-900">Transfer Bank</span>
@@ -776,7 +806,15 @@
                                         :style="paymentMethod === 'qris' ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
                                         @click="paymentMethod = 'qris'">
                                         <span class="wps-text-sm wps-text-gray-900">QRIS</span>
-                                    </button>
+                                    </button> -->
+                                    
+                                    <template x-for="method in paymentMethods" :key="method.value">
+                                        <button type="button" class="wps-btn wps-btn-secondary wps-btn-sm"
+                                            :style="paymentMethod === method.id ? 'border-left:4px solid #3b82f6;background:#f0f9ff;' : ''"
+                                            @click="paymentMethod = method.id">
+                                            <span class="wps-text-sm wps-text-gray-900" x-text="method.name"></span>
+                                        </button>
+                                    </template>
                                 </div>
 
                                 <div class="wps-mt-2" x-show="!loggedIn" id="checkout-captcha" @input="recomputeAllow()" @change="recomputeAllow()">
