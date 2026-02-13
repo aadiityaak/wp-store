@@ -85,6 +85,20 @@ class SettingsController
             $settings['payment_methods'] = array_map('sanitize_text_field', $params['payment_methods']);
         }
 
+        // Email templates
+        if (isset($params['email_template_user_new_order'])) {
+            $settings['email_template_user_new_order'] = wp_kses_post($params['email_template_user_new_order']);
+        }
+        if (isset($params['email_template_user_status'])) {
+            $settings['email_template_user_status'] = wp_kses_post($params['email_template_user_status']);
+        }
+        if (isset($params['email_template_admin_new_order'])) {
+            $settings['email_template_admin_new_order'] = wp_kses_post($params['email_template_admin_new_order']);
+        }
+        if (isset($params['email_template_admin_status'])) {
+            $settings['email_template_admin_status'] = wp_kses_post($params['email_template_admin_status']);
+        }
+
         // Handle multiple bank accounts
         if (isset($params['store_bank_accounts']) && is_array($params['store_bank_accounts'])) {
             $bank_accounts = [];

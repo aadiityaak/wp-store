@@ -7,6 +7,7 @@ class OrderEmails
     public function register()
     {
         add_action('updated_post_meta', [$this, 'maybe_send_status_email'], 10, 4);
+        add_action('wp_store_order_created', [$this, 'send_new_order_emails'], 10, 4);
     }
 
     public function maybe_send_status_email($meta_id, $post_id, $meta_key, $meta_value)
@@ -38,14 +39,92 @@ class OrderEmails
         $tracking_id = isset($settings['page_tracking']) ? (int) $settings['page_tracking'] : 0;
         $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
         $subject = '[' . $store_name . '] Status Pesanan #' . $order_number . ': ' . $status_label;
-        $body = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
-            . '<p>Halo,</p>'
-            . '<p>Status pesanan #' . esc_html($order_number) . ' Anda kini: <strong>' . esc_html($status_label) . '</strong>.</p>'
-            . '<p>Anda dapat melihat detail dan riwayat pengiriman melalui tautan berikut:</p>'
-            . '<p><a href="' . esc_url(add_query_arg(['order' => $order_number], $tracking_url)) . '" target="_blank" rel="noopener">Lihat Status Pesanan</a></p>'
-            . '<p>Salam,<br>' . esc_html($store_name) . '</p>'
-            . '</div>';
         $headers = ['Content-Type: text/html; charset=UTF-8'];
+        $vars = [
+            'store_name' => $store_name,
+            'order_number' => (string) $order_number,
+            'status_label' => $status_label,
+            'tracking_url' => esc_url(add_query_arg(['order' => $order_number], $tracking_url)),
+        ];
+        $user_tmpl = isset($settings['email_template_user_status']) && is_string($settings['email_template_user_status']) ? $settings['email_template_user_status'] : '';
+        if ($user_tmpl === '') {
+            $user_tmpl = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                . '<p>Halo,</p>'
+                . '<p>Status pesanan #{{order_number}} Anda kini: <strong>{{status_label}}</strong>.</p>'
+                . '<p>Anda dapat melihat detail dan riwayat pengiriman melalui tautan berikut:</p>'
+                . '<p><a href="{{tracking_url}}" target="_blank" rel="noopener">Lihat Status Pesanan</a></p>'
+                . '<p>Salam,<br>{{store_name}}</p>'
+                . '</div>';
+        }
+        $body = $this->render_template($user_tmpl, $vars);
         wp_mail($email, $subject, $body, $headers);
+
+        $admin_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+        $admin_tmpl = isset($settings['email_template_admin_status']) && is_string($settings['email_template_admin_status']) ? $settings['email_template_admin_status'] : '';
+        if ($admin_tmpl !== '' && is_email($admin_email)) {
+            $admin_subject = '[' . $store_name . '] Status Order #' . $order_number . ': ' . $status_label;
+            $admin_body = $this->render_template($admin_tmpl, $vars);
+            wp_mail($admin_email, $admin_subject, $admin_body, $headers);
+        }
+    }
+
+    public function send_new_order_emails($order_id, $data, $lines, $order_total)
+    {
+        if (get_post_type($order_id) !== 'store_order') {
+            return;
+        }
+        $settings = get_option('wp_store_settings', []);
+        $store_name = isset($settings['store_name']) && is_string($settings['store_name']) && $settings['store_name'] !== '' ? $settings['store_name'] : get_bloginfo('name');
+        $order_number = get_post_meta($order_id, '_store_order_number', true);
+        $order_number = $order_number ? $order_number : $order_id;
+        $tracking_id = isset($settings['page_tracking']) ? (int) $settings['page_tracking'] : 0;
+        $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
+        $headers = ['Content-Type: text/html; charset=UTF-8'];
+        $vars = [
+            'store_name' => $store_name,
+            'order_number' => (string) $order_number,
+            'status_label' => get_post_meta($order_id, '_store_order_status', true) ?: '',
+            'tracking_url' => esc_url(add_query_arg(['order' => $order_number], $tracking_url)),
+            'total' => (string) $order_total,
+        ];
+        $email = get_post_meta($order_id, '_store_order_email', true);
+        if (is_string($email) && is_email($email)) {
+            $user_subject = '[' . $store_name . '] Pesanan Baru #' . $order_number;
+            $user_tmpl = isset($settings['email_template_user_new_order']) && is_string($settings['email_template_user_new_order']) ? $settings['email_template_user_new_order'] : '';
+            if ($user_tmpl === '') {
+                $user_tmpl = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                    . '<p>Halo,</p>'
+                    . '<p>Terima kasih. Pesanan #{{order_number}} telah kami terima.</p>'
+                    . '<p>Anda dapat memantau status pesanan melalui tautan berikut:</p>'
+                    . '<p><a href="{{tracking_url}}" target="_blank" rel="noopener">Lihat Status Pesanan</a></p>'
+                    . '<p>Salam,<br>{{store_name}}</p>'
+                    . '</div>';
+            }
+            $user_body = $this->render_template($user_tmpl, $vars);
+            wp_mail($email, $user_subject, $user_body, $headers);
+        }
+        $admin_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+        if (is_email($admin_email)) {
+            $admin_subject = '[' . $store_name . '] Order Baru #' . $order_number;
+            $admin_tmpl = isset($settings['email_template_admin_new_order']) && is_string($settings['email_template_admin_new_order']) ? $settings['email_template_admin_new_order'] : '';
+            if ($admin_tmpl === '') {
+                $admin_tmpl = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
+                    . '<p>Order baru #{{order_number}}.</p>'
+                    . '<p>Total: {{total}}</p>'
+                    . '<p>Tracking: <a href="{{tracking_url}}" target="_blank" rel="noopener">{{tracking_url}}</a></p>'
+                    . '</div>';
+            }
+            $admin_body = $this->render_template($admin_tmpl, $vars);
+            wp_mail($admin_email, $admin_subject, $admin_body, $headers);
+        }
+    }
+
+    private function render_template($template, array $vars)
+    {
+        $replacements = [];
+        foreach ($vars as $key => $value) {
+            $replacements['{{' . $key . '}}'] = (string) $value;
+        }
+        return strtr($template, $replacements);
     }
 }

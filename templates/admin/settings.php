@@ -518,6 +518,30 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                             <input name="recaptcha_secret_key" type="text" id="recaptcha_secret_key" value="<?php echo esc_attr($settings['recaptcha_secret_key'] ?? ''); ?>" class="wp-store-input" placeholder="Secret Key">
                         </div>
                     </div>
+                    <div class="wp-store-box-gray wp-store-mt-4">
+                        <h3 class="wp-store-subtitle">Template Email</h3>
+                        <p class="wp-store-helper">Gunakan placeholder: {{store_name}}, {{order_number}}, {{status_label}}, {{tracking_url}}, {{total}}.</p>
+                        <div class="wp-store-grid-2">
+                            <div>
+                                <label class="wp-store-label" for="email_template_user_new_order">User: Pesanan Baru</label>
+                                <textarea name="email_template_user_new_order" id="email_template_user_new_order" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_user_new_order'] ?? ''); ?></textarea>
+                            </div>
+                            <div>
+                                <label class="wp-store-label" for="email_template_admin_new_order">Admin: Pesanan Baru</label>
+                                <textarea name="email_template_admin_new_order" id="email_template_admin_new_order" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_admin_new_order'] ?? ''); ?></textarea>
+                            </div>
+                        </div>
+                        <div class="wp-store-grid-2">
+                            <div>
+                                <label class="wp-store-label" for="email_template_user_status">User: Status Order</label>
+                                <textarea name="email_template_user_status" id="email_template_user_status" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_user_status'] ?? ''); ?></textarea>
+                            </div>
+                            <div>
+                                <label class="wp-store-label" for="email_template_admin_status">Admin: Status Order</label>
+                                <textarea name="email_template_admin_status" id="email_template_admin_status" class="wp-store-textarea" rows="6"><?php echo esc_textarea($settings['email_template_admin_status'] ?? ''); ?></textarea>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
