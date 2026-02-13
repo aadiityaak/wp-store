@@ -202,11 +202,17 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                     <h3 class="wp-store-subtitle">Transfer Bank</h3>
                     <p class="wp-store-helper">Kelola daftar rekening bank untuk pembayaran manual.</p>
 
-                    <!-- add payment_methods bisa pilih beberapa metode pembayaran -->
+                    <!-- Pilih metode pembayaran (multi-select) -->
                     <div class="wp-store-grid-2">
-                        <div>
-                            <button type="button" class="wp-store-btn" :class="{'wp-store-btn-primary': paymentMethods.includes('bank_transfer')}" x-model="paymentMethods" @click="updatePaymentMethods('bank_transfer')">Transfer Bank</button>
-                            <button type="button" class="wp-store-btn" :class="{'wp-store-btn-primary': paymentMethods.includes('qris')}" x-model="paymentMethods" @click="updatePaymentMethods('qris')">QRIS</button>
+                        <div class="wp-store-flex wp-store-gap-2">
+                            <label class="wp-store-btn" :class="{'wp-store-btn-primary': paymentMethods.includes('bank_transfer')}">
+                                <input type="checkbox" name="payment_methods[]" value="bank_transfer" x-model="paymentMethods" style="position:absolute;opacity:0;width:0;height:0;">
+                                Transfer Bank
+                            </label>
+                            <label class="wp-store-btn" :class="{'wp-store-btn-primary': paymentMethods.includes('qris')}">
+                                <input type="checkbox" name="payment_methods[]" value="qris" x-model="paymentMethods" style="position:absolute;opacity:0;width:0;height:0;">
+                                QRIS
+                            </label>
                         </div>
                     </div>
                     <div x-show="paymentMethods.includes('bank_transfer')">
@@ -1182,8 +1188,8 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         data[key] = value;
                     }
                 });
-                // Handle payment methods
-                data.payment_methods = data.payment_methods.filter(method => method !== '');
+                // Handle payment methods from Alpine state
+                data.payment_methods = Array.isArray(this.paymentMethods) ? JSON.parse(JSON.stringify(this.paymentMethods)) : [];
 
                 // Add bank accounts manually to data
                 data.store_bank_accounts = JSON.parse(JSON.stringify(this.bankAccounts));
