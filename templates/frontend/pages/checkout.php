@@ -312,7 +312,7 @@
                 this.phone = this.profile.phone || this.phone;
             },
             async useAddressById() {
-                this.importingAddresses = this.selectedAddressId;
+                this.importingAddresses = String(this.selectedAddressId);
                 const addr = this.addresses.find(a => String(a.id) === String(this.selectedAddressId));
                 if (!addr) return;
                 await this.applyAddress(addr);
@@ -645,8 +645,9 @@
                                 <div class="wps-flex wps-flex-wrap" style="gap:8px;">
                                     <template x-for="addr in addresses" :key="addr.id">
                                         <button type="button"
-                                            @click="selectedAddressId = addr.id; useAddressById()"
+                                            @click="selectedAddressId = String(addr.id); useAddressById()"
                                             class="wps-btn wps-btn-sm"
+                                            :disabled="String(importingAddresses) === String(addr.id)"
                                             :class="String(selectedAddressId) === String(addr.id) ? 'wps-btn-dark' : 'wps-btn-primary'">
                                             <span x-show="importingAddresses !== String(addr.id) ">
                                                 <?php echo wps_icon(['name' => 'map-pin', 'size' => 16, 'class' => 'wps-mr-2', 'border-color' => '#fff']); ?>
