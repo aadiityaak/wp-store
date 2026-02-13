@@ -251,78 +251,134 @@ class Assets
                 <span x-text="message" class="wps-text-sm wps-text-gray-900"></span>
             </div>
         </div>
-        <div x-data="{
-            open: false,
-            loading: false,
-            updatingKey: '',
-            cart: [],
-            total: 0,
-            currency: '<?php echo esc_js(($settings['currency_symbol'] ?? 'Rp')); ?>',
-            formatPrice(value) {
-                const v = typeof value === 'number' ? value : parseFloat(value || 0);
-                if (this.currency === 'USD') {
-                    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v);
-                }
-                return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
-            },
-            getItemKey(i) {
-                const opts = i && i.options ? i.options : {};
-                let s = '';
-                try { s = JSON.stringify(opts); } catch (e) { s = ''; }
-                return String(i.id) + ':' + s;
-            },
-            async fetchCart() {
-                try {
-                    const res = await fetch(wpStoreSettings.restUrl + 'cart', { 
-                        credentials: 'same-origin',
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
-                    });
-                    const data = await res.json();
-                    this.cart = data.items || [];
-                    this.total = data.total || 0;
-                } catch(e) {
-                    this.cart = [];
-                    this.total = 0;
-                }
-            },
-            async updateItem(item, qty) {
-                this.loading = true;
-                try {
-                    const res = await fetch(wpStoreSettings.restUrl + 'cart', {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-WP-Nonce': wpStoreSettings.nonce
-                        },
-                        body: JSON.stringify({ id: item.id, qty, options: (item.options || {}) })
-                    });
-                    const data = await res.json();
-                    if (!res.ok) {
-                        return;
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('wpStoreCartOffcanvas', () => ({
+                    open: false,
+                    loading: false,
+                    updatingKey: '',
+                    cart: [],
+                    total: 0,
+                    urlKeranjang: '',
+                    urlCheckout: '',
+                    currency: '<?php echo esc_js(($settings['currency_symbol'] ?? 'Rp')); ?>',
+                    formatPrice(value) {
+                        const v = typeof value === 'number' ? value : parseFloat(value || 0);
+                        if (this.currency === 'USD') {
+                            return new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'USD',
+                                minimumFractionDigits: 0
+                            }).format(v);
+                        }
+                        return new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 0
+                        }).format(v);
+                    },
+                    getItemKey(i) {
+                        const opts = i && i.options ? i.options : {};
+                        let s = '';
+                        try {
+                            s = JSON.stringify(opts);
+                        } catch (e) {
+                            s = '';
+                        }
+                        return String(i.id) + ':' + s;
+                    },
+                    async fetchPage() {
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'settings/page-urls', {
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
+                            });
+                            const data = await res.json();
+                            if (!res.ok) {
+                                return;
+                            }
+                            this.urlKeranjang = data.data.page_cart || '';
+                            this.urlCheckout = data.data.page_checkout || '';
+                        } catch (e) {
+                            this.urlKeranjang = '';
+                            this.urlCheckout = '';
+                        }
+                    },
+                    async fetchCart() {
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'cart', {
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                }
+                            });
+                            const data = await res.json();
+                            this.cart = data.items || [];
+                            this.total = data.total || 0;
+                        } catch (e) {
+                            this.cart = [];
+                            this.total = 0;
+                        }
+                    },
+                    async updateItem(item, qty) {
+                        this.loading = true;
+                        try {
+                            const res = await fetch(wpStoreSettings.restUrl + 'cart', {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-WP-Nonce': wpStoreSettings.nonce
+                                },
+                                body: JSON.stringify({
+                                    id: item.id,
+                                    qty,
+                                    options: (item.options || {})
+                                })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) {
+                                return;
+                            }
+                            this.cart = data.items || [];
+                            this.total = data.total || 0;
+                            document.dispatchEvent(new CustomEvent('wp-store:cart-updated', {
+                                detail: data
+                            }));
+                        } catch (e) {} finally {
+                            this.loading = false;
+                            this.updatingKey = '';
+                        }
+                    },
+                    increment(item) {
+                        this.updateItem(item, item.qty + 1);
+                    },
+                    decrement(item) {
+                        const q = item.qty > 1 ? item.qty - 1 : 0;
+                        this.updateItem(item, q);
+                    },
+                    remove(item) {
+                        this.updatingKey = this.getItemKey(item);
+                        this.updateItem(item, 0);
+                    },
+                    init() {
+                        this.fetchCart();
+                        this.fetchPage();
+                        document.addEventListener('wp-store:cart-updated', (e) => {
+                            const data = e.detail || {};
+                            this.cart = data.items || [];
+                            this.total = data.total || 0;
+                        });
+                        window.addEventListener('wp-store:open-cart', () => {
+                            this.open = true;
+                        });
                     }
-                    this.cart = data.items || [];
-                    this.total = data.total || 0;
-                    document.dispatchEvent(new CustomEvent('wp-store:cart-updated', { detail: data }));
-                } catch(e) {
-                } finally {
-                    this.loading = false;
-                    this.updatingKey = '';
-                }
-            },
-            increment(item) { this.updateItem(item, item.qty + 1); },
-            decrement(item) { const q = item.qty > 1 ? item.qty - 1 : 0; this.updateItem(item, q); },
-            remove(item) { this.updatingKey = this.getItemKey(item); this.updateItem(item, 0); },
-            init() {
-                this.fetchCart();
-                document.addEventListener('wp-store:cart-updated', (e) => {
-                    const data = e.detail || {};
-                    this.cart = data.items || [];
-                    this.total = data.total || 0;
-                });
-                window.addEventListener('wp-store:open-cart', () => { this.open = true; });
-            }
-        }" x-init="init()" x-cloak>
+                }));
+            });
+        </script>
+        <div x-data="wpStoreCartOffcanvas()" x-init="init()" x-cloak>
             <div class="wps-offcanvas-backdrop" x-show="open" @click="open = false" x-transition.opacity></div>
             <div class="wps-offcanvas" x-show="open" x-transition>
                 <div class="wps-offcanvas-header">
@@ -371,15 +427,18 @@ class Assets
                     </template>
                 </div>
                 <div class="wps-offcanvas-footer">
-                    <div>
-                        <a :href="wpStoreSettings.cartUrl" class="wps-btn wps-btn-secondary wps-btn-sm">Lihat Keranjang</a>
-                    </div>
-                    <div>
+                    <!-- <div class="wps-flex wps-justify-center wps-gap-2 wps-bg-dark wps-text-white wps-p-2 wps-rounded-md"> -->
+                    <a :href="urlKeranjang" class="wps-btn wps-btn-secondary wps-btn-sm wps-w-full">
+                        <?php echo wps_icon(['name' => 'cart', 'size' => 16]); ?>
+                        Keranjang
+                    </a>
+                    <!-- </div> -->
+                    <div class="wps-mt-2 wps-flex wps-justify-between wps-checkout-box">
                         <div class="wps-total-box">
                             <div class="wps-total-label">Total</div>
                             <div class="wps-total-amount" x-text="formatPrice(total)"></div>
                         </div>
-                        <a :href="wpStoreSettings.checkoutUrl" class="wps-btn wps-btn-primary wps-btn-sm wps-checkout-btn" x-show="cart.length > 0"><?php echo wps_icon(['name' => 'credit-card', 'size' => 16, 'class' => 'wps-mr-2']); ?>Checkout</a>
+                        <a :href="urlCheckout" class="wps-btn wps-btn-primary wps-btn-sm wps-checkout-btn" x-show="cart.length > 0"><?php echo wps_icon(['name' => 'credit-card', 'size' => 16, 'class' => 'wps-mr-2']); ?>Checkout</a>
                     </div>
                 </div>
             </div>

@@ -43,6 +43,13 @@ class SettingsController
                 'permission_callback' => [$this, 'check_admin_auth'],
             ],
         ]);
+        register_rest_route('wp-store/v1', '/settings/page-urls', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_page_urls'],
+                'permission_callback' => [$this, 'check_admin_auth'],
+            ],
+        ]);
     }
 
     public function get_settings(WP_REST_Request $request)
@@ -718,6 +725,17 @@ class SettingsController
         return new WP_REST_Response([
             'success' => true,
             'data' => $payment_methods
+        ], 200);
+    }
+    public function get_page_urls(WP_REST_Request $request)
+    {
+        $settings = get_option('wp_store_settings', []);
+        $page = [];
+        $page['page_cart'] = $settings['page_cart'] ? get_permalink($settings['page_cart']) : '';
+        $page['page_checkout'] = $settings['page_checkout'] ? get_permalink($settings['page_checkout']) : '';
+        return new WP_REST_Response([
+            'success' => true,
+            'data' => $page
         ], 200);
     }
 }

@@ -337,8 +337,7 @@ button.wps-btn-dark {
   background-color: var(--gray-900);
   color: var(--light-bg) !important;
 }
-.wps-btn-outline-primary:hover svg
- {
+.wps-btn-outline-primary:hover svg {
   stroke: var(--light-bg);
 }
 .wps-btn-outline-success {
@@ -737,10 +736,11 @@ button.wps-btn-dark {
 .wps-offcanvas-footer {
   padding: 12px;
   border-top: 1px solid #eeeeee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+}
+.wps-checkout-box {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eeeeee;
 }
 .wps-total-box {
   display: flex;
@@ -973,6 +973,9 @@ tr:not(:last-child) .wps-td {
 
 .wps-bg-primary-100 {
   background-color: #eff6ff;
+}
+.wps-bg-dark {
+  background-color: var(--gray-900);
 }
 .wps-text-white {
   color: #fff;
