@@ -107,9 +107,9 @@ class OrderColumns
             return;
         }
         if ($column === 'order_shipping') {
-            $shipping = get_post_meta($post_id, '_store_order_shipping_method', true);
-            $label = ($shipping === 'jne') ? 'JNE' : 'POS Indonesia';
-            echo esc_html($label);
+            $shipping = get_post_meta($post_id, '_store_order_shipping_courier', true) ?? '-';
+            $shipping = strtoupper($shipping);
+            echo esc_html($shipping);
             $tracking = get_post_meta($post_id, '_store_order_tracking_number', true);
             if ($tracking) {
                 echo '<br><small style="font-size:11px; color:#6b7280;">Resi: ' . esc_html($tracking) . '</small>';
