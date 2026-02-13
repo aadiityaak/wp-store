@@ -266,7 +266,8 @@ if (!$order_number) {
                                         if (res.ok && data && data.success && data.data) {
                                             const json = data.data;
                                             let ev = [];
-                                            if (json.result && Array.isArray(json.result.manifest)) ev = json.result.manifest;
+                                            if (json.rajaongkir && json.rajaongkir.result && Array.isArray(json.rajaongkir.result.manifest)) ev = json.rajaongkir.result.manifest;
+                                            else if (json.result && Array.isArray(json.result.manifest)) ev = json.result.manifest;
                                             else if (Array.isArray(json.manifest)) ev = json.manifest;
                                             else if (Array.isArray(json.history)) ev = json.history;
                                             else if (Array.isArray(json.events)) ev = json.events;
