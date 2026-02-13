@@ -278,6 +278,7 @@
                     return;
                 }
                 this.submitting = true;
+                this.requestId = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
                 this.submit();
             },
             async fetchProfile() {
@@ -472,9 +473,6 @@
                     this.showToast(err, 'error');
                     return;
                 }
-                if (!this.requestId) {
-                    this.requestId = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
-                }
                 this.message = '';
                 try {
                     const res = await fetch(wpStoreSettings.restUrl + 'checkout', {
@@ -556,6 +554,7 @@
                     this.message = 'Terjadi kesalahan jaringan.';
                 } finally {
                     this.submitting = false;
+                    this.requestId = '';
                 }
             },
             async init() {
