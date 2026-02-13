@@ -430,7 +430,7 @@ class Assets
                     <!-- <div class="wps-flex wps-justify-center wps-gap-2 wps-bg-dark wps-text-white wps-p-2 wps-rounded-md"> -->
                     <a :href="urlKeranjang" class="wps-btn wps-btn-secondary wps-btn-sm wps-w-full">
                         <?php echo wps_icon(['name' => 'cart', 'size' => 16]); ?>
-                        Keranjang
+                        <span class="wps-pl-2">Keranjang</span>
                     </a>
                     <!-- </div> -->
                     <div class="wps-mt-2 wps-flex wps-justify-between wps-checkout-box">

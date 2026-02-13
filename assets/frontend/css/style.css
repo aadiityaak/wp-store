@@ -650,6 +650,10 @@ button.wps-btn-dark {
 .wps-pl-1 {
   padding-left: 0.25rem;
 }
+.wps-pl-2 {
+  padding-left: 0.5rem;
+}
+
 .rounded-full {
   border-radius: 9999px;
 }
