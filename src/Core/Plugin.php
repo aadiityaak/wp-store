@@ -16,6 +16,9 @@ class Plugin
     {
         $post_types = new PostTypes();
         $post_types->register();
+
+        $order_emails = new \WpStore\Admin\OrderEmails();
+        $order_emails->register();
     }
 
     private function load_admin()
@@ -53,9 +56,6 @@ class Plugin
 
         $coupon_columns = new \WpStore\Admin\CouponColumns();
         $coupon_columns->register();
-        
-        $order_emails = new \WpStore\Admin\OrderEmails();
-        $order_emails->register();
     }
 
     private function load_api()
