@@ -7,7 +7,7 @@
     }
 </script>
 <script>
-    if (typeof window.wpStoreAddToCart === 'undefined') {
+    if (typeof window.wpStoreAddToCart !== 'function') {
         window.wpStoreAddToCart = function(params) {
             return {
                 loading: false,
@@ -78,6 +78,9 @@
                     return this.normalizeOptions(opts);
                 },
                 async add() {
+                    if (this.loading) {
+                        return;
+                    }
                     if (this.hasOptions()) {
                         const payload = {
                             basic_name: this.basicName,
@@ -92,16 +95,18 @@
                             window.removeEventListener('wp-store:options-selected', handler);
                             this.confirmAdd();
                         };
-                        window.addEventListener('wp-store:options-selected', handler);
+                        window.addEventListener('wp-store:options-selected', handler, {
+                            once: true
+                        });
                         window.dispatchEvent(new CustomEvent('wp-store:open-options-modal', {
                             detail: payload
                         }));
                         return;
                     }
+                    this.loading = true;
                     await this.confirmAdd();
                 },
                 async confirmAdd() {
-                    this.loading = true;
                     try {
                         const addQty = this.qtyEnabled ? (this.qty > 0 ? this.qty : 1) : 1;
                         const res = await fetch(wpStoreSettings.restUrl + 'cart', {
@@ -135,6 +140,9 @@
             };
         };
     }
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('wpStoreAddToCart', (params) => window.wpStoreAddToCart(params));
+    });
 </script>
 <div x-data="wpStoreAddToCart({
         id: <?php echo (int) $id; ?>,
