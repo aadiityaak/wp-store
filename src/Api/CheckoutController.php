@@ -41,9 +41,41 @@ class CheckoutController
         if ($name === '' || empty($items)) {
             return new WP_REST_Response(['message' => 'Data tidak lengkap'], 400);
         }
+        if (!is_email($email)) {
+            return new WP_REST_RESPONSE(['message' => 'Email tidak valid'], 400);
+        }
+        $address_required = isset($data['address']) ? sanitize_textarea_field($data['address']) : '';
+        if ($address_required === '') {
+            return new WP_REST_RESPONSE(['message' => 'Alamat wajib diisi'], 400);
+        }
+        if ($phone === '') {
+            return new WP_REST_RESPONSE(['message' => 'Telepon wajib diisi'], 400);
+        }
+        $shipping_courier_req = isset($data['shipping_courier']) ? sanitize_text_field($data['shipping_courier']) : '';
+        $shipping_service_req = isset($data['shipping_service']) ? sanitize_text_field($data['shipping_service']) : '';
+        $shipping_cost_req = isset($data['shipping_cost']) ? floatval($data['shipping_cost']) : 0;
+        if ($shipping_courier_req === '' || $shipping_service_req === '' || $shipping_cost_req <= 0) {
+            return new WP_REST_RESPONSE(['message' => 'Ongkir belum dipilih atau tidak valid'], 400);
+        }
+
+        $actor_key = is_user_logged_in() ? ('user:' . get_current_user_id()) : ('guest:' . (isset($_COOKIE['wp_store_cart_key']) ? sanitize_key($_COOKIE['wp_store_cart_key']) : ''));
+        $fingerprint = md5(wp_json_encode($items) . '|' . ($data['coupon_code'] ?? '') . '|' . $shipping_courier_req . '|' . $shipping_service_req . '|' . (string) $shipping_cost_req);
+        if ($actor_key !== '') {
+            $lock_key = 'wp_store_checkout_lock_' . md5($actor_key);
+            $existing_lock = get_transient($lock_key);
+            if (is_string($existing_lock) && $existing_lock === $fingerprint) {
+                return new WP_REST_Response(['message' => 'Order sedang diproses, coba lagi beberapa detik.'], 429);
+            }
+            set_transient($lock_key, $fingerprint, 10);
+        }
 
         $request_id = isset($data['request_id']) ? sanitize_text_field($data['request_id']) : '';
         if ($request_id !== '') {
+            $rid_lock_key = 'wp_store_rid_lock_' . md5($request_id);
+            if (get_transient($rid_lock_key)) {
+                return new WP_REST_Response(['message' => 'Duplikasi submit terdeteksi'], 409);
+            }
+            set_transient($rid_lock_key, 1, 20);
             $existing = get_posts([
                 'post_type' => 'store_order',
                 'post_status' => 'any',
@@ -63,6 +95,7 @@ class CheckoutController
                     'message' => 'Pesanan berhasil dibuat',
                 ];
                 $resp = apply_filters('wp_store_payment_response', $resp, $order_id, null, $data);
+                delete_transient($rid_lock_key);
                 return new WP_REST_Response($resp, 200);
             }
         }
@@ -146,9 +179,9 @@ class CheckoutController
 
         update_post_meta($order_id, '_store_order_email', $email);
         update_post_meta($order_id, '_store_order_phone', $phone);
-        $shipping_courier = isset($data['shipping_courier']) ? sanitize_text_field($data['shipping_courier']) : '';
-        $shipping_service = isset($data['shipping_service']) ? sanitize_text_field($data['shipping_service']) : '';
-        $shipping_cost = isset($data['shipping_cost']) ? floatval($data['shipping_cost']) : 0;
+        $shipping_courier = $shipping_courier_req;
+        $shipping_service = $shipping_service_req;
+        $shipping_cost = $shipping_cost_req;
         $order_total = max(0, $total - $discount_amount) + max(0, $shipping_cost);
         update_post_meta($order_id, '_store_order_total', $order_total);
         update_post_meta($order_id, '_store_order_items', $lines);
@@ -160,6 +193,7 @@ class CheckoutController
         }
         if ($request_id !== '') {
             update_post_meta($order_id, '_store_order_request_id', $request_id);
+            delete_transient('wp_store_rid_lock_' . md5($request_id));
         }
         $payment_method = isset($data['payment_method']) ? sanitize_key($data['payment_method']) : 'bank_transfer';
         if (!in_array($payment_method, ['bank_transfer', 'qris'], true)) {
