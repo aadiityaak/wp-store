@@ -111,6 +111,13 @@ class CartController
             $qty = 0;
         }
 
+        $lock_key = 'wp_store_cart_lock_' . $this->get_actor_key();
+        if (get_transient($lock_key)) {
+            $cart = $this->read_cart();
+            return new WP_REST_Response($this->format_cart($cart), 200);
+        }
+        set_transient($lock_key, 1, 1);
+
         $cart = $this->read_cart();
         if ($add_qty !== null) {
             if ($add_qty < 0) {
@@ -256,6 +263,14 @@ class CartController
         $_COOKIE[$this->cookie_key] = $key;
 
         return $key;
+    }
+
+    private function get_actor_key()
+    {
+        if (is_user_logged_in()) {
+            return 'u_' . get_current_user_id();
+        }
+        return 'g_' . $this->get_or_set_guest_key();
     }
 
     private function format_cart($cart)
