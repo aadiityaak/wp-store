@@ -142,10 +142,26 @@ class RajaOngkirController
 
         if (empty($api_key) || empty($origin_subdistrict) || empty($destination_subdistrict) || empty($courier)) {
             if (!empty($custom_services)) {
+                $mapped = array_map(function ($s) {
+                    return [
+                        'name' => 'Custom Rate',
+                        'code' => isset($s['courier']) ? (string) $s['courier'] : 'custom',
+                        'service' => isset($s['service']) ? (string) $s['service'] : '',
+                        'description' => isset($s['description']) ? (string) $s['description'] : '',
+                        'cost' => isset($s['cost']) ? (float) $s['cost'] : 0,
+                        'etd' => isset($s['etd']) ? (string) $s['etd'] : ''
+                    ];
+                }, $custom_services);
                 return new WP_REST_Response([
                     'success' => true,
-                    'weight' => $weight,
-                    'services' => $custom_services
+                    'data' => [
+                        'meta' => [
+                            'message' => 'Success Calculate Cost',
+                            'code' => 200,
+                            'status' => 'success'
+                        ],
+                        'data' => $mapped
+                    ]
                 ], 200);
             }
             return new WP_REST_Response([
@@ -154,7 +170,7 @@ class RajaOngkirController
             ], 400);
         }
 
-        $cache_key = apply_filters('wp_store_shipping_cache_key', 'wp_store_rajaongkir_cost_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier, serialize($custom_services)])), $params);
+        $cache_key = apply_filters('wp_store_shipping_cache_key', 'wp_store_rajaongkir_cost_v2_' . md5(implode('|', [$origin_subdistrict, $destination_subdistrict, $weight, $courier, serialize($custom_services)])), $params);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             return new WP_REST_Response($cached, 200);
@@ -187,11 +203,11 @@ class RajaOngkirController
             $d = $data['data'];
             if (isset($d['couriers']) && is_array($d['couriers'])) {
                 foreach ($d['couriers'] as $cg) {
-                    $code = isset($cg['code']) ? (string) $cg['code'] : (isset($cg['courier']['code']) ? (string) $cg['courier']['code'] : '');
                     $list = isset($cg['services']) && is_array($cg['services']) ? $cg['services'] : [];
                     foreach ($list as $row) {
                         $services[] = [
-                            'courier' => $code,
+                            'courier' => isset($row['code']) ? (string) $row['code'] : (isset($cg['code']) ? (string) $cg['code'] : ''),
+                            'name' => isset($cg['name']) ? (string) $cg['name'] : $this->map_courier_name(isset($row['code']) ? (string) $row['code'] : ''),
                             'service' => isset($row['service']) ? (string) $row['service'] : (isset($row['service_code']) ? (string) $row['service_code'] : ''),
                             'description' => isset($row['description']) ? (string) $row['description'] : (isset($row['service_name']) ? (string) $row['service_name'] : ''),
                             'cost' => isset($row['cost']) ? (float) $row['cost'] : (isset($row['value']) ? (float) $row['value'] : 0),
@@ -202,10 +218,10 @@ class RajaOngkirController
             } elseif (is_array($d)) {
                 foreach ($d as $row) {
                     if (isset($row['services']) && is_array($row['services'])) {
-                        $code = isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : '');
                         foreach ($row['services'] as $s) {
                             $services[] = [
-                                'courier' => $code,
+                                'courier' => isset($s['code']) ? (string) $s['code'] : (isset($row['courier']) ? (string) $row['courier'] : ''),
+                                'name' => isset($row['name']) ? (string) $row['name'] : $this->map_courier_name(isset($row['courier']) ? (string) $row['courier'] : ''),
                                 'service' => isset($s['service']) ? (string) $s['service'] : (isset($s['service_code']) ? (string) $s['service_code'] : ''),
                                 'description' => isset($s['description']) ? (string) $s['description'] : (isset($s['service_name']) ? (string) $s['service_name'] : ''),
                                 'cost' => isset($s['cost']) ? (float) $s['cost'] : (isset($s['value']) ? (float) $s['value'] : 0),
@@ -215,6 +231,7 @@ class RajaOngkirController
                     } else {
                         $services[] = [
                             'courier' => isset($row['courier']) ? (string) $row['courier'] : '',
+                            'name' => $this->map_courier_name(isset($row['courier']) ? (string) $row['courier'] : ''),
                             'service' => isset($row['service']) ? (string) $row['service'] : (isset($row['service_code']) ? (string) $row['service_code'] : ''),
                             'description' => isset($row['description']) ? (string) $row['description'] : (isset($row['service_name']) ? (string) $row['service_name'] : ''),
                             'cost' => isset($row['cost']) ? (float) $row['cost'] : (isset($row['value']) ? (float) $row['value'] : 0),
@@ -251,11 +268,10 @@ class RajaOngkirController
                     $dd = $d2['data'];
                     if (isset($dd['couriers']) && is_array($dd['couriers'])) {
                         foreach ($dd['couriers'] as $cg) {
-                            $code = isset($cg['code']) ? (string) $cg['code'] : (isset($cg['courier']['code']) ? (string) $cg['courier']['code'] : $c);
                             $list = isset($cg['services']) && is_array($cg['services']) ? $cg['services'] : [];
                             foreach ($list as $row) {
                                 $services[] = [
-                                    'courier' => $code,
+                                    'courier' => isset($row['code']) ? (string) $row['code'] : '',
                                     'service' => isset($row['service']) ? (string) $row['service'] : (isset($row['service_code']) ? (string) $row['service_code'] : ''),
                                     'description' => isset($row['description']) ? (string) $row['description'] : (isset($row['service_name']) ? (string) $row['service_name'] : ''),
                                     'cost' => isset($row['cost']) ? (float) $row['cost'] : (isset($row['value']) ? (float) $row['value'] : 0),
@@ -266,10 +282,9 @@ class RajaOngkirController
                     } elseif (is_array($dd)) {
                         foreach ($dd as $row) {
                             if (isset($row['services']) && is_array($row['services'])) {
-                                $code = isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : $c);
                                 foreach ($row['services'] as $s) {
                                     $services[] = [
-                                        'courier' => $code,
+                                        'courier' => isset($row['code']) ? (string) $row['code'] : '',
                                         'service' => isset($s['service']) ? (string) $s['service'] : (isset($s['service_code']) ? (string) $s['service_code'] : ''),
                                         'description' => isset($s['description']) ? (string) $s['description'] : (isset($s['service_name']) ? (string) $s['service_name'] : ''),
                                         'cost' => isset($s['cost']) ? (float) $s['cost'] : (isset($s['value']) ? (float) $s['value'] : 0),
@@ -284,13 +299,27 @@ class RajaOngkirController
         }
         $services = array_merge($custom_services, $services);
         $services = apply_filters('wp_store_shipping_services', $services, $params);
+        $mapped = array_map(function ($s) {
+            return [
+                'name' => isset($s['name']) ? (string) $s['name'] : $this->map_courier_name(isset($s['courier']) ? (string) $s['courier'] : ''),
+                'code' => isset($s['courier']) ? (string) $s['courier'] : '',
+                'service' => isset($s['service']) ? (string) $s['service'] : '',
+                'description' => isset($s['description']) ? (string) $s['description'] : '',
+                'cost' => isset($s['cost']) ? (float) $s['cost'] : 0,
+                'etd' => isset($s['etd']) ? (string) $s['etd'] : ''
+            ];
+        }, $services);
         $payload = [
             'success' => true,
-            'weight' => $weight,
-            'services' => $services
+            'data' => [
+                'meta' => [
+                    'message' => 'Success Calculate Cost',
+                    'code' => 200,
+                    'status' => 'success'
+                ],
+                'data' => $mapped
+            ]
         ];
-        $payload = apply_filters('wp_store_shipping_payload', $payload, $params);
-        $payload = apply_filters('wp_store_after_calculate_shipping', $payload, $params);
         set_transient($cache_key, $payload, DAY_IN_SECONDS);
         do_action('wp_store_shipping_calculated', $payload, $params);
         return new WP_REST_Response($payload, 200);

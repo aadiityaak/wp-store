@@ -100,6 +100,15 @@ class CheckoutController
             }
         }
 
+        $actor_key = is_user_logged_in() ? ('user:' . get_current_user_id()) : ('guest:' . (isset($_COOKIE['wp_store_cart_key']) ? sanitize_key($_COOKIE['wp_store_cart_key']) : ''));
+        if ($actor_key !== '') {
+            $actor_lock_key = 'wp_store_checkout_actor_lock_' . md5($actor_key);
+            if (get_transient($actor_lock_key)) {
+                return new WP_REST_Response(['message' => 'Order sedang diproses'], 429);
+            }
+            set_transient($actor_lock_key, 1, 10);
+        }
+
         $lines = [];
         $total = 0;
         $coupon_code = isset($data['coupon_code']) ? sanitize_text_field($data['coupon_code']) : '';
@@ -194,6 +203,9 @@ class CheckoutController
         if ($request_id !== '') {
             update_post_meta($order_id, '_store_order_request_id', $request_id);
             delete_transient('wp_store_rid_lock_' . md5($request_id));
+        }
+        if (isset($actor_lock_key)) {
+            delete_transient($actor_lock_key);
         }
         $payment_method = isset($data['payment_method']) ? sanitize_key($data['payment_method']) : 'bank_transfer';
         if (!in_array($payment_method, ['bank_transfer', 'qris'], true)) {

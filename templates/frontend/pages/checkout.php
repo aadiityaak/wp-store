@@ -11,6 +11,7 @@
         return {
             loading: true,
             submitting: false,
+            _submitGuard: false,
             requestId: '',
             allowSubmit: false,
             importingProfile: false,
@@ -467,10 +468,13 @@
                 this.importingProfile = false;
             },
             async submit() {
+                if (this._submitGuard) return;
+                this._submitGuard = true;
                 const err = this.getValidationError();
                 if (err) {
                     this.message = err;
                     this.showToast(err, 'error');
+                    this._submitGuard = false;
                     return;
                 }
                 this.message = '';
@@ -496,7 +500,7 @@
                             subdistrict_name: (this.subdistricts.find(s => String(s.subdistrict_id) === String(this.selectedSubdistrict)) || {}).subdistrict_name || '',
                             postal_code: this.postalCode || '',
                             notes: this.notes || '',
-                            shipping_courier: this.shippingCourier || '',
+                            shipping_courier: this.shippingCourier || String(this.selectedShippingKey || '').split(':')[0] || '',
                             shipping_service: this.shippingService || '',
                             shipping_cost: this.shippingCost || 0,
                             payment_method: this.paymentMethod || 'bank_transfer',
@@ -555,6 +559,7 @@
                 } finally {
                     this.submitting = false;
                     this.requestId = '';
+                    this._submitGuard = false;
                 }
             },
             async init() {
@@ -822,7 +827,7 @@
                                 </div>
 
                                 <div class="wps-mt-4 wps-flex wps-justify-end">
-                                    <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || !allowSubmit" @click="trySubmit()">
+                                    <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || _submitGuard || !allowSubmit" @click="trySubmit()">
                                         <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                         <span x-show="submitting">Memproses...</span>
                                         <span x-show="!submitting">Buat Pesanan</span>
