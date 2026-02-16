@@ -40,7 +40,7 @@ class OrderEmails
         $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
         $subject = '[' . $store_name . '] Status Pesanan #' . $order_number . ': ' . $status_label;
         $headers = ['Content-Type: text/html; charset=UTF-8'];
-        $headers[] = 'From: ' . $store_name . ' <info@' . get_bloginfo('domain') . '>';
+
         $vars = [
             'store_name' => $store_name,
             'order_number' => (string) $order_number,
@@ -58,7 +58,19 @@ class OrderEmails
                 . '</div>';
         }
         $body = $this->render_template($user_tmpl, $vars);
+        $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+        $from_name = $store_name;
+        $cb_from = function ($e) use ($from_email) {
+            return $from_email;
+        };
+        $cb_name = function ($n) use ($from_name) {
+            return $from_name;
+        };
+        add_filter('wp_mail_from', $cb_from);
+        add_filter('wp_mail_from_name', $cb_name);
         wp_mail($email, $subject, $body, $headers);
+        remove_filter('wp_mail_from', $cb_from);
+        remove_filter('wp_mail_from_name', $cb_name);
 
         $admin_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
         $admin_tmpl = isset($settings['email_template_admin_status']) && is_string($settings['email_template_admin_status']) ? $settings['email_template_admin_status'] : '';
@@ -71,7 +83,19 @@ class OrderEmails
         if (is_email($admin_email)) {
             $admin_subject = '[' . $store_name . '] Status Order #' . $order_number . ': ' . $status_label;
             $admin_body = $this->render_template($admin_tmpl, $vars);
+            $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+            $from_name = $store_name;
+            $cb_from = function ($e) use ($from_email) {
+                return $from_email;
+            };
+            $cb_name = function ($n) use ($from_name) {
+                return $from_name;
+            };
+            add_filter('wp_mail_from', $cb_from);
+            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($admin_email, $admin_subject, $admin_body, $headers);
+            remove_filter('wp_mail_from', $cb_from);
+            remove_filter('wp_mail_from_name', $cb_name);
         }
     }
 
@@ -87,7 +111,7 @@ class OrderEmails
         $tracking_id = isset($settings['page_tracking']) ? (int) $settings['page_tracking'] : 0;
         $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
         $headers = ['Content-Type: text/html; charset=UTF-8'];
-        $headers[] = 'From: ' . $store_name . ' <info@' . get_bloginfo('domain') . '>';
+
         $vars = [
             'store_name' => $store_name,
             'order_number' => (string) $order_number,
@@ -109,7 +133,19 @@ class OrderEmails
                     . '</div>';
             }
             $user_body = $this->render_template($user_tmpl, $vars);
+            $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+            $from_name = $store_name;
+            $cb_from = function ($e) use ($from_email) {
+                return $from_email;
+            };
+            $cb_name = function ($n) use ($from_name) {
+                return $from_name;
+            };
+            add_filter('wp_mail_from', $cb_from);
+            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($email, $user_subject, $user_body, $headers);
+            remove_filter('wp_mail_from', $cb_from);
+            remove_filter('wp_mail_from_name', $cb_name);
         }
         $admin_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
         if (is_email($admin_email)) {
@@ -123,7 +159,19 @@ class OrderEmails
                     . '</div>';
             }
             $admin_body = $this->render_template($admin_tmpl, $vars);
+            $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+            $from_name = $store_name;
+            $cb_from = function ($e) use ($from_email) {
+                return $from_email;
+            };
+            $cb_name = function ($n) use ($from_name) {
+                return $from_name;
+            };
+            add_filter('wp_mail_from', $cb_from);
+            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($admin_email, $admin_subject, $admin_body, $headers);
+            remove_filter('wp_mail_from', $cb_from);
+            remove_filter('wp_mail_from_name', $cb_name);
         }
     }
 

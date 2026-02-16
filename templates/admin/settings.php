@@ -519,6 +519,7 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         </div>
                     </div>
                     <div class="wp-store-box-gray wp-store-mt-4 wp-store-email-template">
+
                         <h3 class="wp-store-subtitle">Template Email</h3>
                         <p class="wp-store-helper wp-store-mb-4">Gunakan placeholder: {{store_name}}, {{order_number}}, {{status_label}}, {{tracking_url}}, {{total}}.</p>
                         <div class="wp-store-grid-2">
