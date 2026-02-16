@@ -39,6 +39,11 @@ class RajaOngkirController
                 'callback' => [$this, 'calculate_rajaongkir_cost'],
                 'permission_callback' => '__return_true',
             ],
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'calculate_rajaongkir_cost'],
+                'permission_callback' => '__return_true',
+            ],
         ]);
 
         register_rest_route('wp-store/v1', '/rajaongkir/waybill', [
@@ -106,6 +111,15 @@ class RajaOngkirController
         $api_key = $settings['rajaongkir_api_key'] ?? '';
         $origin_subdistrict = isset($settings['shipping_origin_subdistrict']) ? (string) $settings['shipping_origin_subdistrict'] : '';
         $params = $request->get_json_params();
+        if (!is_array($params) || empty($params)) {
+            $params = [
+                'destination_subdistrict' => $request->get_param('destination_subdistrict'),
+                'destination_city' => $request->get_param('destination_city'),
+                'destination_province' => $request->get_param('destination_province'),
+                'courier' => $request->get_param('courier'),
+                'manual_weight_grams' => $request->get_param('manual_weight_grams'),
+            ];
+        }
         $params = apply_filters('wp_store_before_calculate_shipping', $params, $request);
         $destination_subdistrict = isset($params['destination_subdistrict']) ? sanitize_text_field($params['destination_subdistrict']) : '';
         $destination_city = isset($params['destination_city']) ? sanitize_text_field($params['destination_city']) : '';
@@ -220,8 +234,8 @@ class RajaOngkirController
                     if (isset($row['services']) && is_array($row['services'])) {
                         foreach ($row['services'] as $s) {
                             $services[] = [
-                                'courier' => isset($s['code']) ? (string) $s['code'] : (isset($row['courier']) ? (string) $row['courier'] : ''),
-                                'name' => isset($row['name']) ? (string) $row['name'] : $this->map_courier_name(isset($row['courier']) ? (string) $row['courier'] : ''),
+                                'courier' => isset($s['code']) ? (string) $s['code'] : (isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : '')),
+                                'name' => isset($row['name']) ? (string) $row['name'] : $this->map_courier_name(isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : '')),
                                 'service' => isset($s['service']) ? (string) $s['service'] : (isset($s['service_code']) ? (string) $s['service_code'] : ''),
                                 'description' => isset($s['description']) ? (string) $s['description'] : (isset($s['service_name']) ? (string) $s['service_name'] : ''),
                                 'cost' => isset($s['cost']) ? (float) $s['cost'] : (isset($s['value']) ? (float) $s['value'] : 0),
@@ -230,8 +244,8 @@ class RajaOngkirController
                         }
                     } else {
                         $services[] = [
-                            'courier' => isset($row['courier']) ? (string) $row['courier'] : '',
-                            'name' => $this->map_courier_name(isset($row['courier']) ? (string) $row['courier'] : ''),
+                            'courier' => isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : ''),
+                            'name' => isset($row['name']) ? (string) $row['name'] : $this->map_courier_name(isset($row['courier']) ? (string) $row['courier'] : (isset($row['code']) ? (string) $row['code'] : '')),
                             'service' => isset($row['service']) ? (string) $row['service'] : (isset($row['service_code']) ? (string) $row['service_code'] : ''),
                             'description' => isset($row['description']) ? (string) $row['description'] : (isset($row['service_name']) ? (string) $row['service_name'] : ''),
                             'cost' => isset($row['cost']) ? (float) $row['cost'] : (isset($row['value']) ? (float) $row['value'] : 0),
@@ -349,6 +363,27 @@ class RajaOngkirController
             $total = 1;
         }
         return $total;
+    }
+
+    private function map_courier_name($code)
+    {
+        $code = strtolower((string) $code);
+        $names = [
+            'jne' => 'Jalur Nugraha Ekakurir (JNE)',
+            'jnt' => 'J&T Express',
+            'sicepat' => 'SiCepat Ekspres',
+            'pos' => 'POS Indonesia',
+            'lion' => 'Lion Parcel',
+            'tiki' => 'TIKI',
+            'sap' => 'SAP Express',
+            'ninja' => 'Ninja Express',
+            'ide' => 'IDExpress',
+            'wahana' => 'Wahana Prestasi Logistik',
+            'sc' => 'Sentral Cargo',
+            'rex' => 'Royal Express Asia',
+            'custom' => 'Custom Rate'
+        ];
+        return $names[$code] ?? strtoupper($code);
     }
 
     public function get_rajaongkir_provinces(WP_REST_Request $request)

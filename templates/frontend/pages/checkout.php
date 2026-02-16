@@ -157,13 +157,14 @@
                         })
                     });
                     const data = await res.json();
-                    if (res.ok && data && data.success && Array.isArray(data.services)) {
-                        this.shippingOptions = data.services.map(s => ({
-                            courier: s.courier || '',
+                    if (res.ok && data && data.success && data.data && Array.isArray(data.data.data)) {
+                        this.shippingOptions = data.data.data.map(s => ({
+                            courier: s.code || '',
                             service: s.service || '',
                             description: s.description || '',
                             cost: s.cost || 0,
-                            etd: s.etd || ''
+                            etd: s.etd || '',
+                            name: s.name || ''
                         }));
                     }
                 } catch (e) {}
