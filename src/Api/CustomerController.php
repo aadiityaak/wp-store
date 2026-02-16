@@ -309,19 +309,33 @@ class CustomerController
         $settings = get_option('wp_store_settings', []);
         $tracking_id = isset($settings['page_tracking']) ? absint($settings['page_tracking']) : 0;
         $tracking_base = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
-        $q = new \WP_Query([
-            'post_type' => 'store_order',
-            'post_status' => 'publish',
-            'posts_per_page' => 20,
-            'orderby' => 'date',
-            'order' => 'DESC',
-            'meta_query' => [
+        $meta_query = [
+            'relation' => 'OR',
+            [
+                'key' => '_store_order_user_id',
+                'value' => $user_id,
+                'compare' => '='
+            ],
+            [
+                'relation' => 'AND',
+                [
+                    'key' => '_store_order_user_id',
+                    'compare' => 'NOT EXISTS'
+                ],
                 [
                     'key' => '_store_order_email',
                     'value' => $email,
                     'compare' => '='
                 ]
             ]
+        ];
+        $q = new \WP_Query([
+            'post_type' => 'store_order',
+            'post_status' => 'publish',
+            'posts_per_page' => 20,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'meta_query' => $meta_query
         ]);
         $orders = [];
         foreach ($q->posts as $p) {

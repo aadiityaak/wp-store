@@ -187,6 +187,9 @@ class CheckoutController
         update_post_meta($order_id, '_store_order_number', $order_number);
 
         update_post_meta($order_id, '_store_order_email', $email);
+        if (is_user_logged_in()) {
+            update_post_meta($order_id, '_store_order_user_id', get_current_user_id());
+        }
         update_post_meta($order_id, '_store_order_phone', $phone);
         $shipping_courier = $shipping_courier_req;
         $shipping_service = $shipping_service_req;

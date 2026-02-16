@@ -57,39 +57,51 @@ class CustomerProfile
             $uid = get_current_user_id();
             $user = get_userdata($uid);
             $email = $user ? $user->user_email : '';
-            if ($email) {
-                $q = new \WP_Query([
-                    'post_type' => 'store_order',
-                    'post_status' => 'publish',
-                    'posts_per_page' => 20,
-                    'orderby' => 'date',
-                    'order' => 'DESC',
-                    'meta_query' => [
-                        [
-                            'key' => '_store_order_email',
-                            'value' => $email,
-                            'compare' => '='
-                        ]
+            $meta_query = [
+                'relation' => 'OR',
+                [
+                    'key' => '_store_order_user_id',
+                    'value' => $uid,
+                    'compare' => '='
+                ],
+                [
+                    'relation' => 'AND',
+                    [
+                        'key' => '_store_order_user_id',
+                        'compare' => 'NOT EXISTS'
+                    ],
+                    [
+                        'key' => '_store_order_email',
+                        'value' => $email,
+                        'compare' => '='
                     ]
-                ]);
-                foreach ($q->posts as $p) {
-                    $oid = $p->ID;
-                    $order_number = get_post_meta($oid, '_store_order_number', true);
-                    if (!$order_number) {
-                        $order_number = $oid;
-                    }
-                    $orders[] = [
-                        'id' => $oid,
-                        'order_number' => $order_number,
-                        'date' => get_the_date('d M Y', $oid),
-                        'total' => (float) get_post_meta($oid, '_store_order_total', true),
-                        'status' => (string) (get_post_meta($oid, '_store_order_status', true) ?: 'pending'),
-                        'tracking_url' => add_query_arg(['order' => $order_number], $tracking_base),
-                        'items' => (array) (get_post_meta($oid, '_store_order_items', true) ?: [])
-                    ];
+                ]
+            ];
+            $q = new \WP_Query([
+                'post_type' => 'store_order',
+                'post_status' => 'publish',
+                'posts_per_page' => 20,
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'meta_query' => $meta_query
+            ]);
+            foreach ($q->posts as $p) {
+                $oid = $p->ID;
+                $order_number = get_post_meta($oid, '_store_order_number', true);
+                if (!$order_number) {
+                    $order_number = $oid;
                 }
-                wp_reset_postdata();
+                $orders[] = [
+                    'id' => $oid,
+                    'order_number' => $order_number,
+                    'date' => get_the_date('d M Y', $oid),
+                    'total' => (float) get_post_meta($oid, '_store_order_total', true),
+                    'status' => (string) (get_post_meta($oid, '_store_order_status', true) ?: 'pending'),
+                    'tracking_url' => add_query_arg(['order' => $order_number], $tracking_base),
+                    'items' => (array) (get_post_meta($oid, '_store_order_items', true) ?: [])
+                ];
             }
+            wp_reset_postdata();
         }
         ob_start();
         ?>
