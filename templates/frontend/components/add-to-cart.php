@@ -83,22 +83,7 @@
         async confirmAdd() {
             this.loading = true;
             try {
-                let currentQty = 0;
-                try {
-                    const resCart = await fetch(wpStoreSettings.restUrl + 'cart', { 
-                        credentials: 'same-origin',
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
-                    });
-                    const dataCart = await resCart.json();
-                    const opts = this.getOptionsPayload();
-                    const item = (dataCart.items || []).find((i) => {
-                        if (i.id !== <?php echo (int) $id; ?>) return false;
-                        return this.stringifyOptions(i.options || {}) === this.stringifyOptions(opts || {});
-                    });
-                    currentQty = item ? (item.qty || 0) : 0;
-                } catch (e) {}
                 const addQty = this.qtyEnabled ? (this.qty > 0 ? this.qty : 1) : 1;
-                const nextQty = currentQty + addQty;
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                     method: 'POST',
                     credentials: 'same-origin',
@@ -106,7 +91,7 @@
                         'Content-Type': 'application/json',
                         'X-WP-Nonce': wpStoreSettings.nonce
                     },
-                    body: JSON.stringify({ id: <?php echo (int) $id; ?>, qty: nextQty, options: this.getOptionsPayload() })
+                    body: JSON.stringify({ id: <?php echo (int) $id; ?>, add_qty: addQty, options: this.getOptionsPayload() })
                 });
                 const data = await res.json();
                 if (!res.ok) {

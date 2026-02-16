@@ -101,6 +101,7 @@ class CartController
         $product_id = isset($data['id']) ? (int) $data['id'] : 0;
         $qty = isset($data['qty']) ? (int) $data['qty'] : 1;
         $options = isset($data['options']) && is_array($data['options']) ? $this->normalize_options($data['options']) : [];
+        $add_qty = isset($data['add_qty']) ? (int) $data['add_qty'] : null;
 
         if ($product_id <= 0 || get_post_type($product_id) !== 'store_product') {
             return new WP_REST_Response(['message' => 'Produk tidak valid'], 400);
@@ -111,6 +112,13 @@ class CartController
         }
 
         $cart = $this->read_cart();
+        if ($add_qty !== null) {
+            if ($add_qty < 0) {
+                $add_qty = 0;
+            }
+            $current = $this->find_current_qty($cart, $product_id, $options);
+            $qty = max(0, $current + $add_qty);
+        }
         $cart = $this->apply_upsert($cart, $product_id, $qty, $options);
         $this->write_cart($cart);
 
@@ -155,6 +163,24 @@ class CartController
         }
 
         return $next;
+    }
+
+    private function find_current_qty($cart, $product_id, $options = [])
+    {
+        $cart = is_array($cart) ? $cart : [];
+        $options = $this->normalize_options(is_array($options) ? $options : []);
+        foreach ($cart as $row) {
+            $id = isset($row['id']) ? (int) $row['id'] : 0;
+            $row_qty = isset($row['qty']) ? (int) $row['qty'] : 0;
+            $row_opts = isset($row['opts']) && is_array($row['opts']) ? $this->normalize_options($row['opts']) : [];
+            if ($id <= 0 || $row_qty <= 0) {
+                continue;
+            }
+            if ($id === (int) $product_id && $this->options_equal($row_opts, $options)) {
+                return $row_qty;
+            }
+        }
+        return 0;
     }
 
     private function read_cart()
@@ -217,12 +243,10 @@ class CartController
     {
         if (isset($_COOKIE[$this->cookie_key]) && is_string($_COOKIE[$this->cookie_key]) && $_COOKIE[$this->cookie_key] !== '') {
             $key = sanitize_key($_COOKIE[$this->cookie_key]);
-            error_log("WpStore: Found existing cookie key: " . $key);
             return $key;
         }
 
         $key = sanitize_key(wp_generate_uuid4());
-        error_log("WpStore: Generated new key: " . $key);
 
         $secure = is_ssl();
         $path = '/'; // Force root path for testing

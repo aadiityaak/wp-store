@@ -76,26 +76,11 @@
         async addToCart(item) {
             this.updatingAddKey = this.getItemKey(item);
             try {
-                let currentQty = 0;
-                try {
-                    const resCart = await fetch(wpStoreSettings.restUrl + 'cart', {
-                        credentials: 'same-origin',
-                        headers: { 'X-WP-Nonce': wpStoreSettings.nonce }
-                    });
-                    const dataCart = await resCart.json();
-                    const opts = this.normalizeOptions(item.options || {});
-                    const found = (dataCart.items || []).find((i) => {
-                        if (i.id !== item.id) return false;
-                        return this.stringifyOptions(i.options || {}) === this.stringifyOptions(opts || {});
-                    });
-                    currentQty = found ? (found.qty || 0) : 0;
-                } catch(e) {}
-                const nextQty = currentQty + 1;
                 const res = await fetch(wpStoreSettings.restUrl + 'cart', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': wpStoreSettings.nonce },
-                    body: JSON.stringify({ id: item.id, qty: nextQty, options: (item.options || {}) })
+                    body: JSON.stringify({ id: item.id, add_qty: 1, options: (item.options || {}) })
                 });
                 const data = await res.json();
                 if (!res.ok) { this.showToast(data.message || 'Gagal menambah ke keranjang', 'error'); return; }
