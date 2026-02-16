@@ -72,7 +72,7 @@ class OrderEmails
         remove_filter('wp_mail_from', $cb_from);
         remove_filter('wp_mail_from_name', $cb_name);
 
-        $admin_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+        $admin_email = isset($settings['store_email_admin']) && is_email($settings['store_email_admin']) ? $settings['store_email_admin'] : (isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email'));
         $admin_tmpl = isset($settings['email_template_admin_status']) && is_string($settings['email_template_admin_status']) ? $settings['email_template_admin_status'] : '';
         if ($admin_tmpl === '') {
             $admin_tmpl = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111;">'
@@ -147,7 +147,7 @@ class OrderEmails
             remove_filter('wp_mail_from', $cb_from);
             remove_filter('wp_mail_from_name', $cb_name);
         }
-        $admin_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+        $admin_email = isset($settings['store_email_admin']) && is_email($settings['store_email_admin']) ? $settings['store_email_admin'] : (isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email'));
         if (is_email($admin_email)) {
             $admin_subject = '[' . $store_name . '] Order Baru #' . $order_number;
             $admin_tmpl = isset($settings['email_template_admin_new_order']) && is_string($settings['email_template_admin_new_order']) ? $settings['email_template_admin_new_order'] : '';
