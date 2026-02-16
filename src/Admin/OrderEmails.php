@@ -40,6 +40,7 @@ class OrderEmails
         $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
         $subject = '[' . $store_name . '] Status Pesanan #' . $order_number . ': ' . $status_label;
         $headers = ['Content-Type: text/html; charset=UTF-8'];
+        $headers[] = 'From: ' . $store_name . ' <info@' . get_bloginfo('domain') . '>';
         $vars = [
             'store_name' => $store_name,
             'order_number' => (string) $order_number,
@@ -86,6 +87,7 @@ class OrderEmails
         $tracking_id = isset($settings['page_tracking']) ? (int) $settings['page_tracking'] : 0;
         $tracking_url = $tracking_id ? get_permalink($tracking_id) : site_url('/tracking-order/');
         $headers = ['Content-Type: text/html; charset=UTF-8'];
+        $headers[] = 'From: ' . $store_name . ' <info@' . get_bloginfo('domain') . '>';
         $vars = [
             'store_name' => $store_name,
             'order_number' => (string) $order_number,
