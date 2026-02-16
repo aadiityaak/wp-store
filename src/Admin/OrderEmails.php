@@ -64,6 +64,10 @@ class OrderEmails
             return $from_email;
         };
         $cb_name = function ($n) use ($from_name) {
+            return $from_name;
+        };
+        add_filter('wp_mail_from', $cb_from);
+        add_filter('wp_mail_from_name', $cb_name);
         wp_mail($email, $subject, $body, $headers);
         remove_filter('wp_mail_from', $cb_from);
         remove_filter('wp_mail_from_name', $cb_name);
@@ -85,6 +89,10 @@ class OrderEmails
                 return $from_email;
             };
             $cb_name = function ($n) use ($from_name) {
+                return $from_name;
+            };
+            add_filter('wp_mail_from', $cb_from);
+            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($admin_email, $admin_subject, $admin_body, $headers);
             remove_filter('wp_mail_from', $cb_from);
             remove_filter('wp_mail_from_name', $cb_name);
@@ -131,6 +139,10 @@ class OrderEmails
                 return $from_email;
             };
             $cb_name = function ($n) use ($from_name) {
+                return $from_name;
+            };
+            add_filter('wp_mail_from', $cb_from);
+            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($email, $user_subject, $user_body, $headers);
             remove_filter('wp_mail_from', $cb_from);
             remove_filter('wp_mail_from_name', $cb_name);
@@ -153,6 +165,10 @@ class OrderEmails
                 return $from_email;
             };
             $cb_name = function ($n) use ($from_name) {
+                return $from_name;
+            };
+            add_filter('wp_mail_from', $cb_from);
+            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($admin_email, $admin_subject, $admin_body, $headers);
             remove_filter('wp_mail_from', $cb_from);
             remove_filter('wp_mail_from_name', $cb_name);
