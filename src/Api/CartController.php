@@ -111,7 +111,22 @@ class CartController
             $qty = 0;
         }
 
-        $lock_key = 'wp_store_cart_lock_' . $this->get_actor_key();
+        $actor_key = $this->get_actor_key();
+        $op_fingerprint = md5(wp_json_encode([
+            'id' => $product_id,
+            'qty' => $qty,
+            'add_qty' => $add_qty,
+            'options' => $options,
+        ]));
+        $op_lock_key = 'wp_store_cart_op_' . md5($actor_key);
+        $existing_op = get_transient($op_lock_key);
+        if (is_string($existing_op) && $existing_op === $op_fingerprint) {
+            $cart = $this->read_cart();
+            return new WP_REST_Response($this->format_cart($cart), 200);
+        }
+        set_transient($op_lock_key, $op_fingerprint, 3);
+
+        $lock_key = 'wp_store_cart_lock_' . $actor_key;
         if (get_transient($lock_key)) {
             $cart = $this->read_cart();
             return new WP_REST_Response($this->format_cart($cart), 200);
@@ -128,6 +143,7 @@ class CartController
         }
         $cart = $this->apply_upsert($cart, $product_id, $qty, $options);
         $this->write_cart($cart);
+        delete_transient($lock_key);
 
         return new WP_REST_Response($this->format_cart($cart), 200);
     }
