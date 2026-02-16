@@ -58,16 +58,12 @@ class OrderEmails
                 . '</div>';
         }
         $body = $this->render_template($user_tmpl, $vars);
-        $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+        $from_email = isset($settings['store_email_from']) && is_email($settings['store_email_from']) ? $settings['store_email_from'] : (isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email'));
         $from_name = $store_name;
         $cb_from = function ($e) use ($from_email) {
             return $from_email;
         };
         $cb_name = function ($n) use ($from_name) {
-            return $from_name;
-        };
-        add_filter('wp_mail_from', $cb_from);
-        add_filter('wp_mail_from_name', $cb_name);
         wp_mail($email, $subject, $body, $headers);
         remove_filter('wp_mail_from', $cb_from);
         remove_filter('wp_mail_from_name', $cb_name);
@@ -83,16 +79,12 @@ class OrderEmails
         if (is_email($admin_email)) {
             $admin_subject = '[' . $store_name . '] Status Order #' . $order_number . ': ' . $status_label;
             $admin_body = $this->render_template($admin_tmpl, $vars);
-            $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+            $from_email = isset($settings['store_email_from']) && is_email($settings['store_email_from']) ? $settings['store_email_from'] : (isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email'));
             $from_name = $store_name;
             $cb_from = function ($e) use ($from_email) {
                 return $from_email;
             };
             $cb_name = function ($n) use ($from_name) {
-                return $from_name;
-            };
-            add_filter('wp_mail_from', $cb_from);
-            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($admin_email, $admin_subject, $admin_body, $headers);
             remove_filter('wp_mail_from', $cb_from);
             remove_filter('wp_mail_from_name', $cb_name);
@@ -133,16 +125,12 @@ class OrderEmails
                     . '</div>';
             }
             $user_body = $this->render_template($user_tmpl, $vars);
-            $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+            $from_email = isset($settings['store_email_from']) && is_email($settings['store_email_from']) ? $settings['store_email_from'] : (isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email'));
             $from_name = $store_name;
             $cb_from = function ($e) use ($from_email) {
                 return $from_email;
             };
             $cb_name = function ($n) use ($from_name) {
-                return $from_name;
-            };
-            add_filter('wp_mail_from', $cb_from);
-            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($email, $user_subject, $user_body, $headers);
             remove_filter('wp_mail_from', $cb_from);
             remove_filter('wp_mail_from_name', $cb_name);
@@ -159,16 +147,12 @@ class OrderEmails
                     . '</div>';
             }
             $admin_body = $this->render_template($admin_tmpl, $vars);
-            $from_email = isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email');
+            $from_email = isset($settings['store_email_from']) && is_email($settings['store_email_from']) ? $settings['store_email_from'] : (isset($settings['store_email']) && is_email($settings['store_email']) ? $settings['store_email'] : get_bloginfo('admin_email'));
             $from_name = $store_name;
             $cb_from = function ($e) use ($from_email) {
                 return $from_email;
             };
             $cb_name = function ($n) use ($from_name) {
-                return $from_name;
-            };
-            add_filter('wp_mail_from', $cb_from);
-            add_filter('wp_mail_from_name', $cb_name);
             wp_mail($admin_email, $admin_subject, $admin_body, $headers);
             remove_filter('wp_mail_from', $cb_from);
             remove_filter('wp_mail_from_name', $cb_name);

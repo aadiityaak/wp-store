@@ -519,7 +519,13 @@ $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general
                         </div>
                     </div>
                     <div class="wp-store-box-gray wp-store-mt-4 wp-store-email-template">
-
+                        <div class="wp-store-grid-2">
+                            <div>
+                                <label class="wp-store-label" for="store_email_from">Email Pengirim (From)</label>
+                                <input name="store_email_from" type="email" id="store_email_from" value="<?php echo esc_attr($settings['store_email_from'] ?? get_bloginfo('admin_email')); ?>" class="wp-store-input" placeholder="noreply@domain.com">
+                                <p class="wp-store-helper">Email ini digunakan sebagai pengirim pada notifikasi. Default: admin email.</p>
+                            </div>
+                        </div>
                         <h3 class="wp-store-subtitle">Template Email</h3>
                         <p class="wp-store-helper wp-store-mb-4">Gunakan placeholder: {{store_name}}, {{order_number}}, {{status_label}}, {{tracking_url}}, {{total}}.</p>
                         <div class="wp-store-grid-2">
