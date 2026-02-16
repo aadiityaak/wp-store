@@ -585,12 +585,90 @@
 </script>
 <div class="">
     <div x-data="wpStoreCheckout()" x-init="init()" x-effect="recomputeAllow()">
-        <div x-show="loading" class="wps-flex wps-justify-center wps-items-center wps-p-12 wps-text-gray-500">
-            <svg class="wps-animate-spin wps-mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Memuat data...</span>
+        <div x-show="loading" class="wps-p-4">
+            <div class="wps-grid wps-grid-cols-1 wps-md-grid-cols-2 wps-gap-4">
+                <div>
+                    <div class="wps-card wps-mb-4">
+                        <div class="wps-p-4">
+                            <div class="wps-skeleton wps-skeleton-text" style="width:40%; height:20px;"></div>
+                            <div class="wps-mt-3">
+                                <div class="wps-skeleton wps-skeleton-text" style="width:80%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:70%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:60%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wps-card">
+                        <div class="wps-p-4">
+                            <div class="wps-skeleton wps-skeleton-text" style="width:40%; height:20px;"></div>
+                            <div class="wps-mt-3">
+                                <div class="wps-skeleton wps-skeleton-text" style="width:80%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:80%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:70%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:60%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:50%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="wps-card wps-mb-4">
+                        <div class="wps-p-4">
+                            <div class="wps-skeleton wps-skeleton-text" style="width:40%; height:20px;"></div>
+                            <div class="wps-mt-3">
+                                <div class="wps-skeleton wps-skeleton-text" style="width:90%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:85%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:80%;"></div>
+                                <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:75%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wps-card">
+                        <div class="wps-p-4">
+                            <div class="wps-skeleton wps-skeleton-text" style="width:40%; height:20px;"></div>
+                            <div class="wps-mt-3">
+                                <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
+                                    <div class="wps-skeleton wps-skeleton-img"></div>
+                                    <div style="flex:1;">
+                                        <div class="wps-skeleton wps-skeleton-text" style="width:70%;"></div>
+                                        <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:40%;"></div>
+                                    </div>
+                                </div>
+                                <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
+                                    <div class="wps-skeleton wps-skeleton-img"></div>
+                                    <div style="flex:1;">
+                                        <div class="wps-skeleton wps-skeleton-text" style="width:70%;"></div>
+                                        <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:40%;"></div>
+                                    </div>
+                                </div>
+                                <div class="wps-flex wps-items-center wps-gap-2 wps-mb-2">
+                                    <div class="wps-skeleton wps-skeleton-img"></div>
+                                    <div style="flex:1;">
+                                        <div class="wps-skeleton wps-skeleton-text" style="width:70%;"></div>
+                                        <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:40%;"></div>
+                                    </div>
+                                </div>
+                                <div class="wps-mt-3">
+                                    <div class="wps-skeleton wps-skeleton-text" style="width:40%;"></div>
+                                    <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:30%;"></div>
+                                    <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:50%;"></div>
+                                    <div class="wps-skeleton wps-skeleton-text wps-mt-2" style="width:60%;"></div>
+                                </div>
+                                <div class="wps-mt-3">
+                                    <div class="wps-flex wps-gap-2 wps-flex-wrap">
+                                        <div class="wps-skeleton" style="width:120px; height:28px; border-radius:4px;"></div>
+                                        <div class="wps-skeleton" style="width:110px; height:28px; border-radius:4px;"></div>
+                                        <div class="wps-skeleton" style="width:140px; height:28px; border-radius:4px;"></div>
+                                    </div>
+                                </div>
+                                <div class="wps-mt-4 wps-flex wps-justify-end">
+                                    <div class="wps-skeleton" style="width:200px; height:36px; border-radius:4px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div x-show="!loading" style="display: none;">
             <template x-if="cart.length === 0">
