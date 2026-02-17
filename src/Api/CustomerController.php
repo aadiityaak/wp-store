@@ -344,6 +344,7 @@ class CustomerController
             if (!$order_number) {
                 $order_number = $oid;
             }
+            $raw_items = (array) (get_post_meta($oid, '_store_order_items', true) ?: []);
             $orders[] = [
                 'id' => $oid,
                 'order_number' => $order_number,
@@ -351,10 +352,43 @@ class CustomerController
                 'total' => (float) get_post_meta($oid, '_store_order_total', true),
                 'status' => (string) (get_post_meta($oid, '_store_order_status', true) ?: 'pending'),
                 'tracking_url' => add_query_arg(['order' => $order_number], $tracking_base),
-                'items' => (array) (get_post_meta($oid, '_store_order_items', true) ?: [])
+                'items' => $this->normalize_order_items($raw_items)
             ];
         }
         wp_reset_postdata();
         return new WP_REST_Response($orders, 200);
+    }
+
+    private function normalize_order_items($items)
+    {
+        $out = [];
+        $map = [];
+        foreach (is_array($items) ? $items : [] as $l) {
+            $pid = isset($l['product_id']) ? (int) $l['product_id'] : 0;
+            $qty = isset($l['qty']) ? (int) $l['qty'] : 0;
+            $price = isset($l['price']) ? (float) $l['price'] : 0;
+            $title = isset($l['title']) ? (string) $l['title'] : '';
+            $opts = isset($l['options']) && is_array($l['options']) ? $l['options'] : [];
+            if ($pid <= 0 || $qty <= 0) {
+                continue;
+            }
+            $key = (string) $pid . '|' . wp_json_encode($opts);
+            if (!isset($map[$key])) {
+                $map[$key] = count($out);
+                $out[] = [
+                    'product_id' => $pid,
+                    'title' => $title !== '' ? $title : get_the_title($pid),
+                    'qty' => $qty,
+                    'price' => $price,
+                    'subtotal' => $price * $qty,
+                    'options' => $opts,
+                ];
+            } else {
+                $idx = (int) $map[$key];
+                $out[$idx]['qty'] += $qty;
+                $out[$idx]['subtotal'] = $out[$idx]['price'] * $out[$idx]['qty'];
+            }
+        }
+        return $out;
     }
 }

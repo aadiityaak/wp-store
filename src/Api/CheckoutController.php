@@ -141,6 +141,7 @@ class CheckoutController
         }
 
         $lines = apply_filters('wp_store_checkout_lines', $lines, $data);
+        $lines = $this->dedupe_lines($lines);
         if (empty($lines)) {
             return new WP_REST_Response(['message' => 'Keranjang kosong'], 400);
         }
@@ -336,6 +337,38 @@ class CheckoutController
         }
         $resp = apply_filters('wp_store_payment_response', $resp, $order_id, isset($payment_info) ? $payment_info : null, $data);
         return new WP_REST_Response($resp, 201);
+    }
+
+    private function dedupe_lines($lines)
+    {
+        $out = [];
+        $map = [];
+        foreach (is_array($lines) ? $lines : [] as $l) {
+            $pid = isset($l['product_id']) ? (int) $l['product_id'] : 0;
+            $qty = isset($l['qty']) ? (int) $l['qty'] : 0;
+            $price = isset($l['price']) ? (float) $l['price'] : 0;
+            $opts = isset($l['options']) && is_array($l['options']) ? $this->normalize_options($l['options']) : [];
+            if ($pid <= 0 || $qty <= 0) {
+                continue;
+            }
+            $key = (string) $pid . '|' . wp_json_encode($opts);
+            if (!isset($map[$key])) {
+                $map[$key] = count($out);
+                $out[] = [
+                    'product_id' => $pid,
+                    'title' => isset($l['title']) ? (string) $l['title'] : get_the_title($pid),
+                    'qty' => $qty,
+                    'price' => $price,
+                    'subtotal' => $price * $qty,
+                    'options' => $opts,
+                ];
+            } else {
+                $idx = (int) $map[$key];
+                $out[$idx]['qty'] += $qty;
+                $out[$idx]['subtotal'] = $out[$idx]['price'] * $out[$idx]['qty'];
+            }
+        }
+        return $out;
     }
 
     private function normalize_options($options)
