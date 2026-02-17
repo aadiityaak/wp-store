@@ -481,17 +481,6 @@ class CustomerProfile
                                     <span class="wps-badge wps-bg-blue-500 wps-text-white wps-text-xs wps-font-medium wps-px-2.5 wps-py-0.5 rounded-full" x-text="statusLabel(order.status)"></span>
                                     <a :href="order.tracking_url" class="wps-btn wps-btn-secondary">Tracking</a>
                                 </div>
-                                <div class="wps-mt-3">
-                                    <div class="wps-text-xs wps-text-gray-500">Item:</div>
-                                    <ul class="wps-mt-1">
-                                        <template x-for="it in (Array.isArray(order.items) ? order.items : [])" :key="String(it.product_id) + '-' + String(it.qty)">
-                                            <li class="wps-text-sm wps-text-gray-900">
-                                                <span x-text="(it.title || 'Produk') + ' x' + (it.qty || 1)"></span>
-                                                <span class="wps-text-gray-500"> — <?php echo esc_html(($currency ?: 'Rp')); ?> <span x-text="formatCurrency(it.subtotal || 0)"></span></span>
-                                            </li>
-                                        </template>
-                                    </ul>
-                                </div>
                             </div>
                         </template>
                     </div>
