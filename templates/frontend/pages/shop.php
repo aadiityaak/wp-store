@@ -20,26 +20,21 @@
                 $pages = (int) $pages;
                 $page = (int) $page;
                 $show = [];
-                for ($i = 1; $i <= 3 && $i <= $pages; $i++) {
+                for ($i = 1; $i <= 2 && $i <= $pages; $i++) {
                     $show[$i] = true;
                 }
-                $start_mid = max(1, $page - 2);
-                $end_mid = min($pages, $page + 2);
+                $start_mid = max(1, $page - 1);
+                $end_mid = min($pages, $page + 1);
                 for ($i = $start_mid; $i <= $end_mid; $i++) {
                     $show[$i] = true;
                 }
-                for ($i = $pages - 2; $i <= $pages; $i++) {
+                for ($i = $pages - 1; $i <= $pages; $i++) {
                     if ($i >= 1 && $i <= $pages) {
                         $show[$i] = true;
                     }
                 }
                 $numbers = array_keys($show);
                 sort($numbers);
-                ?>
-                <?php if ($prev_link) : ?>
-                    <a href="<?php echo esc_url($prev_link); ?>" class="wps-btn wps-btn-secondary wps-btn-sm">Sebelumnya</a>
-                <?php endif; ?>
-                <?php
                 $prev_num = 0;
                 foreach ($numbers as $i) :
                     if ($prev_num && $i > $prev_num + 1) :
@@ -52,9 +47,6 @@
                     ?>
                     <a href="<?php echo esc_url($page_link); ?>" class="wps-btn <?php echo ($i === $page) ? 'wps-btn-primary' : 'wps-btn-secondary'; ?> wps-btn-sm"><?php echo esc_html($i); ?></a>
                 <?php endforeach; ?>
-                <?php if ($next_link) : ?>
-                    <a href="<?php echo esc_url($next_link); ?>" class="wps-btn wps-btn-secondary wps-btn-sm">Berikutnya</a>
-                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>
