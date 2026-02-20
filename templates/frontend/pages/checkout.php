@@ -280,7 +280,9 @@
                     return;
                 }
                 this.submitting = true;
-                this.requestId = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+                if (!this.requestId) {
+                    this.requestId = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+                }
                 this.submit();
             },
             async fetchProfile() {
