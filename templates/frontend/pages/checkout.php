@@ -12,7 +12,7 @@
             loading: true,
             submitting: false,
             _submitGuard: false,
-            requestId: '',
+            requestId: String(Date.now()) + '-' + Math.random().toString(36).slice(2),
             allowSubmit: false,
             importingProfile: false,
             importingAddresses: '',
@@ -908,7 +908,7 @@
                                 </div>
 
                                 <div class="wps-mt-4 wps-flex wps-justify-end">
-                                    <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || _submitGuard || !allowSubmit" @click="trySubmit()">
+                                    <button type="button" class="wps-btn wps-btn-primary" :disabled="submitting || _submitGuard || !allowSubmit" @click.prevent.stop="trySubmit()">
                                         <?php echo wps_icon(['name' => 'cart', 'size' => 16, 'class' => 'wps-mr-2']); ?>
                                         <span x-show="submitting">Memproses...</span>
                                         <span x-show="!submitting">Buat Pesanan</span>
