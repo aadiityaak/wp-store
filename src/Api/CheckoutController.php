@@ -102,11 +102,14 @@ class CheckoutController
 
         $actor_key = is_user_logged_in() ? ('user:' . get_current_user_id()) : ('guest:' . (isset($_COOKIE['wp_store_cart_key']) ? sanitize_key($_COOKIE['wp_store_cart_key']) : ''));
         if ($actor_key !== '') {
-            $actor_lock_key = 'wp_store_checkout_actor_lock_' . md5($actor_key);
-            if (get_transient($actor_lock_key)) {
-                return new WP_REST_Response(['message' => 'Order sedang diproses'], 429);
+            // Jika request_id tersedia, gunakan mekanisme one-time request_id lock saja
+            if ($request_id === '') {
+                $actor_lock_key = 'wp_store_checkout_actor_lock_' . md5($actor_key);
+                if (get_transient($actor_lock_key)) {
+                    return new WP_REST_Response(['message' => 'Order sedang diproses'], 429);
+                }
+                set_transient($actor_lock_key, 1, 10);
             }
-            set_transient($actor_lock_key, 1, 10);
         }
 
         $lines = [];

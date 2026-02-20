@@ -30,6 +30,8 @@ class Shortcode
         add_shortcode('wp_store_catalog', [$this, 'render_catalog']);
         add_shortcode('wp_store_filters', [$this, 'render_filters']);
         add_shortcode('wp_store_shop_with_filters', [$this, 'render_shop_with_filters']);
+        add_shortcode('wp_store_captcha', [$this, 'render_captcha']);
+        add_shortcode('wp-store-captcha', [$this, 'render_captcha']);
         add_filter('the_content', [$this, 'filter_single_content']);
         add_filter('the_content', [$this, 'filter_cart_page_content']);
         add_filter('template_include', [$this, 'override_archive_template']);
@@ -257,6 +259,28 @@ class Shortcode
             'pages' => (int) $query->max_num_pages,
             'total' => (int) $query->found_posts
         ]);
+    }
+
+    public function render_captcha($atts = [])
+    {
+        wp_enqueue_script('alpinejs');
+        wp_enqueue_script('wp-store-frontend');
+        $atts = shortcode_atts([
+            'target-button' => '',
+            'target_button' => ''
+        ], $atts);
+        $selector = '';
+        if (isset($atts['target-button']) && is_string($atts['target-button'])) {
+            $selector = $atts['target-button'];
+        }
+        if ($selector === '' && isset($atts['target_button']) && is_string($atts['target_button'])) {
+            $selector = $atts['target_button'];
+        }
+        $html = '<div class="wps-captcha-shortcode-wrap" data-target-button="' . esc_attr($selector) . '">';
+        $html .= Template::render('components/captcha');
+        $html .= '</div>';
+        $html .= '<script>(function(){try{var wrap=document.currentScript&&document.currentScript.previousElementSibling; if(!wrap||!wrap.classList||!wrap.classList.contains("wps-captcha-shortcode-wrap")){wrap=document.querySelector(".wps-captcha-shortcode-wrap");} var sel=(wrap&&wrap.getAttribute("data-target-button"))||""; if(!wrap||!sel){return;} function ready(){ var verified=wrap.querySelector(\'input[name="captcha_verified"]\'); var idf=wrap.querySelector(\'input[name="captcha_id"]\'); var val=wrap.querySelector(\'input[name="captcha_value"]\'); var ok=(verified&&verified.value==="1")&&(idf&&String(idf.value).trim()!=="")&&(val&&String(val.value).trim()!==""); document.querySelectorAll(sel).forEach(function(btn){ try{ if(ok){ btn.removeAttribute("disabled"); }else{ btn.setAttribute("disabled","disabled"); } }catch(e){} }); } wrap.addEventListener("change", ready, true); wrap.addEventListener("input", ready, true); if(document.readyState!=="loading"){ ready(); } else { document.addEventListener("DOMContentLoaded", ready); } }catch(e){console&&console.warn&&console.warn(e);} })();</script>';
+        return $html;
     }
 
     public function render_checkout($atts = [])
