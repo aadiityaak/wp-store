@@ -217,7 +217,10 @@ class Assets
                         <select class="wps-select" x-model="selectedAdv">
                             <option value="">-- Pilih --</option>
                             <template x-for="opt in advOptions" :key="opt.label">
-                                <option :value="opt.label" x-text="opt.label"></option>
+                                <option
+                                    :value="opt.label"
+                                    x-text="opt.price ? opt.label + ' - ' + (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(parseFloat(opt.price || 0))) : opt.label">
+                                </option>
                             </template>
                         </select>
                     </div>
