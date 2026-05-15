@@ -1,4 +1,4 @@
-<div class="wps-p-4">
+<div class="wps-p-4 wps-single-product">
     <div class="wps-flex wps-gap-4 wps-items-start wps-mb-4">
         <div class="wps-w-full" style="flex: 1;">
             <?php $image_src = (!empty($image) ? $image : (WP_STORE_URL . 'assets/frontend/img/noimg.webp')); ?>
