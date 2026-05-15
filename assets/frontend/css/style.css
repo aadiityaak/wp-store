@@ -1033,6 +1033,11 @@ tr:not(:last-child) .wps-td {
 .wps-products-carousel .flickity-prev-next-button {
   width: 30px;
   height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  box-sizing: border-box;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.9);
   color: #111827;
@@ -1059,9 +1064,11 @@ tr:not(:last-child) .wps-td {
   width: 14px !important;
   height: 14px !important;
   fill: currentColor;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%);
+  display: block;
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
 }
 .wps-products-carousel .flickity-page-dots {
   bottom: 6px;
